@@ -19,8 +19,14 @@ antes de crear y verifica (typecheck/lint/build/tests) antes de dar nada por ter
 indica qué toca hacer ahora.
 
 **Decisiones firmes:**
-- (Documenta aquí las decisiones de stack y producto que no se renegocian: lenguaje, framework,
-  base de datos, despliegue, etc.)
+- Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4. Sin base de datos: todo el
+  contenido es estático y sale de `lib/contact.ts`.
+- three.js con React Three Fiber y drei para la escena; Vitest para los tests.
+- La tarjeta es libre (sin física de cuerda, a diferencia de la referencia de Vercel): se mueve
+  con los muelles amortiguados de `lib/motion.ts`.
+- Nada remoto en tiempo de ejecución: ni fuentes, ni HDRI, ni imágenes de las caras (se dibujan
+  en un canvas 2D).
+- La página funciona sin WebGL: siempre hay una versión plana con los mismos datos.
 - Commits manuales: no commitear sin que se pida.
 
 > Base instalada con la suite de Organízate. Las reglas comunes viven en `.claude/rules/` y los
