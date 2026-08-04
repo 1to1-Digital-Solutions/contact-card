@@ -9,7 +9,7 @@ import { ContactPanel } from "./contact-panel";
 import { SceneErrorBoundary } from "./scene-error-boundary";
 
 const CONTROL_CLASSES =
-  "inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 text-sm font-medium text-ink-inverse backdrop-blur transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent";
+  "inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 text-sm font-medium text-ink-inverse backdrop-blur transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink-inverse";
 
 export function ContactCardExperience() {
   const reducedMotion = useReducedMotion();

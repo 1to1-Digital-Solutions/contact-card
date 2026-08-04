@@ -21,7 +21,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b1120",
+  // El fondo de la página. A mano porque los metadatos no leen CSS ni TSX
+  // de cliente: si cambia `BRAND.backdrop`, cambia aquí.
+  themeColor: "#27272a",
 };
 
 export default function RootLayout({

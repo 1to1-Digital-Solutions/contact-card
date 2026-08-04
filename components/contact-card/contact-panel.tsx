@@ -37,7 +37,7 @@ export function ContactPanel() {
         <h1 className="text-3xl font-semibold tracking-tight text-ink-inverse sm:text-4xl">
           {CONTACT.name}
         </h1>
-        <p className="mt-2 text-sm font-semibold uppercase tracking-[0.2em] text-accent">
+        <p className="mt-2 text-sm font-semibold uppercase tracking-[0.2em] text-accent-ink-inverse">
           {CONTACT.company}
         </p>
       </div>
@@ -50,7 +50,7 @@ export function ContactPanel() {
             </dt>
             <dd className="mt-1">
               <a
-                className="inline-flex min-h-11 items-center text-lg text-ink-inverse underline decoration-white/25 underline-offset-4 transition-colors hover:decoration-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                className="inline-flex min-h-11 items-center text-lg text-ink-inverse underline decoration-white/25 underline-offset-4 transition-colors hover:decoration-accent-ink-inverse focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink-inverse"
                 href={field.href}
               >
                 {field.value}
@@ -63,7 +63,7 @@ export function ContactPanel() {
       <button
         type="button"
         onClick={downloadVCard}
-        className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-ink transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none motion-reduce:hover:scale-100"
+        className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-ink transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink-inverse motion-reduce:transition-none motion-reduce:hover:scale-100"
       >
         Guardar contacto (.vcf)
       </button>

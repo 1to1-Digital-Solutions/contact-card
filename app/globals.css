@@ -1,20 +1,21 @@
 @import "tailwindcss";
 
 /*
-  Tokens de marca. PROVISIONALES: los valores deben coincidir con los de
-  `lib/brand.ts` (three.js no puede leer variables CSS, así que la paleta
-  vive en los dos sitios). Al recibir los colores oficiales de
-  1to1 Digital Solutions, se cambian aquí y allí, y nada más.
+  Tokens de marca de 1to1 Digital Solutions. Los valores deben coincidir con
+  los de `lib/brand.ts` (three.js no puede leer variables CSS, así que la
+  paleta vive en los dos sitios): al cambiar uno hay que cambiar el otro.
 */
 @theme {
-  --color-backdrop: #0b1120;
-  --color-card-front: #f7f5f0;
-  --color-card-back: #111c33;
-  --color-ink: #111c33;
-  --color-ink-muted: #5b6478;
-  --color-ink-inverse: #f7f5f0;
-  --color-ink-inverse-muted: #94a0ba;
-  --color-accent: #d9a441;
+  --color-backdrop: #27272a;
+  --color-card-front: #f4f4f5;
+  --color-card-back: #1e1e21;
+  --color-ink: #1a1a1a;
+  --color-ink-muted: #626265;
+  --color-ink-inverse: #ededed;
+  --color-ink-inverse-muted: #a3a3a8;
+  --color-accent: #1f957a;
+  --color-accent-ink: #116e57;
+  --color-accent-ink-inverse: #1ac89a;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
@@ -37,6 +38,9 @@
     color-scheme: dark;
   }
 
+  /* Dos veladuras del verde de marca sobre el fondo. La proporción se
+     mantiene baja a propósito: aclaran el fondo y con ella baja el contraste
+     del texto claro que va encima. */
   body {
     background:
       radial-gradient(
@@ -46,7 +50,7 @@
       ),
       radial-gradient(
         60rem 40rem at 110% 20%,
-        color-mix(in srgb, #4c6ef5 18%, transparent),
+        color-mix(in srgb, var(--color-accent-ink) 22%, transparent),
         transparent 55%
       ),
       var(--color-backdrop);

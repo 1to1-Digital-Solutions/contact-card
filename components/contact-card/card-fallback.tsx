@@ -25,7 +25,7 @@ export function CardFallback({ note }: { note: string }) {
               ? "Ver el anverso de la tarjeta"
               : "Ver el reverso de la tarjeta"
           }
-          className="relative block aspect-[85/55] w-[min(90vw,26rem)] rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          className="relative block aspect-[85/55] w-[min(90vw,26rem)] rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink-inverse"
         >
           <span
             aria-hidden="true"
@@ -37,7 +37,7 @@ export function CardFallback({ note }: { note: string }) {
                 <span className="block text-xl font-semibold text-ink sm:text-2xl">
                   {CONTACT.name}
                 </span>
-                <span className="mt-1 block text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-accent">
+                <span className="mt-1 block text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-accent-ink">
                   {CONTACT.company}
                 </span>
               </span>
@@ -48,7 +48,9 @@ export function CardFallback({ note }: { note: string }) {
               </span>
             </span>
 
-            <span className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl bg-card-back p-6 shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
+            {/* El reverso es casi del color del fondo: el filete claro hace
+                de canto y le devuelve la silueta que en 3D da el papel. */}
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/15 bg-card-back p-6 shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
               <span className="flex size-16 items-center justify-center rounded-xl border-2 border-accent text-2xl font-semibold text-ink-inverse">
                 1:1
               </span>
