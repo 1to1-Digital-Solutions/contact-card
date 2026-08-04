@@ -11,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: "*", allow: "/" }],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    // `Host` es un nombre de dominio, sin esquema: con él se ignora la directiva.
+    host: new URL(SITE_URL).host,
   };
 }
