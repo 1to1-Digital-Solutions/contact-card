@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { CARD } from "@/lib/brand";
 import { isShowingBack, snapToHalfTurn } from "@/lib/card-orientation";
@@ -114,6 +114,11 @@ export function DraggableCard({
     drag.current.mode = "move";
     drag.current.grabX = event.point.x - (current?.position.x ?? 0);
     drag.current.grabY = event.point.y - (current?.position.y ?? 0);
+    // El objetivo arranca donde está la tarjeta: si no, al reagarrarla en
+    // pleno vuelo el primer frame mide un salto que no ha existido y la
+    // inclina de golpe.
+    drag.current.targetX = current?.position.x ?? 0;
+    drag.current.targetY = current?.position.y ?? 0;
     onGrabChange(true);
   };
 
@@ -125,8 +130,13 @@ export function DraggableCard({
     onGrabChange(true);
   };
 
-  const release = (event: ThreeEvent<PointerEvent>) => {
-    (event.target as Element).releasePointerCapture(event.pointerId);
+  /**
+   * Fin del gesto, venga de donde venga. Es idempotente a propósito: además
+   * del `pointerup` normal lo invocan la cancelación del gesto y la pérdida
+   * de la captura del puntero.
+   */
+  const endDrag = useCallback(() => {
+    if (drag.current.mode === "idle") return;
     if (drag.current.mode === "rotate") {
       // Al soltar, la tarjeta encaja mostrando una cara entera.
       spin.current.turn = snapToHalfTurn(spin.current.turn);
@@ -134,7 +144,31 @@ export function DraggableCard({
     }
     drag.current.mode = "idle";
     onGrabChange(false);
+  }, [onGrabChange]);
+
+  const release = (event: ThreeEvent<PointerEvent>) => {
+    (event.target as Element).releasePointerCapture(event.pointerId);
+    endDrag();
   };
+
+  /**
+   * Red de seguridad del gesto. React Three Fiber no reparte `pointercancel`
+   * entre los objetos de la escena (solo lo usa para deshacer el hover), así
+   * que un gesto interrumpido —una llamada entrante, un gesto del sistema,
+   * el puntero que se va con la captura— nunca llegaría a los manejadores de
+   * la tarjeta y esta se quedaría pegada al puntero hasta recargar la página.
+   * Estos dos eventos sí llegan siempre al canvas.
+   */
+  const gl = useThree((state) => state.gl);
+  useEffect(() => {
+    const canvas = gl.domElement;
+    canvas.addEventListener("pointercancel", endDrag);
+    canvas.addEventListener("lostpointercapture", endDrag);
+    return () => {
+      canvas.removeEventListener("pointercancel", endDrag);
+      canvas.removeEventListener("lostpointercapture", endDrag);
+    };
+  }, [gl, endDrag]);
 
   useFrame((state, delta) => {
     const current = group.current;
@@ -224,7 +258,6 @@ export function DraggableCard({
         ref={group}
         onPointerDown={startMove}
         onPointerUp={release}
-        onPointerCancel={release}
         onDoubleClick={(event) => {
           event.stopPropagation();
           spin.current.turn += Math.PI;
