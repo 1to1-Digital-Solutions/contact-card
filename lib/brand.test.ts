@@ -137,3 +137,30 @@ describe("paleta duplicada en @theme", () => {
     expect([...declared.keys()].filter((name) => !fromBrand.has(name))).toEqual([]);
   });
 });
+
+/**
+ * Los dos sitios que no pueden leer ni `BRAND` ni el `@theme`: los metadatos
+ * de Next (`themeColor` es un string en el módulo de servidor) y el favicon,
+ * que es un SVG estático. Ahí los colores van copiados a mano, así que aquí
+ * se comprueba que siguen siendo los de la paleta y no los de la anterior.
+ */
+describe("colores copiados a mano fuera de la paleta", () => {
+  const source = (path: string) =>
+    readFileSync(new URL(path, import.meta.url), "utf8");
+  const hexesIn = (text: string) =>
+    [...text.matchAll(/#[0-9a-f]{6}\b/gi)].map(([hex]) => hex.toLowerCase());
+
+  it("el `themeColor` de la pestaña es el fondo de la página", () => {
+    const declared = source("../app/layout.tsx").match(
+      /themeColor:\s*"(#[0-9a-f]{6})"/i,
+    )?.[1];
+    expect(declared).toBe(BRAND.backdrop);
+  });
+
+  it("el favicon es la tarjeta en miniatura: reverso, acento y texto claro", () => {
+    const used = [...new Set(hexesIn(source("../app/icon.svg")))].sort();
+    expect(used).toEqual(
+      [BRAND.cardBack, BRAND.accent, BRAND.inkInverse].sort(),
+    );
+  });
+});
