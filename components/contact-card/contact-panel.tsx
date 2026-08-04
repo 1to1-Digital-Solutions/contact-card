@@ -20,7 +20,9 @@ function downloadVCard() {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  // Revocar en el mismo tick que el clic deja a Safari sin fichero que
+  // descargar: se libera en cuanto el navegador ha tomado el blob.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 /**
