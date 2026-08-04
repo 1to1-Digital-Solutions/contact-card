@@ -34,8 +34,9 @@ arquitectura en `README.md`.
   WebGL, metadatos, `robots.txt`, sitemap y JSON-LD.
 - Colores oficiales de marca aplicados (verde `#1f957a` y neutros antracita)
   en `lib/brand.ts`, `@theme`, favicon y `themeColor`.
-- 49 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio) y
-  sobre el contraste de la paleta.
+- 64 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
+  sobre el contraste de la paleta y sobre que `lib/brand.ts` y el `@theme` de
+  `app/globals.css` no se desincronicen.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
@@ -51,9 +52,13 @@ arquitectura en `README.md`.
 
 - La paleta de marca está duplicada a propósito en `lib/brand.ts` (para
   three.js) y en `@theme` de `app/globals.css` (para Tailwind). Si se cambia
-  una, hay que cambiar la otra. `lib/brand.test.ts` comprueba que cada par de
-  texto y fondo llega a WCAG AA, así que la paleta no se puede romper en
-  silencio.
+  una, hay que cambiar la otra: `lib/brand.test.ts` compara las dos listas y
+  falla si dejan de coincidir, y comprueba que cada par de texto y fondo
+  llega a WCAG AA.
+- El texto secundario claro (`inkInverseMuted`) no se mide contra `backdrop`
+  a secas: las veladuras y el halo aclaran el fondo hasta `#364946` en el
+  centro de la escena, que es justo donde se lee «Cargando la tarjeta…». Ese
+  es el caso que fija el token, y está en el test.
 - El acento vivo (`#1f957a`) no llega a AA como texto ni sobre el anverso
   claro ni sobre el fondo oscuro: para texto están `accentInk` (sobre claro) y
   `accentInkInverse` (sobre oscuro).

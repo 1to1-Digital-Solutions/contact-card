@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { BRAND } from "./brand";
 
@@ -28,6 +29,32 @@ function contrast(a: string, b: string): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
+/** Superpone `top` con opacidad `alpha` sobre `bottom`, como hace el navegador. */
+function blend(top: string, alpha: number, bottom: string): string {
+  const t = Number.parseInt(top.slice(1), 16);
+  const b = Number.parseInt(bottom.slice(1), 16);
+  const channel = (shift: number) =>
+    Math.round(((t >> shift) & 255) * alpha + ((b >> shift) & 255) * (1 - alpha));
+  return `#${[16, 8, 0]
+    .map((shift) => channel(shift).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+/**
+ * El fondo NO es `backdrop` a secas donde vive el texto de la escena: encima
+ * llevan las veladuras del `body` y el halo de la tarjeta (`app/globals.css`),
+ * que lo aclaran. El peor caso es el centro de la escena —ahí se lee «Cargando
+ * la tarjeta…» y la nota de la versión plana—: el halo al completo sobre la
+ * veladura más fuerte. Las dos veladuras están en esquinas opuestas del
+ * viewport, así que nunca se suman a plena intensidad.
+ * Si cambian esas opacidades en el CSS, cambian aquí.
+ */
+const BACKDROP_LIT = blend(
+  "#ffffff",
+  0.09,
+  blend(BRAND.accentInk, 0.22, BRAND.backdrop),
+);
+
 /** Pares de texto sobre fondo, con dónde aparece cada uno. */
 const TEXT: Array<[string, string, string]> = [
   [BRAND.ink, BRAND.cardFront, "nombre y datos del anverso"],
@@ -39,6 +66,12 @@ const TEXT: Array<[string, string, string]> = [
   [BRAND.inkInverseMuted, BRAND.backdrop, "etiquetas del panel y avisos"],
   [BRAND.accentInkInverse, BRAND.backdrop, "empresa en el panel y foco"],
   [BRAND.ink, BRAND.accent, "texto del botón de guardar contacto"],
+  [BRAND.inkInverse, BACKDROP_LIT, "avisos de la escena sobre el fondo aclarado"],
+  [
+    BRAND.inkInverseMuted,
+    BACKDROP_LIT,
+    "«Cargando la tarjeta…» y la nota de la versión plana",
+  ],
 ];
 
 /** Elementos que informan por su forma, no por su texto. */
@@ -46,6 +79,7 @@ const GRAPHICS: Array<[string, string, string]> = [
   [BRAND.accent, BRAND.cardFront, "filete de marca del anverso"],
   [BRAND.accent, BRAND.cardBack, "marco del monograma y remate del reverso"],
   [BRAND.cardEdge, BRAND.backdrop, "canto de la tarjeta contra el fondo"],
+  [BRAND.accentInkInverse, BACKDROP_LIT, "foco del teclado sobre la escena"],
 ];
 
 describe("contraste de la paleta de marca", () => {
@@ -66,5 +100,40 @@ describe("contraste de la paleta de marca", () => {
   it("mantiene el acento vivo fuera del texto: por eso existen sus dos tintas", () => {
     expect(contrast(BRAND.accent, BRAND.cardFront)).toBeLessThan(4.5);
     expect(contrast(BRAND.accent, BRAND.backdrop)).toBeLessThan(4.5);
+  });
+});
+
+/** `inkInverseMuted` → `--color-ink-inverse-muted`, el nombre que usa Tailwind. */
+function cssVariable(token: string): string {
+  return `--color-${token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
+}
+
+/** Tokens que solo existen en three.js: no tienen clase de Tailwind que los use. */
+const ONLY_IN_THREE = new Set(["cardEdge"]);
+
+describe("paleta duplicada en @theme", () => {
+  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const theme = css.match(/@theme\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  const declared = new Map(
+    [...theme.matchAll(/(--color-[a-z-]+):\s*([^;]+);/g)].map(([, name, value]) => [
+      name,
+      value.trim(),
+    ]),
+  );
+
+  it("encuentra el bloque @theme y sus colores", () => {
+    expect(declared.size).toBeGreaterThan(0);
+  });
+
+  it.each(Object.entries(BRAND).filter(([token]) => !ONLY_IN_THREE.has(token)))(
+    "%s vale lo mismo en `lib/brand.ts` y en `app/globals.css`",
+    (token, value) => {
+      expect(declared.get(cssVariable(token))).toBe(value);
+    },
+  );
+
+  it("no declara en @theme colores que three.js no conozca", () => {
+    const fromBrand = new Set(Object.keys(BRAND).map(cssVariable));
+    expect([...declared.keys()].filter((name) => !fromBrand.has(name))).toEqual([]);
   });
 });

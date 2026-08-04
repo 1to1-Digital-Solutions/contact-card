@@ -58,6 +58,12 @@ export function CardScene(props: Props) {
           scale={[8, 3, 1]}
           color="#ffffff"
         />
+        {/*
+          Blanco cenital y relleno frío: son luz de estudio, no colores de
+          marca, y por eso no salen de `BRAND` (medido: dejan el anverso en
+          su color, a ±2 niveles de `cardFront`). El único que sí es de
+          marca es el acento, que tiñe el reflejo del canto derecho.
+        */}
         <Lightformer
           intensity={0.8}
           position={[-4, 1, 2]}

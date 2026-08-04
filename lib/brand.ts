@@ -28,8 +28,13 @@ export const BRAND = {
   inkMuted: "#626265",
   /** Texto principal sobre superficie oscura. */
   inkInverse: "#ededed",
-  /** Texto secundario sobre superficie oscura: el claro apagado hasta AA. */
-  inkInverseMuted: "#a3a3a8",
+  /**
+   * Texto secundario sobre superficie oscura: el claro apagado hasta AA. No
+   * basta con que cumpla sobre `backdrop`: este texto también cae sobre el
+   * fondo ya aclarado por las veladuras y el halo de `app/globals.css` (ahí
+   * es donde se lee «Cargando la tarjeta…»), y ese es el caso que manda.
+   */
+  inkInverseMuted: "#b8b8bd",
   /** Acento de marca (primary-300). Para grafismos: como texto no llega a AA. */
   accent: "#1f957a",
   /** Acento para texto sobre superficie clara (primary-500). */
