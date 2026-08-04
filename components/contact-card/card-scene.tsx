@@ -3,6 +3,7 @@
 import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { NoToneMapping } from "three";
+import { BRAND } from "@/lib/brand";
 import { DraggableCard } from "./draggable-card";
 
 type Props = {
@@ -33,13 +34,16 @@ export function CardScene(props: Props) {
     >
       {/*
         Las intensidades parecen altas porque la reflexión difusa de three
-        divide por π: la cara frontal recibe (1,05 + 1,3·0,92 + 0,4·0,59)/π,
-        y el mapa de entorno suma el resto hasta rozar 1. Justo lo que hace
-        falta para que el crema de la tarjeta salga en su color y no quemado.
+        divide por π; entre las tres luces y el mapa de entorno, la cara
+        frontal recibe algo menos de 1. Es el punto en el que el claro del
+        anverso sale justo en su color: por encima se satura a blanco y se
+        pierden el relieve y la marca de agua, por debajo se agrisa. Si se
+        tocan, hay que volver a medirlo (una captura de la escena y el
+        porcentaje de píxeles a 255 en una zona lisa de la tarjeta).
       */}
-      <ambientLight intensity={1.05} />
-      <directionalLight position={[1.6, 2.6, 7]} intensity={1.3} />
-      <directionalLight position={[-4, -1, 3]} intensity={0.4} />
+      <ambientLight intensity={0.95} />
+      <directionalLight position={[1.6, 2.6, 7]} intensity={1.13} />
+      <directionalLight position={[-4, -1, 3]} intensity={0.34} />
 
       <DraggableCard {...props} />
 
@@ -49,7 +53,7 @@ export function CardScene(props: Props) {
       */}
       <Environment resolution={256}>
         <Lightformer
-          intensity={2}
+          intensity={1.7}
           position={[0, 3, 4]}
           scale={[8, 3, 1]}
           color="#ffffff"
@@ -64,7 +68,7 @@ export function CardScene(props: Props) {
           intensity={0.6}
           position={[4, -2, 2]}
           scale={[4, 4, 1]}
-          color="#d9a441"
+          color={BRAND.accent}
         />
       </Environment>
     </Canvas>

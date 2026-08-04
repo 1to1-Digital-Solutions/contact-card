@@ -68,6 +68,5 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
 ## Pendiente
 
 - Logotipo real de la empresa en el reverso (ahora hay un monograma provisional).
-- Colores oficiales de marca (la paleta actual es un marcador de posición).
 
 Ver `ESTADO.md` para el detalle del estado y el siguiente paso.

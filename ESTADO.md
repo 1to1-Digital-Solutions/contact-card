@@ -7,11 +7,9 @@
 
 ## ⏭️ SIGUIENTE PASO (lo primero al volver)
 
-- Sustituir el monograma provisional «1:1» del reverso por el logotipo real y
-  cambiar la paleta por los colores oficiales de marca. Ambas cosas están
-  fichadas como tareas y localizadas: el logo en
-  `components/contact-card/card-textures.ts` (`createBackTexture`) y la paleta
-  en `lib/brand.ts` + `@theme` de `app/globals.css`.
+- Sustituir el monograma provisional «1:1» del reverso por el logotipo real.
+  Está fichado como tarea y localizado en
+  `components/contact-card/card-textures.ts` (`createBackTexture`).
 
 ## Qué es contact-card
 
@@ -34,27 +32,38 @@ arquitectura en `README.md`.
 - Proyecto creado de cero y primera versión de la tarjeta funcionando:
   arrastrar, girar, voltear, recolocar, descarga de vCard, respaldo 2D sin
   WebGL, metadatos, `robots.txt`, sitemap y JSON-LD.
-- 30 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio).
+- Colores oficiales de marca aplicados (verde `#1f957a` y neutros antracita)
+  en `lib/brand.ts`, `@theme`, favicon y `themeColor`.
+- 49 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio) y
+  sobre el contraste de la paleta.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
 ## Pendiente / próximos pasos
 
 1. Logotipo real en el reverso (tarea creada).
-2. Colores oficiales de marca (tarea creada).
-3. Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
+2. Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
    se ve previsualización.
-4. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
+3. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
    tarjeta, hay que decidirlo.
 
 ## Caveats y notas
 
 - La paleta de marca está duplicada a propósito en `lib/brand.ts` (para
   three.js) y en `@theme` de `app/globals.css` (para Tailwind). Si se cambia
-  una, hay que cambiar la otra.
+  una, hay que cambiar la otra. `lib/brand.test.ts` comprueba que cada par de
+  texto y fondo llega a WCAG AA, así que la paleta no se puede romper en
+  silencio.
+- El acento vivo (`#1f957a`) no llega a AA como texto ni sobre el anverso
+  claro ni sobre el fondo oscuro: para texto están `accentInk` (sobre claro) y
+  `accentInkInverse` (sobre oscuro).
 - La escena no usa tone mapping para que los colores salgan fieles; por eso
   las intensidades de luz parecen altas (la reflexión difusa divide por π).
-  Si se tocan, revisar que el crema del anverso no se queme ni se agrise.
+  Están medidas para dejar el anverso justo por debajo del punto de quemado:
+  si se tocan, hay que volver a medirlo (captura de la escena y porcentaje de
+  píxeles a 255 en una zona lisa de la tarjeta).
+- El fondo y el reverso son casi del mismo tono: en 3D los separa el canto
+  claro y en la versión plana, un filete claro en el reverso.
 - `npm audit` reporta 3 vulnerabilidades altas heredadas de `next`
   (postcss y sharp internos). No hay arreglo sin bajar Next a la v9.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
