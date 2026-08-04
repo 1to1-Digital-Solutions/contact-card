@@ -43,7 +43,10 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
 
 - **Las caras de la tarjeta se dibujan en un canvas 2D** en tiempo de
   ejecución (`card-textures.ts`), no son imágenes. Cambiar un dato o un
-  color no obliga a reexportar ningún asset.
+  color no obliga a reexportar ningún asset. La excepción es el logotipo del
+  reverso, que es el SVG oficial de la marca (`public/logo-negative.svg`):
+  como hay que esperar a que cargue, la cara se dibuja sin él y se refresca
+  en cuanto está.
 - **Sin fuentes remotas**: se usa la pila tipográfica del sistema, tanto en
   la interfaz como dentro de la tarjeta, para que ambas coincidan y no haya
   descargas.
@@ -67,6 +70,6 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
 
 ## Pendiente
 
-- Logotipo real de la empresa en el reverso (ahora hay un monograma provisional).
+- Logotipo en la marca de agua del anverso (ahí queda el monograma provisional).
 
 Ver `ESTADO.md` para el detalle del estado y el siguiente paso.

@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
+import { LOGO } from "@/lib/brand";
 import { CONTACT } from "@/lib/contact";
 
 /**
@@ -50,13 +52,18 @@ export function CardFallback({ note }: { note: string }) {
 
             {/* El reverso es casi del color del fondo: el filete claro hace
                 de canto y le devuelve la silueta que en 3D da el papel. */}
-            <span className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/15 bg-card-back p-6 shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
-              <span className="flex size-16 items-center justify-center rounded-xl border-2 border-accent text-2xl font-semibold text-ink-inverse">
-                1:1
-              </span>
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-ink-inverse">
-                {CONTACT.company}
-              </span>
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/15 bg-card-back p-6 shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
+              {/* El mismo fichero que dibuja el reverso en 3D, aquí sin canvas.
+                  Va sin `alt` porque el bloque entero es decorativo, y sin
+                  optimizar porque es un SVG: se sirve tal cual. */}
+              <Image
+                src={LOGO.src}
+                alt=""
+                width={LOGO.width}
+                height={LOGO.height}
+                unoptimized
+                className="h-auto w-2/5"
+              />
               <span className="text-xs text-ink-inverse-muted">
                 {CONTACT.website}
               </span>

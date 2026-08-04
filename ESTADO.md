@@ -7,9 +7,9 @@
 
 ## ⏭️ SIGUIENTE PASO (lo primero al volver)
 
-- Sustituir el monograma provisional «1:1» del reverso por el logotipo real.
-  Está fichado como tarea y localizado en
-  `components/contact-card/card-textures.ts` (`createBackTexture`).
+- Sustituir el monograma provisional «1:1» que queda en la marca de agua del
+  anverso por el logotipo positivo. Está fichado como tarea y localizado en
+  `components/contact-card/card-textures.ts` (`drawWatermark`).
 
 ## Qué es contact-card
 
@@ -34,16 +34,19 @@ arquitectura en `README.md`.
   WebGL, metadatos, `robots.txt`, sitemap y JSON-LD.
 - Colores oficiales de marca aplicados (verde `#1f957a` y neutros antracita)
   en `lib/brand.ts`, `@theme`, favicon y `themeColor`.
-- 66 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
-  sobre el contraste de la paleta y sobre que `lib/brand.ts` no se
+- Logotipo real en el reverso (3D y versión plana) y el isotipo en el favicon,
+  con los ficheros oficiales copiados del repo `landing`.
+- 68 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
+  sobre el contraste de la paleta, sobre que `lib/brand.ts` no se
   desincronice de sus tres copias a mano (el `@theme` de `app/globals.css`,
-  el `themeColor` de `app/layout.tsx` y el favicon `app/icon.svg`).
+  el `themeColor` de `app/layout.tsx` y el favicon `app/icon.svg`) y sobre que
+  el logotipo siga donde `LOGO` dice, con su lienzo y en negativo.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
 ## Pendiente / próximos pasos
 
-1. Logotipo real en el reverso (tarea creada).
+1. Logotipo positivo en la marca de agua del anverso (tarea creada).
 2. Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
    se ve previsualización.
 3. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la

@@ -1,12 +1,13 @@
 import * as THREE from "three";
-import { BRAND, CARD } from "@/lib/brand";
+import { BRAND, CARD, LOGO } from "@/lib/brand";
 import type { Contact } from "@/lib/contact";
 
 /**
  * Las dos caras de la tarjeta se dibujan en un canvas 2D en tiempo de
  * ejecución en lugar de cargarse como imágenes: así el contenido sale de
- * `lib/contact.ts` (una sola fuente de verdad), no hay assets que
- * mantener sincronizados y no se descarga nada de la red.
+ * `lib/contact.ts` (una sola fuente de verdad) y no hay que mantener
+ * sincronizada ninguna imagen del texto. La única excepción es el logotipo
+ * del reverso, que es el fichero oficial de la marca y no se redibuja.
  */
 
 /** Resolución de la cara larga. 2048 mantiene el texto nítido en pantallas HiDPI. */
@@ -70,6 +71,26 @@ function drawField(ctx: Ctx, y: number, label: string, value: string) {
   ctx.fillText(value, PAD, y + 58);
 }
 
+/**
+ * Dibuja el logotipo centrado en `cx`, con la altura que le toca por su
+ * proporción. Es un SVG que se carga como imagen, así que el dibujo llega
+ * después: quien llame debe refrescar la textura cuando la promesa resuelva.
+ */
+function drawLogo(ctx: Ctx, cx: number, top: number, width: number): Promise<void> {
+  const height = (width * LOGO.height) / LOGO.width;
+  return new Promise((resolve, reject) => {
+    // Las medidas van en el constructor para que el SVG rasterice al tamaño
+    // final y no al de su lienzo, que es mucho más pequeño.
+    const image = new Image(width, height);
+    image.onload = () => {
+      ctx.drawImage(image, cx - width / 2, top, width, height);
+      resolve();
+    };
+    image.onerror = () => reject(new Error(`No se pudo cargar ${LOGO.src}`));
+    image.src = LOGO.src;
+  });
+}
+
 /** Monograma de agua que equilibra el peso visual del texto a la izquierda. */
 function drawWatermark(ctx: Ctx) {
   ctx.save();
@@ -118,8 +139,8 @@ export function createFrontTexture(contact: Contact): THREE.CanvasTexture {
 }
 
 /**
- * Reverso. El monograma es PROVISIONAL: sustituir por el logotipo real de
- * 1to1 Digital Solutions cuando esté disponible (ver `ESTADO.md`).
+ * Reverso: el logotipo de la marca y la web. El nombre de la empresa no se
+ * repite debajo porque el propio logotipo ya lo dice.
  */
 export function createBackTexture(contact: Contact): THREE.CanvasTexture {
   const { canvas, ctx } = createFaceCanvas(BRAND.cardBack);
@@ -127,30 +148,24 @@ export function createBackTexture(contact: Contact): THREE.CanvasTexture {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  const size = 300;
-  const top = 395;
-  ctx.strokeStyle = BRAND.accent;
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.roundRect(cx - size / 2, top, size, size, 36);
-  ctx.stroke();
-
-  ctx.fillStyle = BRAND.inkInverse;
-  ctx.font = font(124, 600);
-  setTracking(ctx, -2);
-  ctx.fillText("1:1", cx, top + size / 2);
-
-  ctx.font = font(46, 600);
-  setTracking(ctx, 12);
-  ctx.fillText(contact.company.toUpperCase(), cx, 815);
-
   ctx.fillStyle = BRAND.inkInverseMuted;
   ctx.font = font(34, 400);
   setTracking(ctx, 4);
-  ctx.fillText(contact.website, cx, 905);
+  ctx.fillText(contact.website, cx, 945);
 
   ctx.fillStyle = BRAND.accent;
   ctx.fillRect(cx - 60, H - 90, 120, 4);
 
-  return toTexture(canvas);
+  const texture = toTexture(canvas);
+  // La cara sube a la GPU sin el logotipo y se refresca cuando la imagen está
+  // decodificada; si no llega, el reverso se queda sin él pero legible.
+  drawLogo(ctx, cx, 370, 820)
+    .then(() => {
+      texture.needsUpdate = true;
+    })
+    .catch((error: Error) => {
+      console.error("El reverso de la tarjeta se queda sin logotipo:", error);
+    });
+
+  return texture;
 }

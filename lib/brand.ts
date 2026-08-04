@@ -43,6 +43,18 @@ export const BRAND = {
   accentInkInverse: "#1ac89a",
 } as const;
 
+/**
+ * Logotipo oficial en negativo (trazo blanco), el que va sobre las superficies
+ * oscuras. El fichero es el mismo que usa la web de la marca; las medidas son
+ * las de su lienzo y sirven para escalarlo sin deformarlo (`brand.test.ts`
+ * comprueba que siguen siendo las del SVG).
+ */
+export const LOGO = {
+  src: "/logo-negative.svg",
+  width: 246,
+  height: 133,
+} as const;
+
 /** Proporciones físicas de una tarjeta de visita estándar (85 × 55 mm). */
 export const CARD = {
   width: 3.2,

@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { BRAND } from "./brand";
+import { BRAND, LOGO } from "./brand";
 
 /**
  * Los tokens de marca solo valen si el texto se lee encima de su fondo. Aquí
@@ -60,7 +60,6 @@ const TEXT: Array<[string, string, string]> = [
   [BRAND.ink, BRAND.cardFront, "nombre y datos del anverso"],
   [BRAND.inkMuted, BRAND.cardFront, "etiquetas del anverso"],
   [BRAND.accentInk, BRAND.cardFront, "empresa en el anverso"],
-  [BRAND.inkInverse, BRAND.cardBack, "monograma y empresa del reverso"],
   [BRAND.inkInverseMuted, BRAND.cardBack, "web en el reverso"],
   [BRAND.inkInverse, BRAND.backdrop, "titular y enlaces del panel"],
   [BRAND.inkInverseMuted, BRAND.backdrop, "etiquetas del panel y avisos"],
@@ -77,7 +76,7 @@ const TEXT: Array<[string, string, string]> = [
 /** Elementos que informan por su forma, no por su texto. */
 const GRAPHICS: Array<[string, string, string]> = [
   [BRAND.accent, BRAND.cardFront, "filete de marca del anverso"],
-  [BRAND.accent, BRAND.cardBack, "marco del monograma y remate del reverso"],
+  [BRAND.accent, BRAND.cardBack, "remate del reverso e isotipo del favicon"],
   [BRAND.cardEdge, BRAND.backdrop, "canto de la tarjeta contra el fondo"],
   [BRAND.accentInkInverse, BACKDROP_LIT, "foco del teclado sobre la escena"],
 ];
@@ -157,10 +156,45 @@ describe("colores copiados a mano fuera de la paleta", () => {
     expect(declared).toBe(BRAND.backdrop);
   });
 
-  it("el favicon es la tarjeta en miniatura: reverso, acento y texto claro", () => {
+  it("el favicon es el isotipo de marca sobre el reverso de la tarjeta", () => {
     const used = [...new Set(hexesIn(source("../app/icon.svg")))].sort();
-    expect(used).toEqual(
-      [BRAND.cardBack, BRAND.accent, BRAND.inkInverse].sort(),
-    );
+    expect(used).toEqual([BRAND.cardBack, BRAND.accent].sort());
+  });
+});
+
+/**
+ * El logotipo es el único dibujo que no se genera: es el fichero oficial de la
+ * marca, copiado del sitio web. Aquí se comprueba que sigue donde `LOGO` dice,
+ * que se escala con las medidas de su propio lienzo (si no, sale deformado en
+ * la textura del reverso) y que es la versión en negativo, que es la que se lee
+ * sobre el reverso oscuro.
+ */
+describe("logotipo de marca", () => {
+  const file = new URL(`../public${LOGO.src}`, import.meta.url);
+  /** El SVG oficial nombra el blanco en vez de escribir su hex. */
+  const NAMED: Record<string, string> = { white: "#ffffff", black: "#000000" };
+
+  it("está en `public/`, en la ruta que apunta `LOGO`", () => {
+    expect(existsSync(file)).toBe(true);
+  });
+
+  it("tiene el lienzo con el que se escala", () => {
+    const svg = readFileSync(file, "utf8");
+    expect(svg).toContain(`width="${LOGO.width}"`);
+    expect(svg).toContain(`height="${LOGO.height}"`);
+  });
+
+  it("va en negativo: sus trazos se leen sobre el reverso", () => {
+    const svg = readFileSync(file, "utf8");
+    const fills = [...svg.matchAll(/fill="([^"]+)"/g)]
+      .map(([, value]) => value.toLowerCase())
+      .filter((value) => value !== "none");
+
+    expect(fills.length).toBeGreaterThan(0);
+    for (const fill of new Set(fills)) {
+      expect(contrast(NAMED[fill] ?? fill, BRAND.cardBack)).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
   });
 });
