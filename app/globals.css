@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/*
+  Tokens de marca. PROVISIONALES: los valores deben coincidir con los de
+  `lib/brand.ts` (three.js no puede leer variables CSS, así que la paleta
+  vive en los dos sitios). Al recibir los colores oficiales de
+  1to1 Digital Solutions, se cambian aquí y allí, y nada más.
+*/
+@theme {
+  --color-backdrop: #0b1120;
+  --color-card-front: #f7f5f0;
+  --color-card-back: #111c33;
+  --color-ink: #111c33;
+  --color-ink-muted: #5b6478;
+  --color-ink-inverse: #f7f5f0;
+  --color-ink-inverse-muted: #94a0ba;
+  --color-accent: #d9a441;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+}
+
+@layer components {
+  /* Claro difuso tras la tarjeta: la separa del fondo sin fingir una pared
+     con una sombra proyectada. */
+  .card-halo {
+    background: radial-gradient(
+      32rem 24rem at 50% 46%,
+      color-mix(in srgb, white 9%, transparent),
+      transparent 68%
+    );
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background:
+      radial-gradient(
+        70rem 50rem at 20% -10%,
+        color-mix(in srgb, var(--color-accent) 12%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        60rem 40rem at 110% 20%,
+        color-mix(in srgb, #4c6ef5 18%, transparent),
+        transparent 55%
+      ),
+      var(--color-backdrop);
+    background-attachment: fixed;
+    color: var(--color-ink-inverse);
+    font-family: var(--font-sans);
+    /* El arrastre de la tarjeta no debe arrastrar la página con él. */
+    overscroll-behavior: none;
+  }
+}
