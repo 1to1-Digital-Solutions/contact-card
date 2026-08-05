@@ -36,11 +36,12 @@ arquitectura en `README.md`.
   en `lib/brand.ts`, `@theme`, favicon y `themeColor`.
 - Logotipo real en el reverso (3D y versión plana) y el isotipo en el favicon,
   con los ficheros oficiales copiados del repo `landing`.
-- 68 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
+- 69 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
   sobre el contraste de la paleta, sobre que `lib/brand.ts` no se
   desincronice de sus tres copias a mano (el `@theme` de `app/globals.css`,
-  el `themeColor` de `app/layout.tsx` y el favicon `app/icon.svg`) y sobre que
-  el logotipo siga donde `LOGO` dice, con su lienzo y en negativo.
+  el `themeColor` de `app/layout.tsx` y el favicon `app/icon.svg`, este
+  también en el encaje del isotipo) y sobre que el logotipo siga donde `LOGO`
+  dice, con su lienzo y en negativo.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
