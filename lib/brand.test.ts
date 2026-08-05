@@ -160,6 +160,36 @@ describe("colores copiados a mano fuera de la paleta", () => {
     const used = [...new Set(hexesIn(source("../app/icon.svg")))].sort();
     expect(used).toEqual([BRAND.cardBack, BRAND.accent].sort());
   });
+
+  /**
+   * El isotipo del favicon es el oficial, pero su lienzo no es el del icono:
+   * viene en un `viewBox` de 56 a 244 y se mete en el de 64 con una escala y
+   * un desplazamiento calculados a mano. Si se toca uno de los dos números,
+   * el isotipo deja de estar centrado sin que se note en un favicon de 16px,
+   * así que aquí se rehace la cuenta.
+   */
+  it("encaja el isotipo centrado dentro del lienzo del favicon", () => {
+    const svg = source("../app/icon.svg");
+    /** `viewBox` del isotipo oficial (`landing/app/icon.svg`). */
+    const ISOTYPE = { origin: 56, size: 188 };
+    const BOX = 64;
+
+    const scale = Number(svg.match(/scale\(([\d.]+)\)/)?.[1]);
+    const offset = svg
+      .match(/translate\((-?[\d.]+)[\s,]+(-?[\d.]+)\)/)
+      ?.slice(1, 3)
+      .map(Number);
+
+    expect(scale).toBeGreaterThan(0);
+    expect(offset).toHaveLength(2);
+
+    const drawn = ISOTYPE.size * scale;
+    const margin = (BOX - drawn) / 2;
+    expect(margin).toBeGreaterThan(0);
+    for (const axis of offset!) {
+      expect(ISOTYPE.origin * scale + axis).toBeCloseTo(margin, 1);
+    }
+  });
 });
 
 /**
