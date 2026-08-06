@@ -32,17 +32,26 @@ arquitectura en `README.md`.
   arrastrar, girar, voltear, recolocar, descarga de vCard, respaldo 2D sin
   WebGL, metadatos, `robots.txt`, sitemap y JSON-LD.
 - Colores oficiales de marca aplicados (verde `#1f957a` y neutros antracita)
-  en `lib/brand.ts`, `@theme`, favicon y `themeColor`.
+  en `lib/brand.ts`, en los tokens de `app/globals.css` y en el favicon.
 - Logotipo real en el reverso (3D y versión plana) y el isotipo en el favicon,
   con los ficheros oficiales copiados del repo `landing`.
-- El anverso ya no lleva el monograma provisional «1:1»: la marca de agua es
-  el isotipo oficial (`public/isotype.svg`) al 7%.
-- 73 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
-  sobre el contraste de la paleta, sobre que `lib/brand.ts` no se
-  desincronice de sus tres copias a mano (el `@theme` de `app/globals.css`,
-  el `themeColor` de `app/layout.tsx` y el favicon `app/icon.svg`, este
-  también en el encaje del isotipo) y sobre que los dibujos de marca sigan
-  donde `LOGO` dice, con su lienzo y con el trazo que se lee sobre su cara.
+- Dos temas, oscuro (el de partida) y claro, con un botón en la cabecera. El
+  tema vive en la clase de `<html>`, lo fija un script en línea antes de
+  pintar (`lib/theme.ts`) y se recuerda en el navegador; de él dependen la
+  página, las dos caras de la tarjeta —del mismo color— y el `theme-color`.
+- Papel mate y granulado en lugar de brillante: el ruido hace de mapa de
+  relieve del material en 3D y de textura (`.paper-grain`) en la versión plana.
+- El reverso lleva el logotipo en verde de marca (`logo-brand.svg`) y el
+  anverso, de marca de agua, el positivo o el negativo según el tema.
+- En pantalla estrecha la tarjeta ocupa toda la pantalla, sin scroll, y los
+  datos salen en una hoja (`<dialog>`) desde el botón «Ver los datos», con un
+  botón de copiar por dato.
+- 107 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+  elección de tema), sobre el contraste de la paleta en los dos temas, sobre
+  que `lib/brand.ts` no se desincronice de los tokens de `app/globals.css` ni
+  del favicon `app/icon.svg` (este también en el encaje del isotipo) y sobre
+  que los dibujos de marca sigan donde `LOGO` dice, con su lienzo y con la
+  tinta que se lee sobre su cara.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 

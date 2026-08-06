@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CONTACT } from "@/lib/contact";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
@@ -29,6 +29,9 @@ export function ContactCardExperience() {
 
   const flip = () => setFlipCount((value) => value + 1);
   const reset = () => setResetCount((value) => value + 1);
+  const openSheet = () => setSheetOpen(true);
+  // Estable: de él cuelga la suscripción al ancho de pantalla de la hoja.
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   return (
     // La pantalla completa y sin scroll: la tarjeta es el contenido, no un
@@ -90,46 +93,55 @@ export function ContactCardExperience() {
           <ThemeToggle theme={theme} onToggle={toggle} className="pointer-events-auto" />
         </header>
 
-        {status === "ready" && (
-          <div className="relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
-            <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {/* Voltear y recolocar solo existen con la escena: la tarjeta
+                plana se gira pulsándola. */}
+            {status === "ready" && (
               <div className="hidden flex-wrap gap-3 lg:flex">
                 <CardControls showingBack={showingBack} onFlip={flip} onReset={reset} />
               </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => setSheetOpen(true)}
-                className={`${CONTROL_CLASSES} lg:hidden`}
+            {/* La puerta a los datos no depende de la escena: en pantalla
+                estrecha el panel lateral está oculto, así que este botón es
+                la única forma de llegar a ellos, también sin WebGL. */}
+            <button
+              type="button"
+              onClick={openSheet}
+              className={`${CONTROL_CLASSES} lg:hidden`}
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="size-4"
               >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="size-4"
-                >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 11v5M12 7.6v.4" />
-                </svg>
-                Ver los datos
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-ink-muted lg:text-left">
-              Arrastra la tarjeta para moverla y el fondo para girarla.
-            </p>
-
-            <p role="status" className="sr-only">
-              {showingBack
-                ? "La tarjeta muestra el reverso."
-                : "La tarjeta muestra el anverso."}
-            </p>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 11v5M12 7.6v.4" />
+              </svg>
+              Ver los datos
+            </button>
           </div>
-        )}
+
+          {status === "ready" && (
+            <>
+              <p className="text-center text-sm text-ink-muted lg:text-left">
+                Arrastra la tarjeta para moverla y el fondo para girarla.
+              </p>
+
+              <p role="status" className="sr-only">
+                {showingBack
+                  ? "La tarjeta muestra el reverso."
+                  : "La tarjeta muestra el anverso."}
+              </p>
+            </>
+          )}
+        </div>
       </section>
 
       <aside
@@ -139,11 +151,7 @@ export function ContactCardExperience() {
         <ContactPanel />
       </aside>
 
-      <ContactSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        title={SHEET_TITLE}
-      >
+      <ContactSheet open={sheetOpen} onClose={closeSheet} title={SHEET_TITLE}>
         {status === "ready" && (
           <div className="flex flex-wrap gap-3">
             <CardControls showingBack={showingBack} onFlip={flip} onReset={reset} />

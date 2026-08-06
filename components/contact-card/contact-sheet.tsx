@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
+
+/** El ancho a partir del cual manda el panel fijo: el `lg:` de las clases. */
+const WIDE = "(min-width: 64rem)";
 
 /**
  * Hoja de datos para pantallas estrechas, donde la tarjeta se queda con toda
@@ -28,15 +31,52 @@ export function ContactSheet({
     if (!open && element.open) element.close();
   }, [open]);
 
+  /**
+   * Al ensanchar la pantalla —girar una tableta, redimensionar la ventana— la
+   * hoja desaparece por CSS (`lg:hidden`), pero seguiría abierta y modal: el
+   * resto de la página quedaría inerte sin nada visible que cerrar. Se cierra
+   * sola en cuanto manda el panel fijo, que ya enseña los mismos datos.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const wide = window.matchMedia(WIDE);
+    if (wide.matches) {
+      onClose();
+      return;
+    }
+    const onWiden = (event: MediaQueryListEvent) => {
+      if (event.matches) onClose();
+    };
+    wide.addEventListener("change", onWiden);
+    return () => wide.removeEventListener("change", onWiden);
+  }, [open, onClose]);
+
+  /**
+   * El clic sobre el fondo llega al propio `<dialog>`, pero también el que cae
+   * en su relleno: sin comprobar dónde ha caído, tocar el borde de la hoja la
+   * cerraría (y en una hoja anclada abajo ese borde es justo donde va el dedo).
+   */
+  const closeIfOutside = useCallback(
+    (event: React.MouseEvent<HTMLDialogElement>) => {
+      const element = dialog.current;
+      if (!element || event.target !== element) return;
+      const box = element.getBoundingClientRect();
+      const inside =
+        event.clientX >= box.left &&
+        event.clientX <= box.right &&
+        event.clientY >= box.top &&
+        event.clientY <= box.bottom;
+      if (!inside) onClose();
+    },
+    [onClose],
+  );
+
   return (
     <dialog
       ref={dialog}
       aria-label={title}
       onClose={onClose}
-      // El clic sobre el fondo llega al propio diálogo: solo entonces cierra.
-      onClick={(event) => {
-        if (event.target === dialog.current) onClose();
-      }}
+      onClick={closeIfOutside}
       className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 lg:hidden"
     >
       <div className="mx-auto flex max-w-md flex-col gap-6">

@@ -190,21 +190,19 @@ describe("paleta duplicada en app/globals.css", () => {
 });
 
 /**
- * Los dos sitios que no pueden leer ni `THEMES` ni el CSS: los metadatos de
- * Next (`themeColor` sí sale de `THEMES`, pero conviene comprobar que están
- * los dos temas) y el favicon, que es un SVG estático con los colores
- * copiados a mano.
+ * Los dos sitios que no leen el CSS: los metadatos de Next y el favicon. El
+ * `themeColor` ya sale de la paleta (`CHROME_COLOR`), así que aquí solo se
+ * vigila que nadie vuelva a escribirlo a mano; el favicon, en cambio, es un
+ * SVG estático y sus colores sí van copiados.
  */
 describe("colores fuera del CSS", () => {
   const hexesIn = (text: string) =>
     [...text.matchAll(/#[0-9a-f]{6}\b/gi)].map(([hex]) => hex.toLowerCase());
 
-  it("declara un `themeColor` por tema", () => {
+  it("saca el `themeColor` de la paleta y no de un color escrito a mano", () => {
     const layout = source("../app/layout.tsx");
-    expect(layout).toContain("(prefers-color-scheme: light)");
-    expect(layout).toContain("THEMES.light.backdrop");
-    expect(layout).toContain("(prefers-color-scheme: dark)");
-    expect(layout).toContain("THEMES.dark.backdrop");
+    expect(layout).toContain("themeColor: CHROME_COLOR[DEFAULT_THEME]");
+    expect(hexesIn(layout)).toEqual([]);
   });
 
   it("el favicon es el isotipo de marca sobre la tarjeta oscura", () => {

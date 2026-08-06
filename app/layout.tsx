@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { THEMES } from "@/lib/brand";
 import { CONTACT } from "@/lib/contact";
 import { SITE_URL } from "@/lib/site";
-import { DEFAULT_THEME, THEME_SCRIPT } from "@/lib/theme";
+import { CHROME_COLOR, DEFAULT_THEME, THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const DESCRIPTION = `Tarjeta de contacto interactiva de ${CONTACT.name}, de ${CONTACT.company}: arrástrala, gírala y guarda los datos en tu agenda.`;
@@ -23,13 +22,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // El fondo de la página en cada tema. Los metadatos no leen el CSS, así que
-  // el navegador se guía por la preferencia del sistema: es lo único que
-  // conoce antes de que corra el script del tema.
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: THEMES.light.backdrop },
-    { media: "(prefers-color-scheme: dark)", color: THEMES.dark.backdrop },
-  ],
+  // El fondo de la página. No se declara por `prefers-color-scheme` porque el
+  // tema no lo elige el sistema, sino el botón: sale con el de partida y el
+  // script lo corrige con el que se recordó, antes de pintar.
+  themeColor: CHROME_COLOR[DEFAULT_THEME],
 };
 
 export default function RootLayout({

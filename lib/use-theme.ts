@@ -1,21 +1,16 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import type { ThemeName } from "@/lib/brand";
-import {
-  applyTheme,
-  DEFAULT_THEME,
-  readTheme,
-  THEME_STORAGE_KEY,
-} from "@/lib/theme";
+import type { ThemeName } from "./brand";
+import { applyTheme, DEFAULT_THEME, readTheme, THEME_STORAGE_KEY } from "./theme";
 
 /** Quién quiere enterarse de que el tema ha cambiado. */
-const oyentes = new Set<() => void>();
+const listeners = new Set<() => void>();
 
-function suscribir(avisar: () => void): () => void {
-  oyentes.add(avisar);
+function subscribe(onChange: () => void): () => void {
+  listeners.add(onChange);
   return () => {
-    oyentes.delete(avisar);
+    listeners.delete(onChange);
   };
 }
 
@@ -30,7 +25,7 @@ function suscribir(avisar: () => void): () => void {
  */
 export function useTheme(): { theme: ThemeName; toggle: () => void } {
   const theme = useSyncExternalStore(
-    suscribir,
+    subscribe,
     readTheme,
     // En el servidor no hay documento: el HTML se pinta con el tema de partida.
     () => DEFAULT_THEME,
@@ -45,7 +40,7 @@ export function useTheme(): { theme: ThemeName; toggle: () => void } {
       // El tema cambia igual; lo único que se pierde es recordarlo.
       console.warn("No se ha podido recordar el tema elegido:", error);
     }
-    for (const avisar of oyentes) avisar();
+    for (const onChange of listeners) onChange();
   }, []);
 
   return { theme, toggle };

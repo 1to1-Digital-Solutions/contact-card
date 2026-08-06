@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_THEME, parseTheme, THEME_SCRIPT, THEME_STORAGE_KEY } from "./theme";
+import { THEMES } from "./brand";
+import {
+  CHROME_COLOR,
+  DEFAULT_THEME,
+  parseTheme,
+  THEME_SCRIPT,
+  THEME_STORAGE_KEY,
+} from "./theme";
 
 describe("elección de tema", () => {
   it("respeta los dos temas que existen", () => {
@@ -16,8 +23,13 @@ describe("elección de tema", () => {
 });
 
 /** Documento y almacenamiento de mentira: lo justo para correr el script. */
-function runThemeScript(stored: string | null | { broken: true }) {
+function runThemeScript(
+  stored: string | null | { broken: true },
+  { withMeta = true } = {},
+) {
   const classes = new Set<string>([DEFAULT_THEME]);
+  // Sale con el color del tema de partida, que es lo que emite `app/layout.tsx`.
+  const meta = { content: CHROME_COLOR[DEFAULT_THEME] };
   const document = {
     documentElement: {
       classList: {
@@ -25,6 +37,7 @@ function runThemeScript(stored: string | null | { broken: true }) {
         remove: (...names: string[]) => names.forEach((name) => classes.delete(name)),
       },
     },
+    querySelector: () => (withMeta ? meta : null),
   };
   const localStorage = {
     getItem(key: string) {
@@ -34,8 +47,13 @@ function runThemeScript(stored: string | null | { broken: true }) {
   };
 
   new Function("document", "localStorage", THEME_SCRIPT)(document, localStorage);
-  return classes;
+  return { classes, meta };
 }
+
+/** Solo las clases, que es lo que mira la mayoría de las comprobaciones. */
+const classesAfter = (stored: string | null | { broken: true }) => [
+  ...runThemeScript(stored).classes,
+];
 
 /**
  * El script en línea es lo que evita ver la página un instante con el tema
@@ -44,22 +62,37 @@ function runThemeScript(stored: string | null | { broken: true }) {
  */
 describe("script que fija el tema antes de pintar", () => {
   it("pone el tema que se recordó", () => {
-    expect([...runThemeScript("light")]).toEqual(["light"]);
-    expect([...runThemeScript("dark")]).toEqual(["dark"]);
+    expect(classesAfter("light")).toEqual(["light"]);
+    expect(classesAfter("dark")).toEqual(["dark"]);
   });
 
   it("deja el de partida si no hay nada guardado", () => {
-    expect([...runThemeScript(null)]).toEqual([DEFAULT_THEME]);
+    expect(classesAfter(null)).toEqual([DEFAULT_THEME]);
   });
 
   it("deja el de partida si el almacenamiento está bloqueado", () => {
-    expect([...runThemeScript({ broken: true })]).toEqual([DEFAULT_THEME]);
+    expect(classesAfter({ broken: true })).toEqual([DEFAULT_THEME]);
   });
 
   it("nunca deja los dos temas puestos a la vez", () => {
     for (const stored of ["light", "dark", null] as const) {
-      const classes = runThemeScript(stored);
-      expect(classes.size).toBe(1);
+      expect(classesAfter(stored)).toHaveLength(1);
     }
+  });
+
+  /**
+   * El marco del navegador (la barra de direcciones en el móvil) sale con el
+   * color del tema de partida porque los metadatos de Next son estáticos: si
+   * el script no lo corrigiera, al volver con el tema claro recordado la barra
+   * se vería oscura sobre una página clara.
+   */
+  it("deja el `theme-color` del tema que acaba de poner", () => {
+    expect(runThemeScript("light").meta.content).toBe(THEMES.light.backdrop);
+    expect(runThemeScript("dark").meta.content).toBe(THEMES.dark.backdrop);
+    expect(runThemeScript(null).meta.content).toBe(THEMES[DEFAULT_THEME].backdrop);
+  });
+
+  it("no revienta si el `<meta>` todavía no está en el documento", () => {
+    expect(() => runThemeScript("light", { withMeta: false })).not.toThrow();
   });
 });
