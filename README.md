@@ -43,10 +43,15 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
 
 - **Las caras de la tarjeta se dibujan en un canvas 2D** en tiempo de
   ejecución (`card-textures.ts`), no son imágenes. Cambiar un dato o un
-  color no obliga a reexportar ningún asset. La excepción es el logotipo del
-  reverso, que es el SVG oficial de la marca (`public/logo-negative.svg`):
-  como hay que esperar a que cargue, la cara se dibuja sin él y se refresca
-  en cuanto está.
+  color no obliga a reexportar ningún asset. La excepción son los logotipos,
+  que son los SVG oficiales de la marca (`public/logo-brand.svg` en el
+  reverso; el positivo o el negativo de marca de agua en el anverso): como hay
+  que esperar a que carguen, la cara se dibuja sin ellos y se refresca en
+  cuanto están.
+- **Dos temas, y los elige el botón, no el sistema**: el tema vive en la clase
+  de `<html>` y un script en línea lo fija antes del primer pintado
+  (`lib/theme.ts`). De él dependen la página y el color de las dos caras de la
+  tarjeta, que van iguales.
 - **Sin fuentes remotas**: se usa la pila tipográfica del sistema, tanto en
   la interfaz como dentro de la tarjeta, para que ambas coincidan y no haya
   descargas.
@@ -67,9 +72,15 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
 | Arrastrar el fondo             | Girarla; al soltar, encaja     |
 | Doble clic en la tarjeta       | Darle la vuelta                |
 | Botones «Ver el reverso» y «Recolocar» | Lo mismo, con teclado  |
+| Botón de la cabecera           | Cambiar entre tema claro y oscuro |
+| «Ver los datos» (móvil)        | Abre la hoja con los datos, copiar y guardar |
+
+En pantalla estrecha la tarjeta ocupa toda la pantalla y no hay scroll: los
+datos viven en esa hoja. A partir de `lg` están siempre a la vista en el panel
+lateral.
 
 ## Pendiente
 
-- Logotipo en la marca de agua del anverso (ahí queda el monograma provisional).
+- Imagen de Open Graph: al compartir el enlace no se ve previsualización.
 
 Ver `ESTADO.md` para el detalle del estado y el siguiente paso.

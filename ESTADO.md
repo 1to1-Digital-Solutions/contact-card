@@ -65,32 +65,33 @@ arquitectura en `README.md`.
 ## Caveats y notas
 
 - La paleta de marca está duplicada a propósito en `lib/brand.ts` (para
-  three.js) y en `@theme` de `app/globals.css` (para Tailwind). Si se cambia
-  una, hay que cambiar la otra: `lib/brand.test.ts` compara las dos listas y
-  falla si dejan de coincidir, y comprueba que cada par de texto y fondo
-  llega a WCAG AA. Fuera de esas dos listas hay dos colores más escritos a
-  mano —el `themeColor` de `app/layout.tsx` y los del favicon
-  `app/icon.svg`—, porque ni los metadatos de Next ni un SVG estático pueden
-  leer `BRAND`; el mismo test los ata a la paleta.
-- La marca de agua del anverso es el isotipo y no el logotipo completo: se
-  probaron los dos en el navegador y el completo, al 7%, deja el subtítulo
-  «< Digital Solutions >» como una mancha y repite el nombre de la empresa
-  que ya está escrito arriba. Por eso `logo-positive.svg` no está copiado en
-  `public/`: no lo usaría nadie (está en el repo `landing` si hace falta).
-- El texto secundario claro (`inkInverseMuted`) no se mide contra `backdrop`
-  a secas: las veladuras y el halo aclaran el fondo hasta `#364946` en el
-  centro de la escena, que es justo donde se lee «Cargando la tarjeta…». Ese
-  es el caso que fija el token, y está en el test.
-- El acento vivo (`#1f957a`) no llega a AA como texto ni sobre el anverso
-  claro ni sobre el fondo oscuro: para texto están `accentInk` (sobre claro) y
-  `accentInkInverse` (sobre oscuro).
+  three.js) y en `app/globals.css` (para Tailwind). Si se cambia una, hay que
+  cambiar la otra: `lib/brand.test.ts` compara las dos listas y falla si dejan
+  de coincidir, y comprueba que cada par de texto y fondo llega a WCAG AA en
+  los dos temas. Los únicos colores escritos a mano fuera de ahí son los del
+  favicon `app/icon.svg`, que es un SVG estático; el mismo test los ata a la
+  paleta.
+- El `theme-color` de la pestaña no se declara por `prefers-color-scheme`: el
+  tema lo elige el botón, no el sistema. Los metadatos salen con el color del
+  tema de partida y lo corrigen el script en línea (al cargar) y `applyTheme`
+  (al pulsar el botón).
+- El texto secundario (`inkMuted`) no se mide contra `backdrop` a secas: la
+  veladura y el halo mueven el fondo justo donde se lee «Cargando la
+  tarjeta…». Ese es el caso que fija el token, y el test lee las opacidades
+  del propio CSS para rehacer la cuenta.
+- El acento vivo (`#1f957a`) no llega a AA como texto sobre ninguna de las dos
+  caras: para texto está `accentInk`, que cambia con el tema (primary-200
+  sobre oscuro, primary-500 sobre claro).
 - La escena no usa tone mapping para que los colores salgan fieles; por eso
   las intensidades de luz parecen altas (la reflexión difusa divide por π).
   Están medidas para dejar el anverso justo por debajo del punto de quemado:
   si se tocan, hay que volver a medirlo (captura de la escena y porcentaje de
   píxeles a 255 en una zona lisa de la tarjeta).
-- El fondo y el reverso son casi del mismo tono: en 3D los separa el canto
-  claro y en la versión plana, un filete claro en el reverso.
+- La tarjeta y el fondo son casi del mismo tono en los dos temas, y el canto
+  va a un paso del color de la cara (si se separa más, las esquinas
+  redondeadas vuelven a verse encendidas, que era la queja). Lo que separa la
+  tarjeta del fondo es el halo de `.card-halo` —claro sobre oscuro, sombra
+  sobre claro— más las luces de la escena.
 - `npm audit` reporta 3 vulnerabilidades altas heredadas de `next`
   (postcss y sharp internos). No hay arreglo sin bajar Next a la v9.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
