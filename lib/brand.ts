@@ -43,17 +43,28 @@ export const BRAND = {
   accentInkInverse: "#1ac89a",
 } as const;
 
+/** Un dibujo de marca: su fichero y el lienzo con el que se escala. */
+export type BrandArtwork = {
+  readonly src: string;
+  readonly width: number;
+  readonly height: number;
+};
+
 /**
- * Logotipo oficial en negativo (trazo blanco), el que va sobre las superficies
- * oscuras. El fichero es el mismo que usa la web de la marca; las medidas son
- * las de su lienzo y sirven para escalarlo sin deformarlo (`brand.test.ts`
- * comprueba que siguen siendo las del SVG).
+ * Dibujos oficiales de la marca, los únicos que no se generan aquí: los
+ * ficheros son los mismos que usa la web. Las medidas son las de su lienzo y
+ * sirven para escalarlos sin deformarlos (`brand.test.ts` comprueba que
+ * siguen siendo las del SVG).
+ *
+ * - `negative` es el logotipo completo con el trazo en blanco, para el reverso.
+ * - `isotype` es solo el símbolo, sin el texto de la marca, con el trazo en la
+ *   tinta: el que aguanta la opacidad de la marca de agua del anverso, donde
+ *   el subtítulo del logotipo completo se emborronaría.
  */
 export const LOGO = {
-  src: "/logo-negative.svg",
-  width: 246,
-  height: 133,
-} as const;
+  negative: { src: "/logo-negative.svg", width: 246, height: 133 },
+  isotype: { src: "/isotype.svg", width: 188, height: 188 },
+} as const satisfies Record<string, BrandArtwork>;
 
 /** Proporciones físicas de una tarjeta de visita estándar (85 × 55 mm). */
 export const CARD = {

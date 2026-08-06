@@ -7,9 +7,8 @@
 
 ## ⏭️ SIGUIENTE PASO (lo primero al volver)
 
-- Sustituir el monograma provisional «1:1» que queda en la marca de agua del
-  anverso por el logotipo positivo. Está fichado como tarea y localizado en
-  `components/contact-card/card-textures.ts` (`drawWatermark`).
+- Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
+  se ve previsualización.
 
 ## Qué es contact-card
 
@@ -36,21 +35,22 @@ arquitectura en `README.md`.
   en `lib/brand.ts`, `@theme`, favicon y `themeColor`.
 - Logotipo real en el reverso (3D y versión plana) y el isotipo en el favicon,
   con los ficheros oficiales copiados del repo `landing`.
-- 69 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
+- El anverso ya no lleva el monograma provisional «1:1»: la marca de agua es
+  el isotipo oficial (`public/isotype.svg`) al 7%.
+- 73 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio),
   sobre el contraste de la paleta, sobre que `lib/brand.ts` no se
   desincronice de sus tres copias a mano (el `@theme` de `app/globals.css`,
   el `themeColor` de `app/layout.tsx` y el favicon `app/icon.svg`, este
-  también en el encaje del isotipo) y sobre que el logotipo siga donde `LOGO`
-  dice, con su lienzo y en negativo.
+  también en el encaje del isotipo) y sobre que los dibujos de marca sigan
+  donde `LOGO` dice, con su lienzo y con el trazo que se lee sobre su cara.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
 ## Pendiente / próximos pasos
 
-1. Logotipo positivo en la marca de agua del anverso (tarea creada).
-2. Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
+1. Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
    se ve previsualización.
-3. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
+2. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
    tarjeta, hay que decidirlo.
 
 ## Caveats y notas
@@ -63,6 +63,11 @@ arquitectura en `README.md`.
   mano —el `themeColor` de `app/layout.tsx` y los del favicon
   `app/icon.svg`—, porque ni los metadatos de Next ni un SVG estático pueden
   leer `BRAND`; el mismo test los ata a la paleta.
+- La marca de agua del anverso es el isotipo y no el logotipo completo: se
+  probaron los dos en el navegador y el completo, al 7%, deja el subtítulo
+  «< Digital Solutions >» como una mancha y repite el nombre de la empresa
+  que ya está escrito arriba. Por eso `logo-positive.svg` no está copiado en
+  `public/`: no lo usaría nadie (está en el repo `landing` si hace falta).
 - El texto secundario claro (`inkInverseMuted`) no se mide contra `backdrop`
   a secas: las veladuras y el halo aclaran el fondo hasta `#364946` en el
   centro de la escena, que es justo donde se lee «Cargando la tarjeta…». Ese

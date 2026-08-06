@@ -58,10 +58,10 @@ export function CardFallback({ note }: { note: string }) {
                   `aria-hidden` (los datos se leen en el panel), y sin
                   optimizar porque es un SVG: se sirve tal cual. */}
               <Image
-                src={LOGO.src}
+                src={LOGO.negative.src}
                 alt=""
-                width={LOGO.width}
-                height={LOGO.height}
+                width={LOGO.negative.width}
+                height={LOGO.negative.height}
                 unoptimized
                 className="h-auto w-2/5"
               />

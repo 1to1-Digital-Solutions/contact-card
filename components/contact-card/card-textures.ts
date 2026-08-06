@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { BRAND, CARD, LOGO } from "@/lib/brand";
+import { type BrandArtwork, BRAND, CARD, LOGO } from "@/lib/brand";
 import type { Contact } from "@/lib/contact";
 
 /**
@@ -71,44 +71,90 @@ function drawField(ctx: Ctx, y: number, label: string, value: string) {
   ctx.fillText(value, PAD, y + 58);
 }
 
+/** Altura que le toca a un dibujo de marca al pintarlo con ese ancho. */
+function heightOf(artwork: BrandArtwork, width: number) {
+  return (width * artwork.height) / artwork.width;
+}
+
 /**
- * Dibuja el logotipo centrado en `cx`, con la altura que le toca por su
+ * Dibuja un dibujo de marca centrado en `cx`, con la altura que le toca por su
  * proporción. Es un SVG que se carga como imagen, así que el dibujo llega
  * después: quien llame debe refrescar la textura cuando la promesa resuelva.
+ * `paint` envuelve al `drawImage` para lo que haya que ajustar del contexto
+ * (la opacidad de la marca de agua) en el momento en que se pinta de verdad.
  */
-function drawLogo(ctx: Ctx, cx: number, top: number, width: number): Promise<void> {
-  const height = (width * LOGO.height) / LOGO.width;
+function drawArtwork(
+  ctx: Ctx,
+  artwork: BrandArtwork,
+  { cx, top, width }: { cx: number; top: number; width: number },
+  paint?: (draw: () => void) => void,
+): Promise<void> {
+  const height = heightOf(artwork, width);
   return new Promise((resolve, reject) => {
     // Las medidas van en el constructor para que el SVG rasterice al tamaño
     // final y no al de su lienzo, que es mucho más pequeño.
     const image = new Image(width, height);
     image.onload = () => {
-      ctx.drawImage(image, cx - width / 2, top, width, height);
+      const draw = () => ctx.drawImage(image, cx - width / 2, top, width, height);
+      if (paint) paint(draw);
+      else draw();
       resolve();
     };
-    image.onerror = () => reject(new Error(`No se pudo cargar ${LOGO.src}`));
-    image.src = LOGO.src;
+    image.onerror = () => reject(new Error(`No se pudo cargar ${artwork.src}`));
+    image.src = artwork.src;
   });
 }
 
-/** Monograma de agua que equilibra el peso visual del texto a la izquierda. */
-function drawWatermark(ctx: Ctx) {
-  ctx.save();
-  ctx.globalAlpha = 0.07;
-  ctx.fillStyle = BRAND.ink;
-  ctx.font = font(380, 600);
-  ctx.textAlign = "right";
-  ctx.textBaseline = "alphabetic";
-  setTracking(ctx, -8);
-  ctx.fillText("1:1", W - PAD + 20, H - 120);
-  ctx.restore();
+/**
+ * Isotipo de agua que equilibra el peso visual del texto a la izquierda. Va el
+ * símbolo solo y no el logotipo completo: a esta opacidad el subtítulo del
+ * logotipo se emborrona, y el nombre de la empresa ya está escrito arriba.
+ */
+function drawWatermark(ctx: Ctx): Promise<void> {
+  const width = 420;
+  return drawArtwork(
+    ctx,
+    LOGO.isotype,
+    {
+      cx: W - PAD - width / 2,
+      top: H - PAD - heightOf(LOGO.isotype, width),
+      width,
+    },
+    (draw) => {
+      ctx.save();
+      ctx.globalAlpha = 0.07;
+      draw();
+      ctx.restore();
+    },
+  );
 }
 
+/**
+ * Sube la cara a la GPU ya y la refresca cuando el SVG que falta termine de
+ * decodificarse. Si no llega, la cara se queda sin ese dibujo pero legible.
+ */
+function refreshWhenDrawn(
+  texture: THREE.CanvasTexture,
+  drawn: Promise<void>,
+  whatIsMissing: string,
+) {
+  drawn
+    .then(() => {
+      texture.needsUpdate = true;
+    })
+    .catch((error: Error) => {
+      console.error(`${whatIsMissing}:`, error);
+    });
+}
+
+/**
+ * Anverso: los datos de contacto sobre el claro del papel. El isotipo de agua
+ * se pinta encima del resto por ser asíncrono, pero no tapa nada: cae en la
+ * esquina inferior derecha, fuera del bloque de texto.
+ */
 export function createFrontTexture(contact: Contact): THREE.CanvasTexture {
   const { canvas, ctx } = createFaceCanvas(BRAND.cardFront);
   ctx.textBaseline = "top";
-
-  drawWatermark(ctx);
 
   // Filete de marca en el canto izquierdo.
   ctx.fillStyle = BRAND.accent;
@@ -135,7 +181,14 @@ export function createFrontTexture(contact: Contact): THREE.CanvasTexture {
   drawField(ctx, first + 160, "Teléfono", contact.phone);
   drawField(ctx, first + 320, "Web", contact.website);
 
-  return toTexture(canvas);
+  const texture = toTexture(canvas);
+  refreshWhenDrawn(
+    texture,
+    drawWatermark(ctx),
+    "El anverso de la tarjeta se queda sin marca de agua",
+  );
+
+  return texture;
 }
 
 /**
@@ -157,15 +210,11 @@ export function createBackTexture(contact: Contact): THREE.CanvasTexture {
   ctx.fillRect(cx - 60, H - 90, 120, 4);
 
   const texture = toTexture(canvas);
-  // La cara sube a la GPU sin el logotipo y se refresca cuando la imagen está
-  // decodificada; si no llega, el reverso se queda sin él pero legible.
-  drawLogo(ctx, cx, 370, 820)
-    .then(() => {
-      texture.needsUpdate = true;
-    })
-    .catch((error: Error) => {
-      console.error("El reverso de la tarjeta se queda sin logotipo:", error);
-    });
+  refreshWhenDrawn(
+    texture,
+    drawArtwork(ctx, LOGO.negative, { cx, top: 370, width: 820 }),
+    "El reverso de la tarjeta se queda sin logotipo",
+  );
 
   return texture;
 }

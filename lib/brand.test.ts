@@ -163,15 +163,20 @@ describe("colores copiados a mano fuera de la paleta", () => {
 
   /**
    * El isotipo del favicon es el oficial, pero su lienzo no es el del icono:
-   * viene en un `viewBox` de 56 a 244 y se mete en el de 64 con una escala y
-   * un desplazamiento calculados a mano. Si se toca uno de los dos números,
-   * el isotipo deja de estar centrado sin que se note en un favicon de 16px,
-   * así que aquí se rehace la cuenta.
+   * viene en un `viewBox` que arranca en 56 y se mete en el de 64 con una
+   * escala y un desplazamiento calculados a mano. Si se toca uno de los dos
+   * números, el isotipo deja de estar centrado sin que se note en un favicon
+   * de 16px, así que aquí se rehace la cuenta.
    */
   it("encaja el isotipo centrado dentro del lienzo del favicon", () => {
     const svg = source("../app/icon.svg");
-    /** `viewBox` del isotipo oficial (`landing/app/icon.svg`). */
-    const ISOTYPE = { origin: 56, size: 188 };
+    /** El lienzo del isotipo, leído del fichero que lo guarda. */
+    const ISOTYPE = {
+      origin: Number(
+        source(`../public${LOGO.isotype.src}`).match(/viewBox="(-?[\d.]+)/)?.[1],
+      ),
+      size: LOGO.isotype.width,
+    };
     const BOX = 64;
 
     const scale = Number(svg.match(/scale\(([\d.]+)\)/)?.[1]);
@@ -193,38 +198,61 @@ describe("colores copiados a mano fuera de la paleta", () => {
 });
 
 /**
- * El logotipo es el único dibujo que no se genera: es el fichero oficial de la
- * marca, copiado del sitio web. Aquí se comprueba que sigue donde `LOGO` dice,
- * que se escala con las medidas de su propio lienzo (si no, sale deformado en
- * la textura del reverso) y que es la versión en negativo, que es la que se lee
- * sobre el reverso oscuro.
+ * Los dibujos de marca son los únicos que no se generan: son los ficheros
+ * oficiales, copiados del sitio web. Aquí se comprueba que siguen donde `LOGO`
+ * dice, que se escalan con las medidas de su propio lienzo (si no, salen
+ * deformados en la textura) y que cada versión tiene el trazo que se lee sobre
+ * la cara en la que se usa.
  */
-describe("logotipo de marca", () => {
-  const file = new URL(`../public${LOGO.src}`, import.meta.url);
-  /** El SVG oficial nombra el blanco en vez de escribir su hex. */
+describe("dibujos de marca", () => {
+  const artwork = (src: string) => new URL(`../public${src}`, import.meta.url);
+  const svgOf = (src: string) => readFileSync(artwork(src), "utf8");
+  /** Los SVG oficiales nombran el blanco y el negro en vez de escribir su hex. */
   const NAMED: Record<string, string> = { white: "#ffffff", black: "#000000" };
+  const fillsOf = (svg: string) =>
+    new Set(
+      [...svg.matchAll(/fill="([^"]+)"/g)]
+        .map(([, value]) => value.toLowerCase())
+        .filter((value) => value !== "none")
+        .map((value) => NAMED[value] ?? value),
+    );
 
-  it("está en `public/`, en la ruta que apunta `LOGO`", () => {
-    expect(existsSync(file)).toBe(true);
+  it.each(Object.entries(LOGO))("%s está en `public/`, donde apunta", (_, art) => {
+    expect(existsSync(artwork(art.src))).toBe(true);
   });
 
-  it("tiene el lienzo con el que se escala", () => {
-    const svg = readFileSync(file, "utf8");
-    expect(svg).toContain(`width="${LOGO.width}"`);
-    expect(svg).toContain(`height="${LOGO.height}"`);
-  });
+  it.each(Object.entries(LOGO))(
+    "%s tiene el lienzo con el que se escala",
+    (_, art) => {
+      const svg = svgOf(art.src);
+      expect(svg).toContain(`width="${art.width}"`);
+      expect(svg).toContain(`height="${art.height}"`);
+    },
+  );
 
-  it("va en negativo: sus trazos se leen sobre el reverso", () => {
-    const svg = readFileSync(file, "utf8");
-    const fills = [...svg.matchAll(/fill="([^"]+)"/g)]
-      .map(([, value]) => value.toLowerCase())
-      .filter((value) => value !== "none");
-
-    expect(fills.length).toBeGreaterThan(0);
-    for (const fill of new Set(fills)) {
-      expect(contrast(NAMED[fill] ?? fill, BRAND.cardBack)).toBeGreaterThanOrEqual(
-        4.5,
-      );
+  it("el logotipo en negativo se lee sobre el reverso", () => {
+    const fills = fillsOf(svgOf(LOGO.negative.src));
+    expect(fills.size).toBeGreaterThan(0);
+    for (const fill of fills) {
+      expect(contrast(fill, BRAND.cardBack)).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  /**
+   * El isotipo va recoloreado a mano —el SVG estático no puede leer `BRAND`—,
+   * y es el que se dibuja de agua en el anverso: si dejara de ser la tinta de
+   * la paleta, la marca de agua tiraría a otro tono sin que se note al 7%.
+   */
+  it("el isotipo va en la tinta de la paleta", () => {
+    expect([...fillsOf(svgOf(LOGO.isotype.src))]).toEqual([BRAND.ink]);
+  });
+
+  /** El símbolo es el mismo que el del favicon: un único dibujo oficial. */
+  it("el isotipo dibuja el mismo símbolo que el favicon", () => {
+    const paths = (svg: string) =>
+      [...svg.matchAll(/\sd="([^"]+)"/g)].map(([, d]) => d);
+    const favicon = readFileSync(new URL("../app/icon.svg", import.meta.url), "utf8");
+
+    expect(paths(svgOf(LOGO.isotype.src))).toEqual(paths(favicon));
   });
 });
