@@ -2,14 +2,24 @@
 
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { BRAND, CARD } from "@/lib/brand";
+import { type ThemeName, CARD, THEMES } from "@/lib/brand";
 import { CONTACT } from "@/lib/contact";
-import { createBackTexture, createFrontTexture } from "./card-textures";
+import {
+  createBackTexture,
+  createFrontTexture,
+  createGrainTexture,
+} from "./card-textures";
 
 /** Bisel del canto: da un brillo fino en las aristas, como una tarjeta impresa. */
 const BEVEL = 0.004;
 /** Separación de las caras respecto al cuerpo, para que no peleen en el z-buffer. */
 const FACE_OFFSET = CARD.thickness / 2 + 0.0015;
+/**
+ * Papel mate, no plástico: casi toda la luz se dispersa y el relieve del
+ * grano rompe lo poco que queda de reflejo. El relieve va muy bajo a
+ * propósito —es la rugosidad del papel, no un repujado—.
+ */
+const PAPER = { roughness: 0.94, metalness: 0, bumpScale: 0.018 } as const;
 
 function roundedRectShape(width: number, height: number, radius: number) {
   const shape = new THREE.Shape();
@@ -31,8 +41,16 @@ function roundedRectShape(width: number, height: number, radius: number) {
  * Cuerpo de la tarjeta: un contorno redondeado extruido (el bisel se
  * expande hacia fuera, así que el contorno se dibuja encogido para que las
  * medidas finales sean las de `CARD`) con una cara texturizada a cada lado.
+ *
+ * El cuerpo va del color del canto del tema, un escalón del de las caras: es
+ * lo que asoma por las esquinas redondeadas, donde la textura ya es
+ * transparente. Con un color ajeno a la cara —como era el canto claro de
+ * cuando el anverso y el reverso no coincidían— las esquinas del reverso se
+ * veían encendidas.
  */
-export function CardMesh() {
+export function CardMesh({ theme }: { theme: ThemeName }) {
+  const palette = THEMES[theme];
+
   const geometry = useMemo(() => {
     const shape = roundedRectShape(
       CARD.width - BEVEL * 2,
@@ -51,35 +69,33 @@ export function CardMesh() {
     return geo;
   }, []);
 
-  const front = useMemo(() => createFrontTexture(CONTACT), []);
-  const back = useMemo(() => createBackTexture(CONTACT), []);
+  const grain = useMemo(() => createGrainTexture(), []);
+  const front = useMemo(
+    () => createFrontTexture(CONTACT, palette, theme),
+    [palette, theme],
+  );
+  const back = useMemo(() => createBackTexture(CONTACT, palette), [palette]);
 
-  useEffect(() => {
-    return () => {
-      geometry.dispose();
-      front.dispose();
-      back.dispose();
-    };
-  }, [geometry, front, back]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => grain.dispose(), [grain]);
+  // Las caras se rehacen al cambiar de tema: hay que soltar las anteriores.
+  useEffect(() => () => front.dispose(), [front]);
+  useEffect(() => () => back.dispose(), [back]);
 
   return (
     <group>
       <mesh geometry={geometry}>
-        <meshStandardMaterial
-          color={BRAND.cardEdge}
-          roughness={0.55}
-          metalness={0.05}
-        />
+        <meshStandardMaterial color={palette.cardEdge} bumpMap={grain} {...PAPER} />
       </mesh>
 
       <mesh position={[0, 0, FACE_OFFSET]}>
         <planeGeometry args={[CARD.width, CARD.height]} />
         <meshStandardMaterial
           map={front}
-          roughness={0.6}
-          metalness={0}
+          bumpMap={grain}
           transparent
           alphaTest={0.5}
+          {...PAPER}
         />
       </mesh>
 
@@ -87,10 +103,10 @@ export function CardMesh() {
         <planeGeometry args={[CARD.width, CARD.height]} />
         <meshStandardMaterial
           map={back}
-          roughness={0.45}
-          metalness={0.08}
+          bumpMap={grain}
           transparent
           alphaTest={0.5}
+          {...PAPER}
         />
       </mesh>
     </group>

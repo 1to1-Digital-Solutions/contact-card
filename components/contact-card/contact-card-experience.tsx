@@ -1,18 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { CONTACT } from "@/lib/contact";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { useTheme } from "@/lib/use-theme";
 import { useWebGLStatus } from "@/lib/use-webgl-status";
+import { CardControls, CONTROL_CLASSES } from "./card-controls";
 import { CardFallback } from "./card-fallback";
 import { CardScene } from "./card-scene";
 import { ContactPanel } from "./contact-panel";
+import { ContactSheet } from "./contact-sheet";
 import { SceneErrorBoundary } from "./scene-error-boundary";
 
-const CONTROL_CLASSES =
-  "inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 text-sm font-medium text-ink-inverse backdrop-blur transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink-inverse";
+const SHEET_TITLE = "Datos de contacto";
 
 export function ContactCardExperience() {
   const reducedMotion = useReducedMotion();
+  const { theme, toggle } = useTheme();
   // La escena solo puede montarse en el navegador: dibuja las caras de la
   // tarjeta en un canvas 2D, que no existe durante el render del servidor.
   const status = useWebGLStatus();
@@ -20,12 +25,18 @@ export function ContactCardExperience() {
   const [resetCount, setResetCount] = useState(0);
   const [showingBack, setShowingBack] = useState(false);
   const [grabbing, setGrabbing] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const flip = () => setFlipCount((value) => value + 1);
+  const reset = () => setResetCount((value) => value + 1);
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[1fr_26rem]">
+    // La pantalla completa y sin scroll: la tarjeta es el contenido, no un
+    // adorno al principio de una página por la que haya que bajar.
+    <div className="flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[1fr_26rem]">
       <section
         aria-label="Tarjeta de contacto interactiva"
-        className={`relative flex min-h-[62svh] flex-col justify-between overflow-hidden lg:min-h-dvh ${
+        className={`relative flex min-h-0 flex-1 flex-col justify-between overflow-hidden ${
           grabbing ? "cursor-grabbing" : "cursor-grab"
         }`}
       >
@@ -35,7 +46,7 @@ export function ContactCardExperience() {
           {status === "pending" && (
             <p
               role="status"
-              className="flex h-full items-center justify-center text-sm text-ink-inverse-muted"
+              className="flex h-full items-center justify-center text-sm text-ink-muted"
             >
               Cargando la tarjeta…
             </p>
@@ -61,30 +72,57 @@ export function ContactCardExperience() {
                 onFaceChange={setShowingBack}
                 onGrabChange={setGrabbing}
                 reducedMotion={reducedMotion}
+                theme={theme}
               />
             </SceneErrorBoundary>
           )}
         </div>
 
+        <header className="pointer-events-none relative z-10 flex items-start justify-between gap-4 p-6">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+              {CONTACT.name}
+            </h1>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-accent-ink sm:text-sm">
+              {CONTACT.company}
+            </p>
+          </div>
+          <ThemeToggle theme={theme} onToggle={toggle} className="pointer-events-auto" />
+        </header>
+
         {status === "ready" && (
-          <div className="relative z-10 mt-auto flex flex-wrap items-center gap-3 p-6">
-            <button
-              type="button"
-              onClick={() => setFlipCount((value) => value + 1)}
-              className={CONTROL_CLASSES}
-            >
-              {showingBack ? "Ver el anverso" : "Ver el reverso"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setResetCount((value) => value + 1)}
-              className={CONTROL_CLASSES}
-            >
-              Recolocar
-            </button>
-            <p className="text-sm text-ink-inverse-muted">
+          <div className="relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="hidden flex-wrap gap-3 lg:flex">
+                <CardControls showingBack={showingBack} onFlip={flip} onReset={reset} />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSheetOpen(true)}
+                className={`${CONTROL_CLASSES} lg:hidden`}
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 11v5M12 7.6v.4" />
+                </svg>
+                Ver los datos
+              </button>
+            </div>
+
+            <p className="text-center text-sm text-ink-muted lg:text-left">
               Arrastra la tarjeta para moverla y el fondo para girarla.
             </p>
+
             <p role="status" className="sr-only">
               {showingBack
                 ? "La tarjeta muestra el reverso."
@@ -94,9 +132,25 @@ export function ContactCardExperience() {
         )}
       </section>
 
-      <aside className="border-t border-white/10 bg-black/20 p-6 sm:p-10 lg:border-l lg:border-t-0">
+      <aside
+        aria-label={SHEET_TITLE}
+        className="hidden overflow-y-auto border-ink/10 bg-ink/5 p-6 sm:p-10 lg:block lg:border-l"
+      >
         <ContactPanel />
       </aside>
+
+      <ContactSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={SHEET_TITLE}
+      >
+        {status === "ready" && (
+          <div className="flex flex-wrap gap-3">
+            <CardControls showingBack={showingBack} onFlip={flip} onReset={reset} />
+          </div>
+        )}
+        <ContactPanel />
+      </ContactSheet>
     </div>
   );
 }

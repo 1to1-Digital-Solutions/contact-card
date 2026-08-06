@@ -3,7 +3,7 @@
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { CARD } from "@/lib/brand";
+import { type ThemeName, CARD } from "@/lib/brand";
 import { isShowingBack, snapToHalfTurn } from "@/lib/card-orientation";
 import { clamp, stepSpring, type SpringConfig, type SpringState } from "@/lib/motion";
 import { CardMesh } from "./card-mesh";
@@ -17,9 +17,16 @@ const TILT: SpringConfig = { stiffness: 110, damping: 16 };
 
 /** Radianes de giro por cada unidad de recorrido del puntero (que va de -1 a 1). */
 const SPIN_GAIN = 3.4;
-/** Parte del ancho y del alto visibles que ocupa la tarjeta en reposo. */
-const WIDTH_SHARE = 0.62;
-const HEIGHT_SHARE = 0.55;
+/**
+ * Parte del ancho y del alto visibles que ocupa la tarjeta en reposo. En un
+ * hueco más alto que ancho —un móvil de pie— el ancho es el recurso escaso y
+ * sobra alto: ahí la tarjeta se estira casi de borde a borde para no perder
+ * protagonismo.
+ */
+const SHARE = {
+  landscape: { width: 0.62, height: 0.55 },
+  portrait: { width: 0.9, height: 0.6 },
+} as const;
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 1.15;
 /** Cuánto se inclina la tarjeta al arrastrarla rápido. */
@@ -37,6 +44,7 @@ type Props = {
   onFaceChange: (showingBack: boolean) => void;
   onGrabChange: (grabbing: boolean) => void;
   reducedMotion: boolean;
+  theme: ThemeName;
 };
 
 const spring = (value = 0): SpringState => ({ value, velocity: 0 });
@@ -63,15 +71,18 @@ export function DraggableCard({
   onFaceChange,
   onGrabChange,
   reducedMotion,
+  theme,
 }: Props) {
   // La tarjeta se escala al hueco visible en lugar de mover la cámara: así
   // cabe con aire tanto en un móvil vertical como en una pantalla ancha, y
   // el arrastre sigue trabajando en coordenadas de mundo sin corrección.
   const viewport = useThree((state) => state.viewport);
+  const share =
+    viewport.height > viewport.width ? SHARE.portrait : SHARE.landscape;
   const scale = clamp(
     Math.min(
-      (viewport.width * WIDTH_SHARE) / CARD.width,
-      (viewport.height * HEIGHT_SHARE) / CARD.height,
+      (viewport.width * share.width) / CARD.width,
+      (viewport.height * share.height) / CARD.height,
     ),
     MIN_SCALE,
     MAX_SCALE,
@@ -264,7 +275,7 @@ export function DraggableCard({
         }}
       >
         <group scale={scale}>
-          <CardMesh />
+          <CardMesh theme={theme} />
         </group>
       </group>
     </>

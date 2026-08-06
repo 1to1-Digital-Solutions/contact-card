@@ -1,12 +1,12 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { BRAND, LOGO } from "./brand";
+import { type ThemeName, BRAND, LOGO, THEMES, WATERMARK } from "./brand";
 
 /**
  * Los tokens de marca solo valen si el texto se lee encima de su fondo. Aquí
- * está fijada cada combinación que existe en la tarjeta y en la página, con el
- * umbral que le toca: 4.5:1 para texto (WCAG 2.2, criterio 1.4.3 AA) y 3:1
- * para lo que es solo forma (1.4.11).
+ * está fijada cada combinación que existe en la tarjeta y en la página, en los
+ * dos temas, con el umbral que le toca: 4.5:1 para texto (WCAG 2.2, criterio
+ * 1.4.3 AA) y 3:1 para lo que es solo forma (1.4.11).
  */
 
 /** Canal sRGB a luz lineal, según la definición de luminancia relativa de WCAG. */
@@ -40,46 +40,73 @@ function blend(top: string, alpha: number, bottom: string): string {
     .join("")}`;
 }
 
+const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
+const CSS = source("../app/globals.css");
+
+/** Las declaraciones de un bloque de `app/globals.css`, por nombre de variable. */
+function declarationsIn(selector: RegExp): Map<string, string> {
+  const body = CSS.match(selector)?.[1] ?? "";
+  return new Map(
+    [...body.matchAll(/(--[a-z-]+):\s*([^;]+);/g)].map(([, name, value]) => [
+      name,
+      value.trim(),
+    ]),
+  );
+}
+
+const BLOCKS = {
+  theme: declarationsIn(/@theme inline\s*\{([\s\S]*?)\n\}/),
+  shared: declarationsIn(/\n:root\s*\{([\s\S]*?)\n\}/),
+  dark: declarationsIn(/:root,\n\.dark\s*\{([\s\S]*?)\n\}/),
+  light: declarationsIn(/\n\.light\s*\{([\s\S]*?)\n\}/),
+};
+
 /**
  * El fondo NO es `backdrop` a secas donde vive el texto de la escena: encima
- * llevan las veladuras del `body` y el halo de la tarjeta (`app/globals.css`),
- * que lo aclaran. El peor caso es el centro de la escena —ahí se lee «Cargando
- * la tarjeta…» y la nota de la versión plana—: el halo al completo sobre la
- * veladura más fuerte. Las dos veladuras están en esquinas opuestas del
- * viewport, así que nunca se suman a plena intensidad.
- * Si cambian esas opacidades en el CSS, cambian aquí.
+ * llevan la veladura del `body` y el halo de la tarjeta, que lo mueven (en el
+ * tema oscuro lo aclaran y en el claro lo oscurecen). El peor caso es el
+ * centro de la escena —ahí se lee «Cargando la tarjeta…» y la nota de la
+ * versión plana—: el halo entero sobre la veladura más fuerte, que es la
+ * única que llega hasta ahí (las dos están en esquinas opuestas). Las dos
+ * opacidades y la tinta del halo se leen del CSS para que no puedan
+ * desincronizarse.
  */
-const BACKDROP_LIT = blend(
-  "#ffffff",
-  0.09,
-  blend(BRAND.accentInk, 0.22, BRAND.backdrop),
-);
+function litBackdrop(theme: ThemeName): string {
+  const block = BLOCKS[theme];
+  const number = (name: string) => Number(block.get(name));
+  return blend(
+    block.get("--halo-color")!,
+    number("--halo"),
+    blend(BRAND.accent, number("--glaze-b"), block.get("--backdrop")!),
+  );
+}
 
 /** Pares de texto sobre fondo, con dónde aparece cada uno. */
-const TEXT: Array<[string, string, string]> = [
-  [BRAND.ink, BRAND.cardFront, "nombre y datos del anverso"],
-  [BRAND.inkMuted, BRAND.cardFront, "etiquetas del anverso"],
-  [BRAND.accentInk, BRAND.cardFront, "empresa en el anverso"],
-  [BRAND.inkInverseMuted, BRAND.cardBack, "web en el reverso"],
-  [BRAND.inkInverse, BRAND.backdrop, "titular y enlaces del panel"],
-  [BRAND.inkInverseMuted, BRAND.backdrop, "etiquetas del panel y avisos"],
-  [BRAND.accentInkInverse, BRAND.backdrop, "empresa en el panel y foco"],
-  [BRAND.ink, BRAND.accent, "texto del botón de guardar contacto"],
-  [BRAND.inkInverse, BACKDROP_LIT, "avisos de la escena sobre el fondo aclarado"],
-  [
-    BRAND.inkInverseMuted,
-    BACKDROP_LIT,
-    "«Cargando la tarjeta…» y la nota de la versión plana",
-  ],
-];
+function textPairs(theme: ThemeName): Array<[string, string, string]> {
+  const { card, backdrop, ink, inkMuted, accentInk } = THEMES[theme];
+  const lit = litBackdrop(theme);
+  return [
+    [ink, card, "nombre y datos del anverso"],
+    [inkMuted, card, "etiquetas del anverso y web del reverso"],
+    [accentInk, card, "empresa en el anverso"],
+    [ink, backdrop, "titular y enlaces del panel"],
+    [inkMuted, backdrop, "etiquetas del panel"],
+    [accentInk, backdrop, "empresa en la cabecera"],
+    [BRAND.onAccent, BRAND.accent, "texto del botón de guardar contacto"],
+    [ink, lit, "mandos de la escena sobre el fondo velado"],
+    [inkMuted, lit, "«Cargando la tarjeta…» y la nota de la versión plana"],
+  ];
+}
 
 /** Elementos que informan por su forma, no por su texto. */
-const GRAPHICS: Array<[string, string, string]> = [
-  [BRAND.accent, BRAND.cardFront, "filete de marca del anverso"],
-  [BRAND.accent, BRAND.cardBack, "remate del reverso e isotipo del favicon"],
-  [BRAND.cardEdge, BRAND.backdrop, "canto de la tarjeta contra el fondo"],
-  [BRAND.accentInkInverse, BACKDROP_LIT, "foco del teclado sobre la escena"],
-];
+function graphicPairs(theme: ThemeName): Array<[string, string, string]> {
+  const { card, accentInk } = THEMES[theme];
+  return [
+    [BRAND.accent, card, "filete del anverso y remate del reverso"],
+    [accentInk, litBackdrop(theme), "foco del teclado sobre la escena"],
+    [accentInk, card, "foco del teclado sobre la tarjeta plana"],
+  ];
+}
 
 describe("contraste de la paleta de marca", () => {
   it("mide el contraste como manda WCAG", () => {
@@ -88,77 +115,101 @@ describe("contraste de la paleta de marca", () => {
     expect(contrast("#1f957a", "#1f957a")).toBeCloseTo(1, 5);
   });
 
-  it.each(TEXT)("%s sobre %s llega a AA (%s)", (fg, bg) => {
-    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
-  });
+  for (const theme of ["dark", "light"] as const) {
+    describe(`tema ${theme}`, () => {
+      it.each(textPairs(theme))("%s sobre %s llega a AA (%s)", (fg, bg) => {
+        expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+      });
 
-  it.each(GRAPHICS)("%s sobre %s se distingue (%s)", (fg, bg) => {
-    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
-  });
+      it.each(graphicPairs(theme))("%s sobre %s se distingue (%s)", (fg, bg) => {
+        expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
+      });
 
-  it("mantiene el acento vivo fuera del texto: por eso existen sus dos tintas", () => {
-    expect(contrast(BRAND.accent, BRAND.cardFront)).toBeLessThan(4.5);
-    expect(contrast(BRAND.accent, BRAND.backdrop)).toBeLessThan(4.5);
-  });
+      it("mantiene el acento vivo fuera del texto: por eso existe `accentInk`", () => {
+        expect(contrast(BRAND.accent, THEMES[theme].card)).toBeLessThan(4.5);
+      });
+
+      /** El canto es la cara desviada un escalón, no un color ajeno: si se separase
+       *  demasiado, volvería a verse encendido por las esquinas redondeadas de la
+       *  textura, que es justo lo que se quitó de en medio. */
+      it("deja el canto a un paso del color de la cara", () => {
+        const { card, cardEdge } = THEMES[theme];
+        expect(contrast(card, cardEdge)).toBeGreaterThan(1);
+        expect(contrast(card, cardEdge)).toBeLessThan(1.5);
+      });
+    });
+  }
 });
 
-/** `inkInverseMuted` → `--color-ink-inverse-muted`, el nombre que usa Tailwind. */
+/** `inkMuted` → `--ink-muted`, el nombre que tiene la misma variable en el CSS. */
 function cssVariable(token: string): string {
-  return `--color-${token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
+  return `--${token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
 }
 
-/** Tokens que solo existen en three.js: no tienen clase de Tailwind que los use. */
-const ONLY_IN_THREE = new Set(["cardEdge"]);
-
-describe("paleta duplicada en @theme", () => {
-  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-  const theme = css.match(/@theme\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
-  const declared = new Map(
-    [...theme.matchAll(/(--color-[a-z-]+):\s*([^;]+);/g)].map(([, name, value]) => [
-      name,
-      value.trim(),
-    ]),
-  );
-
-  it("encuentra el bloque @theme y sus colores", () => {
-    expect(declared.size).toBeGreaterThan(0);
+describe("paleta duplicada en app/globals.css", () => {
+  it("encuentra los tres bloques y sus declaraciones", () => {
+    expect(BLOCKS.theme.size).toBeGreaterThan(0);
+    expect(BLOCKS.dark.size).toBeGreaterThan(0);
+    expect(BLOCKS.light.size).toBeGreaterThan(0);
   });
 
-  it.each(Object.entries(BRAND).filter(([token]) => !ONLY_IN_THREE.has(token)))(
-    "%s vale lo mismo en `lib/brand.ts` y en `app/globals.css`",
+  it.each(Object.entries(BRAND))(
+    "%s vale lo mismo en `lib/brand.ts` y en el CSS",
     (token, value) => {
-      expect(declared.get(cssVariable(token))).toBe(value);
+      expect(BLOCKS.shared.get(cssVariable(token))).toBe(value);
     },
   );
 
-  it("no declara en @theme colores que three.js no conozca", () => {
-    const fromBrand = new Set(Object.keys(BRAND).map(cssVariable));
-    expect([...declared.keys()].filter((name) => !fromBrand.has(name))).toEqual([]);
+  for (const [theme, palette] of Object.entries(THEMES)) {
+    it.each(Object.entries(palette))(
+      `${theme}: %s vale lo mismo en \`lib/brand.ts\` y en el CSS`,
+      (token, value) => {
+        expect(BLOCKS[theme as ThemeName].get(cssVariable(token))).toBe(value);
+      },
+    );
+  }
+
+  it("expone en `@theme` exactamente los colores que conoce `lib/brand.ts`", () => {
+    const expected = [...Object.keys(BRAND), ...Object.keys(THEMES.dark)]
+      .map(cssVariable)
+      .sort();
+    const declared = [...BLOCKS.theme.keys()]
+      .filter((name) => name.startsWith("--color-"))
+      .map((name) => name.replace("--color-", "--"))
+      .sort();
+
+    expect(declared).toEqual(expected);
+  });
+
+  it("hace que las utilidades apunten a la variable del tema, no a su valor", () => {
+    for (const token of Object.keys(THEMES.dark)) {
+      const variable = cssVariable(token);
+      expect(BLOCKS.theme.get(`--color${variable.slice(1)}`)).toBe(`var(${variable})`);
+    }
   });
 });
 
 /**
- * Los dos sitios que no pueden leer ni `BRAND` ni el `@theme`: los metadatos
- * de Next (`themeColor` es un string en el módulo de servidor) y el favicon,
- * que es un SVG estático. Ahí los colores van copiados a mano, así que aquí
- * se comprueba que siguen siendo los de la paleta y no los de la anterior.
+ * Los dos sitios que no pueden leer ni `THEMES` ni el CSS: los metadatos de
+ * Next (`themeColor` sí sale de `THEMES`, pero conviene comprobar que están
+ * los dos temas) y el favicon, que es un SVG estático con los colores
+ * copiados a mano.
  */
-describe("colores copiados a mano fuera de la paleta", () => {
-  const source = (path: string) =>
-    readFileSync(new URL(path, import.meta.url), "utf8");
+describe("colores fuera del CSS", () => {
   const hexesIn = (text: string) =>
     [...text.matchAll(/#[0-9a-f]{6}\b/gi)].map(([hex]) => hex.toLowerCase());
 
-  it("el `themeColor` de la pestaña es el fondo de la página", () => {
-    const declared = source("../app/layout.tsx").match(
-      /themeColor:\s*"(#[0-9a-f]{6})"/i,
-    )?.[1];
-    expect(declared).toBe(BRAND.backdrop);
+  it("declara un `themeColor` por tema", () => {
+    const layout = source("../app/layout.tsx");
+    expect(layout).toContain("(prefers-color-scheme: light)");
+    expect(layout).toContain("THEMES.light.backdrop");
+    expect(layout).toContain("(prefers-color-scheme: dark)");
+    expect(layout).toContain("THEMES.dark.backdrop");
   });
 
-  it("el favicon es el isotipo de marca sobre el reverso de la tarjeta", () => {
+  it("el favicon es el isotipo de marca sobre la tarjeta oscura", () => {
     const used = [...new Set(hexesIn(source("../app/icon.svg")))].sort();
-    expect(used).toEqual([BRAND.cardBack, BRAND.accent].sort());
+    expect(used).toEqual([THEMES.dark.card, BRAND.accent].sort());
   });
 
   /**
@@ -211,7 +262,7 @@ describe("colores copiados a mano fuera de la paleta", () => {
  * Los dibujos de marca son los únicos que no se generan: son los ficheros
  * oficiales, copiados del sitio web. Aquí se comprueba que siguen donde `LOGO`
  * dice, que se escalan con las medidas de su propio lienzo (si no, salen
- * deformados en la textura) y que cada versión tiene el trazo que se lee sobre
+ * deformados en la textura) y que cada versión lleva la tinta que se lee sobre
  * la cara en la que se usa.
  */
 describe("dibujos de marca", () => {
@@ -226,6 +277,7 @@ describe("dibujos de marca", () => {
         .filter((value) => value !== "none")
         .map((value) => NAMED[value] ?? value),
     );
+  const pathsOf = (svg: string) => [...svg.matchAll(/\sd="([^"]+)"/g)].map(([, d]) => d);
 
   it.each(Object.entries(LOGO))("%s está en `public/`, donde apunta", (_, art) => {
     expect(existsSync(artwork(art.src))).toBe(true);
@@ -240,29 +292,45 @@ describe("dibujos de marca", () => {
     },
   );
 
-  it("el logotipo en negativo se lee sobre el reverso", () => {
-    const fills = fillsOf(svgOf(LOGO.negative.src));
-    expect(fills.size).toBeGreaterThan(0);
-    for (const fill of fills) {
-      expect(contrast(fill, BRAND.cardBack)).toBeGreaterThanOrEqual(4.5);
-    }
+  /** Un solo logotipo con tres tintas: si una versión se cambia por otra, deja
+   *  de dibujar lo mismo y hay que traerla otra vez de la marca. */
+  it("las tres versiones del logotipo dibujan el mismo trazado", () => {
+    const reference = pathsOf(svgOf(LOGO.brand.src));
+    expect(reference.length).toBeGreaterThan(0);
+    expect(pathsOf(svgOf(LOGO.positive.src))).toEqual(reference);
+    expect(pathsOf(svgOf(LOGO.negative.src))).toEqual(reference);
+  });
+
+  it("el logotipo del reverso va en el verde de marca", () => {
+    expect([...fillsOf(svgOf(LOGO.brand.src))]).toEqual([BRAND.accent]);
   });
 
   /**
-   * El isotipo va recoloreado a mano —el SVG estático no puede leer `BRAND`—,
-   * y es el que se dibuja de agua en el anverso: si dejara de ser la tinta de
-   * la paleta, la marca de agua tiraría a otro tono sin que se note al 7%.
+   * El logotipo del reverso es el mismo en los dos temas, así que su verde
+   * tiene que distinguirse sobre las dos caras. Como grafismo le basta 3:1: el
+   * texto que lleva dentro es la marca, que WCAG 1.4.3 deja fuera del umbral
+   * de texto.
    */
-  it("el isotipo va en la tinta de la paleta", () => {
-    expect([...fillsOf(svgOf(LOGO.isotype.src))]).toEqual([BRAND.ink]);
-  });
+  it.each(["dark", "light"] as const)(
+    "el logotipo del reverso se distingue sobre la cara %s",
+    (theme) => {
+      expect(contrast(BRAND.accent, THEMES[theme].card)).toBeGreaterThanOrEqual(3);
+    },
+  );
 
-  /** El símbolo es el mismo que el del favicon: un único dibujo oficial. */
+  it.each(["dark", "light"] as const)(
+    "la marca de agua del anverso %s lleva la tinta que se lee sobre esa cara",
+    (theme) => {
+      const fills = [...fillsOf(svgOf(WATERMARK[theme].src))];
+      expect(fills.length).toBeGreaterThan(0);
+      for (const fill of fills) {
+        expect(contrast(fill, THEMES[theme].card)).toBeGreaterThanOrEqual(4.5);
+      }
+    },
+  );
+
+  /** El símbolo del favicon sale de aquí: un único dibujo oficial. */
   it("el isotipo dibuja el mismo símbolo que el favicon", () => {
-    const paths = (svg: string) =>
-      [...svg.matchAll(/\sd="([^"]+)"/g)].map(([, d]) => d);
-    const favicon = readFileSync(new URL("../app/icon.svg", import.meta.url), "utf8");
-
-    expect(paths(svgOf(LOGO.isotype.src))).toEqual(paths(favicon));
+    expect(pathsOf(svgOf(LOGO.isotype.src))).toEqual(pathsOf(source("../app/icon.svg")));
   });
 });

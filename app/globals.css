@@ -1,66 +1,143 @@
 @import "tailwindcss";
 
+/* La clase `.dark`/`.light` de <html> manda sobre el tema, como en el resto
+   de proyectos de la marca. La pone `lib/theme.ts` antes del primer pintado. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
   Tokens de marca de 1to1 Digital Solutions. Los valores deben coincidir con
   los de `lib/brand.ts` (three.js no puede leer variables CSS, así que la
   paleta vive en los dos sitios): al cambiar uno hay que cambiar el otro.
+  `inline` es lo que hace que las utilidades emitan la variable en vez de su
+  valor, que es lo que permite cambiar de tema sin recompilar nada.
 */
-@theme {
-  --color-backdrop: #27272a;
-  --color-card-front: #f4f4f5;
-  --color-card-back: #1e1e21;
-  --color-ink: #1a1a1a;
-  --color-ink-muted: #626265;
-  --color-ink-inverse: #ededed;
-  --color-ink-inverse-muted: #b8b8bd;
-  --color-accent: #1f957a;
-  --color-accent-ink: #116e57;
-  --color-accent-ink-inverse: #1ac89a;
+@theme inline {
+  --color-backdrop: var(--backdrop);
+  --color-card: var(--card);
+  --color-card-edge: var(--card-edge);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
 }
 
+:root {
+  --accent: #1f957a;
+  --on-accent: #1c1c1f;
+
+  /*
+    Grano de papel: ruido fractal en un SVG en línea, sin fichero que
+    descargar. Es lo que da a la tarjeta plana la textura que en 3D dan el
+    relieve y la rugosidad del material.
+  */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/*
+  Tema oscuro, el de partida. Las dos veladuras del fondo van en esquinas
+  opuestas para no coincidir a plena intensidad; `--glaze-b` es la que más
+  desvía la luminancia del fondo y, junto con `--halo`, marca el peor caso de
+  contraste del texto que cae sobre la escena (`lib/brand.test.ts` lee estas
+  tres variables y rehace la cuenta).
+*/
+:root,
+.dark {
+  color-scheme: dark;
+
+  --backdrop: #27272a;
+  --card: #1e1e21;
+  --card-edge: #2f2f34;
+  --ink: #ededed;
+  --ink-muted: #b8b8bd;
+  --accent-ink: #1ac89a;
+
+  --glaze-a: 0.12;
+  --glaze-b: 0.14;
+  /* Sobre fondo oscuro la tarjeta se separa con un claro y sobre fondo claro,
+     con una sombra: por eso el halo cambia de tinta con el tema. */
+  --halo: 0.09;
+  --halo-color: #ffffff;
+}
+
+.light {
+  color-scheme: light;
+
+  --backdrop: #f4f4f5;
+  --card: #ffffff;
+  --card-edge: #e2e2e6;
+  --ink: #1a1a1a;
+  --ink-muted: #5c5c60;
+  --accent-ink: #116e57;
+
+  --glaze-a: 0.1;
+  --glaze-b: 0.08;
+  --halo: 0.05;
+  --halo-color: #000000;
+}
+
 @layer components {
-  /* Claro difuso tras la tarjeta: la separa del fondo sin fingir una pared
-     con una sombra proyectada. Su opacidad y la de las veladuras del `body`
-     están replicadas en `lib/brand.test.ts`: son las que aclaran el fondo
-     bajo el texto secundario, así que ahí se comprueba que sigue en AA. */
+  /* Claro (o sombra) difusa tras la tarjeta: la separa del fondo sin fingir
+     una pared con una sombra proyectada. */
   .card-halo {
     background: radial-gradient(
       32rem 24rem at 50% 46%,
-      color-mix(in srgb, white 9%, transparent),
+      color-mix(in srgb, var(--halo-color) calc(var(--halo) * 100%), transparent),
       transparent 68%
     );
+  }
+
+  /* Textura de papel para la tarjeta plana: el grano se funde con el color de
+     la cara en vez de pintarse encima, para no ensuciar el texto. */
+  .paper-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: var(--grain);
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    pointer-events: none;
   }
 }
 
 @layer base {
-  html {
-    color-scheme: dark;
-  }
-
-  /* Dos veladuras del verde de marca sobre el fondo, en esquinas opuestas
-     para que nunca coincidan a plena intensidad. La proporción se mantiene
-     baja a propósito: aclaran el fondo y con ella baja el contraste del
-     texto claro que va encima (ver la nota de `.card-halo`). */
+  /* Dos veladuras del verde de marca sobre el fondo, en esquinas opuestas.
+     La proporción se mantiene baja a propósito: mueven la luminancia del
+     fondo y con ella el contraste del texto que va encima (ver la nota de
+     los tokens del tema). */
   body {
     background:
       radial-gradient(
         70rem 50rem at 20% -10%,
-        color-mix(in srgb, var(--color-accent) 12%, transparent),
+        color-mix(in srgb, var(--accent) calc(var(--glaze-a) * 100%), transparent),
         transparent 60%
       ),
       radial-gradient(
         60rem 40rem at 110% 20%,
-        color-mix(in srgb, var(--color-accent-ink) 22%, transparent),
+        color-mix(in srgb, var(--accent) calc(var(--glaze-b) * 100%), transparent),
         transparent 55%
       ),
-      var(--color-backdrop);
+      var(--backdrop);
     background-attachment: fixed;
-    color: var(--color-ink-inverse);
+    color: var(--ink);
     font-family: var(--font-sans);
     /* El arrastre de la tarjeta no debe arrastrar la página con él. */
     overscroll-behavior: none;
+  }
+
+  /* Grano de ambiente, detrás del contenido: da cuerpo al fondo sin llegar a
+     tocar el texto, que va por encima. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--grain);
+    opacity: 0.05;
+    pointer-events: none;
   }
 }

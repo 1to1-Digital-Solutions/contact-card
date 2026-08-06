@@ -1,14 +1,22 @@
 import * as THREE from "three";
-import { type BrandArtwork, BRAND, CARD, LOGO } from "@/lib/brand";
+import {
+  type BrandArtwork,
+  type ThemeName,
+  type ThemePalette,
+  BRAND,
+  CARD,
+  LOGO,
+  WATERMARK,
+} from "@/lib/brand";
 import type { Contact } from "@/lib/contact";
 
 /**
  * Las dos caras de la tarjeta se dibujan en un canvas 2D en tiempo de
  * ejecución en lugar de cargarse como imágenes: así el contenido sale de
- * `lib/contact.ts` (una sola fuente de verdad) y no hay que mantener
- * sincronizada ninguna imagen del texto. Las únicas excepciones son los
- * dibujos de marca de `LOGO` —el logotipo del reverso y el isotipo de agua
- * del anverso—, que son los ficheros oficiales y no se redibujan.
+ * `lib/contact.ts` (una sola fuente de verdad), el color sale del tema y no
+ * hay que mantener sincronizada ninguna imagen del texto. Las únicas
+ * excepciones son los dibujos de marca de `LOGO`, que son los ficheros
+ * oficiales y no se redibujan.
  */
 
 /** Resolución de la cara larga. 2048 mantiene el texto nítido en pantallas HiDPI. */
@@ -31,6 +39,74 @@ function setTracking(ctx: Ctx, px: number) {
   if ("letterSpacing" in ctx) ctx.letterSpacing = `${px}px`;
 }
 
+/** Lado del mosaico de ruido. Basta con uno pequeño: se repite. */
+const GRAIN_TILE = 256;
+/** Cuántas veces cabe el mosaico a lo ancho de la tarjeta: fija el tamaño del grano. */
+const GRAIN_REPEAT = 7;
+
+/** Cuánto se aparta del gris medio cada punto del ruido. */
+const GRAIN_SPREAD = 64;
+/** Con cuánta fuerza se vela la cara con el ruido. */
+const GRAIN_ALPHA = 0.045;
+
+let grainTile: HTMLCanvasElement | null = null;
+
+/**
+ * Mosaico de ruido alrededor del gris medio. Que oscile en los dos sentidos
+ * es lo que hace que el mismo grano se vea tanto sobre una cara clara como
+ * sobre una oscura: velado con poca opacidad, unos puntos aclaran y otros
+ * oscurecen. Se genera una sola vez y se reparte entre las dos caras y el
+ * relieve del material.
+ */
+function getGrainTile(): HTMLCanvasElement {
+  if (grainTile) return grainTile;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = GRAIN_TILE;
+  canvas.height = GRAIN_TILE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("El navegador no permite dibujar en un canvas 2D");
+
+  const image = ctx.createImageData(GRAIN_TILE, GRAIN_TILE);
+  for (let i = 0; i < image.data.length; i += 4) {
+    const tone = 128 + Math.round((Math.random() * 2 - 1) * GRAIN_SPREAD);
+    image.data[i] = tone;
+    image.data[i + 1] = tone;
+    image.data[i + 2] = tone;
+    image.data[i + 3] = 255;
+  }
+  ctx.putImageData(image, 0, 0);
+
+  grainTile = canvas;
+  return canvas;
+}
+
+/**
+ * Relieve del papel para el material: el mismo ruido, repetido, hace de mapa
+ * de relieve. Es lo que rompe el reflejo liso y deja la superficie mate y con
+ * textura al girarla contra la luz. El número de repeticiones a lo alto sale
+ * de la proporción de la tarjeta para que el grano no salga estirado.
+ */
+export function createGrainTexture(): THREE.CanvasTexture {
+  const texture = new THREE.CanvasTexture(getGrainTile());
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(GRAIN_REPEAT, GRAIN_REPEAT / (CARD.width / CARD.height));
+  return texture;
+}
+
+/** Vela la cara con el grano para que el color no salga plano de imprenta. */
+function drawGrain(ctx: Ctx) {
+  const pattern = ctx.createPattern(getGrainTile(), "repeat");
+  if (!pattern) return;
+
+  ctx.save();
+  ctx.globalAlpha = GRAIN_ALPHA;
+  ctx.fillStyle = pattern;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+}
+
 /**
  * Crea el canvas de una cara con las esquinas ya recortadas: lo que quede
  * fuera del radio es transparente, de modo que la textura encaja con las
@@ -48,6 +124,7 @@ function createFaceCanvas(background: string): { canvas: HTMLCanvasElement; ctx:
   ctx.clip();
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, W, H);
+  drawGrain(ctx);
 
   return { canvas, ctx };
 }
@@ -60,13 +137,19 @@ function toTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
 }
 
 /** Etiqueta en versalitas sobre el valor, al estilo de una tarjeta impresa. */
-function drawField(ctx: Ctx, y: number, label: string, value: string) {
-  ctx.fillStyle = BRAND.inkMuted;
+function drawField(
+  ctx: Ctx,
+  palette: ThemePalette,
+  y: number,
+  label: string,
+  value: string,
+) {
+  ctx.fillStyle = palette.inkMuted;
   ctx.font = font(30, 600);
   setTracking(ctx, 6);
   ctx.fillText(label.toUpperCase(), PAD, y);
 
-  ctx.fillStyle = BRAND.ink;
+  ctx.fillStyle = palette.ink;
   ctx.font = font(54, 400);
   setTracking(ctx, 0);
   ctx.fillText(value, PAD, y + 58);
@@ -113,17 +196,17 @@ function drawArtwork(
 }
 
 /**
- * Isotipo de agua que equilibra el peso visual del texto a la izquierda. Va el
- * símbolo solo y no el logotipo completo: a esta opacidad el subtítulo del
- * logotipo se emborrona, y el nombre de la empresa ya está escrito arriba.
+ * Marca de agua del anverso: el logotipo en la tinta que se lee sobre la cara
+ * del tema, al pie del hueco que deja el bloque de texto. Equilibra el peso
+ * visual sin competir con los datos.
  */
-function drawWatermark(ctx: Ctx): Promise<void> {
-  const width = 420;
-  return drawArtwork(ctx, LOGO.isotype, {
+function drawWatermark(ctx: Ctx, theme: ThemeName): Promise<void> {
+  const width = 700;
+  return drawArtwork(ctx, WATERMARK[theme], {
     cx: W - PAD - width / 2,
-    top: H - PAD - heightOf(LOGO.isotype, width),
+    top: H - PAD - heightOf(WATERMARK[theme], width),
     width,
-    alpha: 0.07,
+    alpha: 0.1,
   });
 }
 
@@ -146,43 +229,47 @@ function refreshWhenDrawn(
 }
 
 /**
- * Anverso: los datos de contacto sobre el claro del papel. El isotipo de agua
- * se pinta encima del resto por ser asíncrono, pero no tapa nada: cae en la
+ * Anverso: los datos de contacto sobre el papel del tema. La marca de agua se
+ * pinta encima del resto por ser asíncrona, pero no tapa nada: cae en la
  * esquina inferior derecha, fuera del bloque de texto.
  */
-export function createFrontTexture(contact: Contact): THREE.CanvasTexture {
-  const { canvas, ctx } = createFaceCanvas(BRAND.cardFront);
+export function createFrontTexture(
+  contact: Contact,
+  palette: ThemePalette,
+  theme: ThemeName,
+): THREE.CanvasTexture {
+  const { canvas, ctx } = createFaceCanvas(palette.card);
   ctx.textBaseline = "top";
 
   // Filete de marca en el canto izquierdo.
   ctx.fillStyle = BRAND.accent;
   ctx.fillRect(0, 0, 16, H);
 
-  ctx.fillStyle = BRAND.ink;
+  ctx.fillStyle = palette.ink;
   ctx.font = font(116, 600);
   setTracking(ctx, -2);
   ctx.fillText(contact.name, PAD, 230);
 
-  ctx.fillStyle = BRAND.accentInk;
+  ctx.fillStyle = palette.accentInk;
   ctx.font = font(34, 600);
   setTracking(ctx, 10);
   ctx.fillText(contact.company.toUpperCase(), PAD, 400);
 
-  ctx.fillStyle = BRAND.inkMuted;
+  ctx.fillStyle = palette.inkMuted;
   ctx.globalAlpha = 0.3;
   ctx.fillRect(PAD, 680, W - PAD * 2, 2);
   ctx.globalAlpha = 1;
 
   // Bloque de datos anclado al borde inferior, con el mismo margen que arriba.
   const first = H - PAD - (58 + 54) - 2 * 160;
-  drawField(ctx, first, "Email", contact.email);
-  drawField(ctx, first + 160, "Teléfono", contact.phone);
-  drawField(ctx, first + 320, "Web", contact.website);
+  drawField(ctx, palette, first, "Email", contact.email);
+  drawField(ctx, palette, first + 160, "Teléfono", contact.phone);
+  drawField(ctx, palette, first + 320, "Web", contact.website);
 
   const texture = toTexture(canvas);
   refreshWhenDrawn(
     texture,
-    drawWatermark(ctx),
+    drawWatermark(ctx, theme),
     "El anverso de la tarjeta se queda sin marca de agua",
   );
 
@@ -190,16 +277,20 @@ export function createFrontTexture(contact: Contact): THREE.CanvasTexture {
 }
 
 /**
- * Reverso: el logotipo de la marca y la web. El nombre de la empresa no se
- * repite debajo porque el propio logotipo ya lo dice.
+ * Reverso: el logotipo en verde de marca —el mismo en los dos temas— y la
+ * web. El nombre de la empresa no se repite debajo porque el propio logotipo
+ * ya lo dice.
  */
-export function createBackTexture(contact: Contact): THREE.CanvasTexture {
-  const { canvas, ctx } = createFaceCanvas(BRAND.cardBack);
+export function createBackTexture(
+  contact: Contact,
+  palette: ThemePalette,
+): THREE.CanvasTexture {
+  const { canvas, ctx } = createFaceCanvas(palette.card);
   const cx = W / 2;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  ctx.fillStyle = BRAND.inkInverseMuted;
+  ctx.fillStyle = palette.inkMuted;
   ctx.font = font(34, 400);
   setTracking(ctx, 4);
   ctx.fillText(contact.website, cx, 945);
@@ -210,7 +301,7 @@ export function createBackTexture(contact: Contact): THREE.CanvasTexture {
   const texture = toTexture(canvas);
   refreshWhenDrawn(
     texture,
-    drawArtwork(ctx, LOGO.negative, { cx, top: 370, width: 820 }),
+    drawArtwork(ctx, LOGO.brand, { cx, top: 370, width: 820 }),
     "El reverso de la tarjeta se queda sin logotipo",
   );
 
