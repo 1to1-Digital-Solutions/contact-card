@@ -170,13 +170,23 @@ describe("colores copiados a mano fuera de la paleta", () => {
    */
   it("encaja el isotipo centrado dentro del lienzo del favicon", () => {
     const svg = source("../app/icon.svg");
-    /** El lienzo del isotipo, leído del fichero que lo guarda. */
-    const ISOTYPE = {
-      origin: Number(
-        source(`../public${LOGO.isotype.src}`).match(/viewBox="(-?[\d.]+)/)?.[1],
-      ),
-      size: LOGO.isotype.width,
-    };
+    /**
+     * El lienzo del isotipo, leído del `viewBox` del fichero que lo guarda (no
+     * de sus `width`/`height`, que son otra cosa). La cuenta de abajo aplica un
+     * solo origen y un solo tamaño a los dos ejes, así que el lienzo tiene que
+     * ser cuadrado y arrancar en el mismo número en X y en Y.
+     */
+    const [minX, minY, boxWidth, boxHeight] = (
+      source(`../public${LOGO.isotype.src}`).match(/viewBox="([^"]+)"/)?.[1] ?? ""
+    )
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
+    expect(minY).toBe(minX);
+    expect(boxHeight).toBe(boxWidth);
+    expect(boxWidth).toBe(LOGO.isotype.width);
+
+    const ISOTYPE = { origin: minX, size: boxWidth };
     const BOX = 64;
 
     const scale = Number(svg.match(/scale\(([\d.]+)\)/)?.[1]);

@@ -6,8 +6,9 @@ import type { Contact } from "@/lib/contact";
  * Las dos caras de la tarjeta se dibujan en un canvas 2D en tiempo de
  * ejecución en lugar de cargarse como imágenes: así el contenido sale de
  * `lib/contact.ts` (una sola fuente de verdad) y no hay que mantener
- * sincronizada ninguna imagen del texto. La única excepción es el logotipo
- * del reverso, que es el fichero oficial de la marca y no se redibuja.
+ * sincronizada ninguna imagen del texto. Las únicas excepciones son los
+ * dibujos de marca de `LOGO` —el logotipo del reverso y el isotipo de agua
+ * del anverso—, que son los ficheros oficiales y no se redibujan.
  */
 
 /** Resolución de la cara larga. 2048 mantiene el texto nítido en pantallas HiDPI. */
@@ -78,16 +79,19 @@ function heightOf(artwork: BrandArtwork, width: number) {
 
 /**
  * Dibuja un dibujo de marca centrado en `cx`, con la altura que le toca por su
- * proporción. Es un SVG que se carga como imagen, así que el dibujo llega
- * después: quien llame debe refrescar la textura cuando la promesa resuelva.
- * `paint` envuelve al `drawImage` para lo que haya que ajustar del contexto
- * (la opacidad de la marca de agua) en el momento en que se pinta de verdad.
+ * proporción y la opacidad que se le pida (`alpha`, para la marca de agua). Es
+ * un SVG que se carga como imagen, así que el dibujo llega después: quien
+ * llame debe refrescar la textura cuando la promesa resuelva.
  */
 function drawArtwork(
   ctx: Ctx,
   artwork: BrandArtwork,
-  { cx, top, width }: { cx: number; top: number; width: number },
-  paint?: (draw: () => void) => void,
+  {
+    cx,
+    top,
+    width,
+    alpha = 1,
+  }: { cx: number; top: number; width: number; alpha?: number },
 ): Promise<void> {
   const height = heightOf(artwork, width);
   return new Promise((resolve, reject) => {
@@ -95,9 +99,12 @@ function drawArtwork(
     // final y no al de su lienzo, que es mucho más pequeño.
     const image = new Image(width, height);
     image.onload = () => {
-      const draw = () => ctx.drawImage(image, cx - width / 2, top, width, height);
-      if (paint) paint(draw);
-      else draw();
+      // La opacidad se pone aquí y no antes: para cuando la imagen carga, el
+      // resto de la cara ya está pintado y el contexto ha seguido su curso.
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(image, cx - width / 2, top, width, height);
+      ctx.restore();
       resolve();
     };
     image.onerror = () => reject(new Error(`No se pudo cargar ${artwork.src}`));
@@ -112,21 +119,12 @@ function drawArtwork(
  */
 function drawWatermark(ctx: Ctx): Promise<void> {
   const width = 420;
-  return drawArtwork(
-    ctx,
-    LOGO.isotype,
-    {
-      cx: W - PAD - width / 2,
-      top: H - PAD - heightOf(LOGO.isotype, width),
-      width,
-    },
-    (draw) => {
-      ctx.save();
-      ctx.globalAlpha = 0.07;
-      draw();
-      ctx.restore();
-    },
-  );
+  return drawArtwork(ctx, LOGO.isotype, {
+    cx: W - PAD - width / 2,
+    top: H - PAD - heightOf(LOGO.isotype, width),
+    width,
+    alpha: 0.07,
+  });
 }
 
 /**
