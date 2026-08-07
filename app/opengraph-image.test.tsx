@@ -201,6 +201,7 @@ describe("imagen de Open Graph", () => {
 describe("metadatos de la previsualización", () => {
   it("describe la imagen con los datos del contacto, no con un texto suelto", () => {
     expect(alt).toContain(CONTACT.name);
+    expect(alt).toContain(CONTACT.jobTitle);
     expect(alt).toContain(CONTACT.company);
   });
 
