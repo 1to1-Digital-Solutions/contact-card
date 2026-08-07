@@ -87,7 +87,7 @@ function textPairs(theme: ThemeName): Array<[string, string, string]> {
   const lit = litBackdrop(theme);
   return [
     [ink, card, "nombre y datos del anverso"],
-    [inkMuted, card, "etiquetas del anverso y web del reverso"],
+    [inkMuted, card, "cargo y etiquetas del anverso, web del reverso"],
     [accentInk, card, "empresa en el anverso"],
     [ink, backdrop, "titular y enlaces del panel"],
     [inkMuted, backdrop, "etiquetas del panel"],

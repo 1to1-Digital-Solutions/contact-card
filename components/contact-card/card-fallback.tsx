@@ -55,6 +55,9 @@ export function CardFallback({ note }: { note: string }) {
                 <span className="block text-[5.8cqw] font-semibold text-ink">
                   {CONTACT.name}
                 </span>
+                <span className="mt-[1.2cqw] block text-[3.2cqw] text-ink-muted">
+                  {CONTACT.jobTitle}
+                </span>
                 <span className="mt-[1cqw] block text-[2.5cqw] font-semibold uppercase tracking-[0.2em] text-accent-ink">
                   {CONTACT.company}
                 </span>

@@ -250,10 +250,18 @@ export function createFrontTexture(
   setTracking(ctx, -2);
   ctx.fillText(contact.name, PAD, 230);
 
+  // El cargo, entre el nombre y la empresa: en tinta apagada y sin versalitas
+  // para que matice el nombre sin disputarle la jerarquía ni pisar el verde
+  // con el que firma la empresa.
+  ctx.fillStyle = palette.inkMuted;
+  ctx.font = font(46, 400);
+  setTracking(ctx, 0);
+  ctx.fillText(contact.jobTitle, PAD, 380);
+
   ctx.fillStyle = palette.accentInk;
   ctx.font = font(34, 600);
   setTracking(ctx, 10);
-  ctx.fillText(contact.company.toUpperCase(), PAD, 400);
+  ctx.fillText(contact.company.toUpperCase(), PAD, 460);
 
   ctx.fillStyle = palette.inkMuted;
   ctx.globalAlpha = 0.3;

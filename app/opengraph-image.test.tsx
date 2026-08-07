@@ -152,6 +152,7 @@ describe("imagen de Open Graph", () => {
     [THEME.card, "la cara de la tarjeta"],
     [THEME.cardEdge, "el canto que la separa del fondo"],
     [THEME.ink, "el nombre y los datos"],
+    [THEME.inkMuted, "el cargo"],
     [THEME.accentInk, "la empresa"],
     [BRAND.accent, "el filete y el logotipo"],
   ];

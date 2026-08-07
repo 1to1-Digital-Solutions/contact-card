@@ -10,6 +10,8 @@ export type Contact = {
   givenName: string;
   /** Apellidos (para la vCard estructurada). */
   familyName: string;
+  /** Cargo profesional: `TITLE` en la vCard, `jobTitle` en schema.org. */
+  jobTitle: string;
   company: string;
   email: string;
   /** Teléfono en formato legible, con separadores. */
@@ -26,6 +28,7 @@ export const CONTACT: Contact = {
   name: "César Peón Lamparero",
   givenName: "César",
   familyName: "Peón Lamparero",
+  jobTitle: "Desarrollador full-stack",
   company: "1to1 Digital Solutions",
   email: "cesarpl@1to1digital.solutions",
   phone: "+34 685 399 864",

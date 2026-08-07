@@ -24,6 +24,7 @@ export function personSchema() {
     name: CONTACT.name,
     givenName: CONTACT.givenName,
     familyName: CONTACT.familyName,
+    jobTitle: CONTACT.jobTitle,
     email: `mailto:${CONTACT.email}`,
     telephone: CONTACT.phoneE164,
     url: SITE_URL,

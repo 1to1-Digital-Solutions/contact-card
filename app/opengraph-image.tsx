@@ -18,7 +18,7 @@ import { DEFAULT_THEME } from "@/lib/theme";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = `Tarjeta de contacto de ${CONTACT.name}, de ${CONTACT.company}, con su email, su teléfono y su web.`;
+export const alt = `Tarjeta de contacto de ${CONTACT.name}, ${CONTACT.jobTitle} de ${CONTACT.company}, con su email, su teléfono y su web.`;
 
 /**
  * El tema de partida de la página, no el oscuro por su nombre: si mañana la
@@ -33,7 +33,7 @@ const CARD_WIDTH = size.width - MARGIN * 2;
 /**
  * Las medidas de dentro van en tanto por uno del ancho de la tarjeta, con las
  * mismas proporciones que la versión plana (`card-fallback.tsx`, en `cqw`):
- * margen 5.8%, filete 1%, nombre 5.8%, empresa 2.5% y datos 3.4%.
+ * margen 5.8%, filete 1%, nombre 5.8%, cargo 3.2%, empresa 2.5% y datos 3.4%.
  */
 const of = (ratio: number) => Math.round(CARD_WIDTH * ratio);
 
@@ -83,6 +83,15 @@ export default function Image() {
             <span
               style={{
                 marginTop: of(0.012),
+                fontSize: of(0.032),
+                color: PALETTE.inkMuted,
+              }}
+            >
+              {CONTACT.jobTitle}
+            </span>
+            <span
+              style={{
+                marginTop: of(0.01),
                 fontSize: of(0.025),
                 letterSpacing: of(0.025) * 0.2,
                 color: PALETTE.accentInk,

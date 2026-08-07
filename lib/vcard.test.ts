@@ -51,6 +51,11 @@ describe("buildVCard", () => {
     expect(lines).toContain("URL:https://1to1digital.solutions");
   });
 
+  /** `TITLE` es el campo del cargo en el estándar; es lo que leen las agendas. */
+  it("lleva el cargo en TITLE", () => {
+    expect(lines).toContain("TITLE:Desarrollador full-stack");
+  });
+
   it("escapa los datos de entrada en lugar de romper el formato", () => {
     const conflictivo: Contact = {
       ...CONTACT,

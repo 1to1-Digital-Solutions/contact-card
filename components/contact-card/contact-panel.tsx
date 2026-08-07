@@ -4,11 +4,16 @@ import { CopyButton } from "@/components/copy-button";
 import { CONTACT } from "@/lib/contact";
 import { buildVCard, vCardFilename } from "@/lib/vcard";
 
-const FIELDS = [
+/** El cargo no lleva `href`: es un dato de la ficha, no algo que se pueda abrir. */
+const FIELDS: Array<{ label: string; value: string; href?: string }> = [
+  { label: "Cargo", value: CONTACT.jobTitle },
   { label: "Email", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
   { label: "Teléfono", value: CONTACT.phone, href: `tel:${CONTACT.phoneE164}` },
   { label: "Web", value: CONTACT.website, href: CONTACT.websiteUrl },
 ];
+
+/** Alto de objetivo táctil incluido: el valor va emparejado con su botón. */
+const VALUE_CLASSES = "inline-flex min-h-11 items-center break-all text-lg text-ink";
 
 function downloadVCard() {
   const blob = new Blob([buildVCard(CONTACT)], {
@@ -41,12 +46,16 @@ export function ContactPanel() {
               {field.label}
             </dt>
             <dd className="mt-1 flex items-center justify-between gap-3">
-              <a
-                className="inline-flex min-h-11 items-center break-all text-lg text-ink underline decoration-ink/25 underline-offset-4 transition-colors hover:decoration-accent-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink"
-                href={field.href}
-              >
-                {field.value}
-              </a>
+              {field.href ? (
+                <a
+                  className={`${VALUE_CLASSES} underline decoration-ink/25 underline-offset-4 transition-colors hover:decoration-accent-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink`}
+                  href={field.href}
+                >
+                  {field.value}
+                </a>
+              ) : (
+                <span className={VALUE_CLASSES}>{field.value}</span>
+              )}
               <CopyButton value={field.value} label={field.label} />
             </dd>
           </div>

@@ -32,6 +32,7 @@ export function buildVCard(contact: Contact): string {
     `N:${e(contact.familyName)};${e(contact.givenName)};;;`,
     `FN:${e(contact.name)}`,
     `ORG:${e(contact.company)}`,
+    `TITLE:${e(contact.jobTitle)}`,
     `EMAIL;TYPE=INTERNET,WORK:${e(contact.email)}`,
     `TEL;TYPE=CELL,WORK:${e(contact.phoneE164)}`,
     `URL:${e(contact.websiteUrl)}`,
