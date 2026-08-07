@@ -1,5 +1,5 @@
-// Entre módulos de `lib/` la ruta va relativa, como en el resto: el alias
-// `@/` lo resuelve Next, pero no Vitest, y esto lo cargan sus tests.
+// Entre módulos de `lib/` la ruta va relativa, como en el resto del
+// directorio; el alias `@/` se reserva para cruzar de carpeta.
 import { type ThemeName, THEMES } from "./brand";
 
 /** Dónde recuerda el navegador el tema que eligió quien visita la página. */
