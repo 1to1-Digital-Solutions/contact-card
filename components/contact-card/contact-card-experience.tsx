@@ -93,8 +93,12 @@ export function ContactCardExperience() {
           <ThemeToggle theme={theme} onToggle={toggle} className="pointer-events-auto" />
         </header>
 
-        <div className="relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
-          <div className="flex flex-wrap items-center justify-center gap-3">
+        {/* Como la cabecera: la banda deja pasar el gesto al lienzo y solo los
+            mandos lo recogen. Ahora que la tarjeta ocupa la pantalla entera,
+            esta franja cae encima de la escena —sobre la propia tarjeta en un
+            móvil apaisado—, y sin esto sería una zona muerta de lado a lado. */}
+        <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
+          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-3">
             {/* Voltear y recolocar solo existen con la escena: la tarjeta
                 plana se gira pulsándola. */}
             {status === "ready" && (

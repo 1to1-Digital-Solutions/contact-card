@@ -1,9 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { THEMES } from "./brand";
 import {
+  applyTheme,
   CHROME_COLOR,
   DEFAULT_THEME,
   parseTheme,
+  readTheme,
   THEME_SCRIPT,
   THEME_STORAGE_KEY,
 } from "./theme";
@@ -22,23 +24,34 @@ describe("elección de tema", () => {
   });
 });
 
-/** Documento y almacenamiento de mentira: lo justo para correr el script. */
-function runThemeScript(
-  stored: string | null | { broken: true },
-  { withMeta = true } = {},
-) {
+/**
+ * Documento de mentira: lo justo que tocan el script y `applyTheme`. Arranca
+ * como el HTML que emite `app/layout.tsx`, con el tema de partida puesto y el
+ * `<meta>` de su color.
+ */
+function fakeDocument({ withMeta = true } = {}) {
   const classes = new Set<string>([DEFAULT_THEME]);
-  // Sale con el color del tema de partida, que es lo que emite `app/layout.tsx`.
   const meta = { content: CHROME_COLOR[DEFAULT_THEME] };
   const document = {
     documentElement: {
       classList: {
         add: (...names: string[]) => names.forEach((name) => classes.add(name)),
         remove: (...names: string[]) => names.forEach((name) => classes.delete(name)),
+        contains: (name: string) => classes.has(name),
       },
     },
     querySelector: () => (withMeta ? meta : null),
   };
+  return { classes, meta, document };
+}
+
+/** El script en línea, con almacenamiento de mentira: `null` es «no hay nada
+ *  guardado» y un objeto, «el almacenamiento está bloqueado». */
+function runThemeScript(
+  stored: string | null | { broken: true },
+  { withMeta = true } = {},
+) {
+  const { classes, meta, document } = fakeDocument({ withMeta });
   const localStorage = {
     getItem(key: string) {
       if (stored && typeof stored === "object") throw new Error("bloqueado");
@@ -94,5 +107,73 @@ describe("script que fija el tema antes de pintar", () => {
 
   it("no revienta si el `<meta>` todavía no está en el documento", () => {
     expect(() => runThemeScript("light", { withMeta: false })).not.toThrow();
+  });
+});
+
+/**
+ * La otra mitad del tema: la que corre al pulsar el botón. `applyTheme` hace
+ * sobre el documento lo mismo que el script en línea, pero escrito aparte
+ * (uno es una cadena para el HTML y la otra, código del cliente), así que aquí
+ * se les pide el mismo resultado para que no se separen.
+ */
+describe("cambio de tema al pulsar el botón", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  /** Deja el documento de mentira como el activo y devuelve lo que se le mira. */
+  function withDocument({ withMeta = true } = {}) {
+    const dom = fakeDocument({ withMeta });
+    vi.stubGlobal("document", dom.document);
+    return dom;
+  }
+
+  it("pone el tema pedido y nunca deja los dos a la vez", () => {
+    const dom = withDocument();
+    for (const theme of ["light", "dark", "light"] as const) {
+      applyTheme(theme);
+      expect([...dom.classes]).toEqual([theme]);
+    }
+  });
+
+  it("mueve el `theme-color` con el tema, no solo la clase", () => {
+    const dom = withDocument();
+    applyTheme("light");
+    expect(dom.meta.content).toBe(THEMES.light.backdrop);
+    applyTheme("dark");
+    expect(dom.meta.content).toBe(THEMES.dark.backdrop);
+  });
+
+  it("no revienta si el `<meta>` no está en el documento", () => {
+    withDocument({ withMeta: false });
+    expect(() => applyTheme("light")).not.toThrow();
+  });
+
+  it("lee de `<html>` el tema que acaba de dejar puesto", () => {
+    withDocument();
+    applyTheme("light");
+    expect(readTheme()).toBe("light");
+    applyTheme("dark");
+    expect(readTheme()).toBe("dark");
+  });
+
+  /** Si `<html>` viniera sin clase —un fallo del script—, la interfaz debe
+   *  seguir enseñando el tema con el que se pintó la página. */
+  it("cae en el tema de partida si `<html>` viene sin clase", () => {
+    const dom = withDocument();
+    dom.classes.clear();
+    expect(readTheme()).toBe(DEFAULT_THEME);
+  });
+
+  it("deja el documento igual que el script en línea", () => {
+    for (const theme of ["light", "dark"] as const) {
+      const script = runThemeScript(theme);
+      const dom = withDocument();
+      applyTheme(theme);
+
+      expect([...dom.classes]).toEqual([...script.classes]);
+      expect(dom.meta.content).toBe(script.meta.content);
+      vi.unstubAllGlobals();
+    }
   });
 });
