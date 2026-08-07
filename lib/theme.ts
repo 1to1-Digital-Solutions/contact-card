@@ -46,9 +46,16 @@ export const THEME_SCRIPT = [
   `if(m)m.content=${JSON.stringify(CHROME_COLOR)}[t];`,
 ].join("");
 
-/** El tema que hay puesto ahora mismo en el documento. */
+/**
+ * El tema que hay puesto ahora mismo en el documento. Si `<html>` viniera sin
+ * clase —un fallo del script— cae en el de partida, que es con el que se
+ * pintó la página: no se da por hecho cuál de los dos es.
+ */
 export function readTheme(): ThemeName {
-  return document.documentElement.classList.contains("light") ? "light" : "dark";
+  const { classList } = document.documentElement;
+  if (classList.contains("light")) return "light";
+  if (classList.contains("dark")) return "dark";
+  return DEFAULT_THEME;
 }
 
 /** Deja el tema en `<html>`: de ahí cuelgan los tokens de `app/globals.css`. */
