@@ -3,6 +3,7 @@ import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { BRAND, THEMES } from "@/lib/brand";
 import { CONTACT } from "@/lib/contact";
+import { DEFAULT_THEME } from "@/lib/theme";
 import { metadata } from "./layout";
 import Image, { alt, contentType, size } from "./opengraph-image";
 import * as twitter from "./twitter-image";
@@ -118,8 +119,11 @@ function undoFilter(filter: number, left: number, up: number, corner: number): n
 const image = decodePng(png);
 const PIXELS = image.width * image.height;
 
+/** El tema con el que se abre la página, que es del que va la imagen. */
+const THEME = THEMES[DEFAULT_THEME];
+
 /** Los tokens que la imagen tiene derecho a pintar: la paleta y nada más. */
-const PALETTE = new Set<string>([...Object.values(BRAND), ...Object.values(THEMES.dark)]);
+const PALETTE = new Set<string>([...Object.values(BRAND), ...Object.values(THEME)]);
 
 describe("imagen de Open Graph", () => {
   it("es un PNG del tamaño que declaran los metadatos", () => {
@@ -144,11 +148,11 @@ describe("imagen de Open Graph", () => {
 
   /** Cada token que dibuja algo reconocible: si uno desaparece, el diseño cambió. */
   const drawn: Array<[string, string]> = [
-    [THEMES.dark.backdrop, "el fondo de la escena alrededor de la tarjeta"],
-    [THEMES.dark.card, "la cara de la tarjeta"],
-    [THEMES.dark.cardEdge, "el canto que la separa del fondo"],
-    [THEMES.dark.ink, "el nombre y los datos"],
-    [THEMES.dark.accentInk, "la empresa"],
+    [THEME.backdrop, "el fondo de la escena alrededor de la tarjeta"],
+    [THEME.card, "la cara de la tarjeta"],
+    [THEME.cardEdge, "el canto que la separa del fondo"],
+    [THEME.ink, "el nombre y los datos"],
+    [THEME.accentInk, "la empresa"],
     [BRAND.accent, "el filete y el logotipo"],
   ];
 
@@ -165,21 +169,31 @@ describe("imagen de Open Graph", () => {
   it("lleva el filete de marca en el canto izquierdo de la tarjeta", () => {
     const middle = Math.round(image.height / 2);
     let x = 0;
-    while (x < image.width && image.at(x, middle) === THEMES.dark.backdrop) x++;
+    while (x < image.width && image.at(x, middle) === THEME.backdrop) x++;
 
     expect(x).toBeGreaterThan(0);
     expect(x).toBeLessThan(image.width);
     expect(image.at(x, middle)).toBe(BRAND.accent);
   });
 
-  it("va del tema oscuro, que es con el que se abre la página", () => {
+  it("va del tema de partida, que es con el que se abre la página", () => {
     const dominant = [...image.counts].sort((a, b) => b[1] - a[1])[0][0];
-    expect(dominant).toBe(THEMES.dark.card);
+    expect(dominant).toBe(THEME.card);
   });
 
   /** Como en el favicon y en el `themeColor`: los colores se piden a la paleta. */
   it("no lleva ningún color escrito a mano", () => {
     expect(source("./opengraph-image.tsx").match(/#[0-9a-f]{6}\b/gi)).toBeNull();
+  });
+
+  /**
+   * El otro lado del mismo trato: los textos tampoco se copian. Si un dato
+   * apareciera aquí escrito, cambiarlo en `lib/contact.ts` dejaría la
+   * previsualización enseñando el viejo, que es justo lo que no puede pasar.
+   */
+  it("no lleva ningún dato de contacto escrito a mano", () => {
+    const code = source("./opengraph-image.tsx");
+    for (const value of Object.values(CONTACT)) expect(code).not.toContain(value);
   });
 });
 

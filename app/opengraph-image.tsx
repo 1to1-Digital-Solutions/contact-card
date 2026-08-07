@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { BRAND, CARD, LOGO, THEMES } from "@/lib/brand";
 import { CONTACT } from "@/lib/contact";
+import { DEFAULT_THEME } from "@/lib/theme";
 
 /**
  * Previsualización al compartir el enlace (WhatsApp, LinkedIn, Slack). Se
@@ -11,16 +12,19 @@ import { CONTACT } from "@/lib/contact";
  * desincronizarse de la marca. El mismo fichero sirve para Twitter/X, que lo
  * reexporta desde `app/twitter-image.tsx`.
  *
- * Es una sola imagen y la página tiene dos temas, así que va con el oscuro:
- * es el tema de partida (`DEFAULT_THEME`), el que se ve al abrir el enlace.
+ * Es una sola imagen y la página tiene dos temas, así que va con el de
+ * partida (`DEFAULT_THEME`, hoy el oscuro): el que se ve al abrir el enlace.
  */
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = `Tarjeta de contacto de ${CONTACT.name}, de ${CONTACT.company}, con su email, su teléfono y su web.`;
 
-/** El tema de partida de la página; ver la nota de arriba. */
-const PALETTE = THEMES.dark;
+/**
+ * El tema de partida de la página, no el oscuro por su nombre: si mañana la
+ * página abriera en claro, la previsualización se mudaría con ella.
+ */
+const PALETTE = THEMES[DEFAULT_THEME];
 
 /** Margen de fondo alrededor de la tarjeta: el color de la escena hace de mesa. */
 const MARGIN = 40;

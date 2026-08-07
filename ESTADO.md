@@ -50,7 +50,7 @@ arquitectura en `README.md`.
   anverso de la tarjeta con `ImageResponse` (1200×630, tema oscuro) a partir de
   `lib/contact.ts` y `lib/brand.ts`, y `app/twitter-image.tsx` reexporta la
   misma imagen. No hay ningún PNG en el repo.
-- 132 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+- 133 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
   elección de tema), sobre el contraste de la paleta en los dos temas, sobre
   que `lib/brand.ts` no se desincronice de los tokens de `app/globals.css` ni
   del favicon `app/icon.svg` (este también en el encaje del isotipo), sobre
@@ -74,10 +74,11 @@ arquitectura en `README.md`.
   los dos temas. Los únicos colores escritos a mano fuera de ahí son los del
   favicon `app/icon.svg`, que es un SVG estático; el mismo test los ata a la
   paleta.
-- La imagen de compartir es una sola y la página tiene dos temas: va del
-  oscuro, que es el de partida. Su tipografía no es la pila del sistema (una
-  imagen no la tiene): usa la que trae el generador de Next, empaquetada, sin
-  descargas.
+- La imagen de compartir es una sola y la página tiene dos temas: va del de
+  partida, que hoy es el oscuro. No lo lleva escrito: lo lee de
+  `DEFAULT_THEME`, así que si la página abriera en claro la imagen se mudaría
+  con ella. Su tipografía no es la pila del sistema (una imagen no la tiene):
+  usa la que trae el generador de Next, empaquetada, sin descargas.
 - El `theme-color` de la pestaña no se declara por `prefers-color-scheme`: el
   tema lo elige el botón, no el sistema. Los metadatos salen con el color del
   tema de partida y lo corrigen el script en línea (al cargar) y `applyTheme`
