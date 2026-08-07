@@ -7,8 +7,8 @@
 
 ## ⏭️ SIGUIENTE PASO (lo primero al volver)
 
-- Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
-  tarjeta, hay que decidirlo.
+- Nada pendiente decidido: la tarjeta está completa. Lo siguiente lo marca la
+  próxima tarea.
 
 ## Qué es contact-card
 
@@ -50,7 +50,11 @@ arquitectura en `README.md`.
   anverso de la tarjeta con `ImageResponse` (1200×630, tema oscuro) a partir de
   `lib/contact.ts` y `lib/brand.ts`, y `app/twitter-image.tsx` reexporta la
   misma imagen. No hay ningún PNG en el repo.
-- 133 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+- Cargo profesional («Desarrollador full-stack») en `lib/contact.ts`, entre el
+  nombre y la empresa en las dos caras del anverso (3D, versión plana y la
+  imagen de compartir), en el panel de datos, en `TITLE` de la vCard y en
+  `jobTitle` del JSON-LD.
+- 137 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
   elección de tema), sobre el contraste de la paleta en los dos temas, sobre
   que `lib/brand.ts` no se desincronice de los tokens de `app/globals.css` ni
   del favicon `app/icon.svg` (este también en el encaje del isotipo), sobre
@@ -62,8 +66,7 @@ arquitectura en `README.md`.
 
 ## Pendiente / próximos pasos
 
-1. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
-   tarjeta, hay que decidirlo.
+Nada pendiente.
 
 ## Caveats y notas
 

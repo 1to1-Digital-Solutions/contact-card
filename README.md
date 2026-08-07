@@ -83,9 +83,4 @@ En pantalla estrecha la tarjeta ocupa toda la pantalla y no hay scroll: los
 datos viven en esa hoja. A partir de `lg` están siempre a la vista en el panel
 lateral.
 
-## Pendiente
-
-- Cargo profesional: no hay ninguno en `lib/contact.ts`; si debe salir en la
-  tarjeta, hay que decidir cuál.
-
 Ver `ESTADO.md` para el detalle del estado y el siguiente paso.
