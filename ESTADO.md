@@ -46,7 +46,7 @@ arquitectura en `README.md`.
 - En pantalla estrecha la tarjeta ocupa toda la pantalla, sin scroll, y los
   datos salen en una hoja (`<dialog>`) desde el botón «Ver los datos», con un
   botón de copiar por dato.
-- 107 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+- 116 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
   elección de tema), sobre el contraste de la paleta en los dos temas, sobre
   que `lib/brand.ts` no se desincronice de los tokens de `app/globals.css` ni
   del favicon `app/icon.svg` (este también en el encaje del isotipo) y sobre
