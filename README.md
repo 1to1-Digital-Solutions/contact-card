@@ -30,7 +30,7 @@ three.js con React Three Fiber y drei · Vitest.
 ## Cómo está montado
 
 ```
-app/                     Página, metadatos, robots y sitemap
+app/                     Página, metadatos, imagen de compartir, robots y sitemap
 components/contact-card/ La experiencia: escena, tarjeta, panel y respaldo 2D
 components/geo/          Datos estructurados (JSON-LD)
 lib/                     Datos, marca y lógica pura (con sus tests al lado)
@@ -62,6 +62,10 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
   una pared; el volumen lo dan el bisel, las luces y el mapa de entorno.
 - **Todo funciona sin WebGL**: si el navegador no puede con 3D, se enseña la
   misma tarjeta en CSS. Los datos, además, están siempre en HTML.
+- **La previsualización al compartir también se genera desde el código**
+  (`app/opengraph-image.tsx`, con `ImageResponse`): mismos datos y misma
+  paleta que la tarjeta, así que no hay ningún PNG que reexportar. Twitter/X
+  reutiliza esa misma imagen.
 
 ## Interacción
 
@@ -81,6 +85,7 @@ lateral.
 
 ## Pendiente
 
-- Imagen de Open Graph: al compartir el enlace no se ve previsualización.
+- Cargo profesional: no hay ninguno en `lib/contact.ts`; si debe salir en la
+  tarjeta, hay que decidir cuál.
 
 Ver `ESTADO.md` para el detalle del estado y el siguiente paso.

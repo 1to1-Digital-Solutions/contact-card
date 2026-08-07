@@ -7,8 +7,8 @@
 
 ## ⏭️ SIGUIENTE PASO (lo primero al volver)
 
-- Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
-  se ve previsualización.
+- Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
+  tarjeta, hay que decidirlo.
 
 ## Qué es contact-card
 
@@ -46,20 +46,23 @@ arquitectura en `README.md`.
 - En pantalla estrecha la tarjeta ocupa toda la pantalla, sin scroll, y los
   datos salen en una hoja (`<dialog>`) desde el botón «Ver los datos», con un
   botón de copiar por dato.
-- 116 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+- Previsualización al compartir el enlace: `app/opengraph-image.tsx` dibuja el
+  anverso de la tarjeta con `ImageResponse` (1200×630, tema oscuro) a partir de
+  `lib/contact.ts` y `lib/brand.ts`, y `app/twitter-image.tsx` reexporta la
+  misma imagen. No hay ningún PNG en el repo.
+- 132 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
   elección de tema), sobre el contraste de la paleta en los dos temas, sobre
   que `lib/brand.ts` no se desincronice de los tokens de `app/globals.css` ni
-  del favicon `app/icon.svg` (este también en el encaje del isotipo) y sobre
+  del favicon `app/icon.svg` (este también en el encaje del isotipo), sobre
   que los dibujos de marca sigan donde `LOGO` dice, con su lienzo y con la
-  tinta que se lee sobre su cara.
+  tinta que se lee sobre su cara, y sobre los píxeles de la imagen de
+  Open Graph (que solo pinta colores de la paleta) y sus metadatos.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
 ## Pendiente / próximos pasos
 
-1. Imagen de Open Graph: hoy no hay ninguna, así que al compartir el enlace no
-   se ve previsualización.
-2. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
+1. Cargo profesional: no se ha inventado ninguno; si debe aparecer en la
    tarjeta, hay que decidirlo.
 
 ## Caveats y notas
@@ -71,6 +74,10 @@ arquitectura en `README.md`.
   los dos temas. Los únicos colores escritos a mano fuera de ahí son los del
   favicon `app/icon.svg`, que es un SVG estático; el mismo test los ata a la
   paleta.
+- La imagen de compartir es una sola y la página tiene dos temas: va del
+  oscuro, que es el de partida. Su tipografía no es la pila del sistema (una
+  imagen no la tiene): usa la que trae el generador de Next, empaquetada, sin
+  descargas.
 - El `theme-color` de la pestaña no se declara por `prefers-color-scheme`: el
   tema lo elige el botón, no el sistema. Los metadatos salen con el color del
   tema de partida y lo corrigen el script en línea (al cargar) y `applyTheme`
