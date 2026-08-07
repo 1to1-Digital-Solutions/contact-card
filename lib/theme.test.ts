@@ -157,13 +157,31 @@ describe("cambio de tema al pulsar el botón", () => {
     expect(readTheme()).toBe("dark");
   });
 
-  /** Si `<html>` viniera sin clase —un fallo del script—, la interfaz debe
-   *  seguir enseñando el tema con el que se pintó la página. */
-  it("cae en el tema de partida si `<html>` viene sin clase", () => {
-    const dom = withDocument();
-    dom.classes.clear();
-    expect(readTheme()).toBe(DEFAULT_THEME);
-  });
+  /**
+   * Si en `<html>` no hay ninguna de las dos clases del tema —el script falló,
+   * o lo que hay es una clase de otra cosa—, la interfaz debe seguir enseñando
+   * el tema con el que se pintó la página. Ninguno de los dos temas puede ser
+   * el que se dé por supuesto al no encontrar el otro.
+   */
+  it.each([[], ["antialiased"]])(
+    "cae en el tema de partida si `<html>` no trae ninguna de las dos clases (%s)",
+    (...classes) => {
+      const dom = withDocument();
+      dom.classes.clear();
+      for (const name of classes) dom.classes.add(name);
+      expect(readTheme()).toBe(DEFAULT_THEME);
+    },
+  );
+
+  it.each(["light", "dark"] as const)(
+    "lee la clase `%s` puesta a mano, sin pasar por `applyTheme`",
+    (theme) => {
+      const dom = withDocument();
+      dom.classes.clear();
+      dom.classes.add(theme);
+      expect(readTheme()).toBe(theme);
+    },
+  );
 
   it("deja el documento igual que el script en línea", () => {
     for (const theme of ["light", "dark"] as const) {
