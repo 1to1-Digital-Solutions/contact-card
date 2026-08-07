@@ -1,0 +1,123 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { ImageResponse } from "next/og";
+import { BRAND, CARD, LOGO, THEMES } from "@/lib/brand";
+import { CONTACT } from "@/lib/contact";
+
+/**
+ * Previsualización al compartir el enlace (WhatsApp, LinkedIn, Slack). Se
+ * genera desde el código, como las caras de la tarjeta: el contenido sale de
+ * `lib/contact.ts` y el color de `lib/brand.ts`, así que no puede
+ * desincronizarse de la marca. El mismo fichero sirve para Twitter/X, que lo
+ * reexporta desde `app/twitter-image.tsx`.
+ *
+ * Es una sola imagen y la página tiene dos temas, así que va con el oscuro:
+ * es el tema de partida (`DEFAULT_THEME`), el que se ve al abrir el enlace.
+ */
+
+export const size = { width: 1200, height: 630 };
+export const contentType = "image/png";
+export const alt = `Tarjeta de contacto de ${CONTACT.name}, de ${CONTACT.company}, con su email, su teléfono y su web.`;
+
+/** El tema de partida de la página; ver la nota de arriba. */
+const PALETTE = THEMES.dark;
+
+/** Margen de fondo alrededor de la tarjeta: el color de la escena hace de mesa. */
+const MARGIN = 40;
+const CARD_WIDTH = size.width - MARGIN * 2;
+
+/**
+ * Las medidas de dentro van en tanto por uno del ancho de la tarjeta, con las
+ * mismas proporciones que la versión plana (`card-fallback.tsx`, en `cqw`):
+ * margen 5.8%, filete 1%, nombre 5.8%, empresa 2.5% y datos 3.4%.
+ */
+const of = (ratio: number) => Math.round(CARD_WIDTH * ratio);
+
+/** El logotipo del reverso, en verde de marca, al 20% del ancho de la tarjeta. */
+const LOGO_WIDTH = of(0.2);
+
+/**
+ * El logotipo oficial, incrustado en la imagen: el generador no resuelve rutas
+ * públicas, así que el SVG viaja como data URI.
+ */
+function logoDataUri(): string {
+  const svg = readFileSync(join(process.cwd(), "public", LOGO.brand.src));
+  return `data:image/svg+xml;base64,${svg.toString("base64")}`;
+}
+
+export default function Image() {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          height: "100%",
+          padding: MARGIN,
+          background: PALETTE.backdrop,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            width: "100%",
+            padding: of(0.058),
+            // El canto del papel es lo que separa la tarjeta del fondo: los dos
+            // tonos son casi el mismo, como en la escena.
+            border: `2px solid ${PALETTE.cardEdge}`,
+            borderLeft: `${of(0.01)}px solid ${BRAND.accent}`,
+            borderRadius: of(CARD.radius / CARD.width),
+            background: PALETTE.card,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: of(0.058), color: PALETTE.ink, letterSpacing: -1 }}>
+              {CONTACT.name}
+            </span>
+            <span
+              style={{
+                marginTop: of(0.012),
+                fontSize: of(0.025),
+                letterSpacing: of(0.025) * 0.2,
+                color: PALETTE.accentInk,
+              }}
+            >
+              {CONTACT.company.toUpperCase()}
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: of(0.01),
+                fontSize: of(0.034),
+                color: PALETTE.ink,
+              }}
+            >
+              <span>{CONTACT.email}</span>
+              <span>{CONTACT.phone}</span>
+              <span>{CONTACT.website}</span>
+            </div>
+            <img
+              src={logoDataUri()}
+              alt=""
+              width={LOGO_WIDTH}
+              height={(LOGO_WIDTH * LOGO.brand.height) / LOGO.brand.width}
+            />
+          </div>
+        </div>
+      </div>
+    ),
+    size,
+  );
+}

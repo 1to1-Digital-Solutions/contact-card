@@ -4,11 +4,12 @@ import { SITE_URL } from "@/lib/site";
 import { CHROME_COLOR, DEFAULT_THEME, THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
+const TITLE = `${CONTACT.name} — Tarjeta de contacto`;
 const DESCRIPTION = `Tarjeta de contacto interactiva de ${CONTACT.name}, de ${CONTACT.company}: arrástrala, gírala y guarda los datos en tu agenda.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: `${CONTACT.name} — Tarjeta de contacto`,
+  title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
@@ -16,7 +17,15 @@ export const metadata: Metadata = {
     locale: "es_ES",
     url: "/",
     siteName: CONTACT.company,
-    title: `${CONTACT.name} — Tarjeta de contacto`,
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  // La imagen de la previsualización y su `alt` los declaran
+  // `app/opengraph-image.tsx` y `app/twitter-image.tsx`; aquí solo se pide la
+  // tarjeta grande, que es la que la enseña entera.
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
     description: DESCRIPTION,
   },
 };
