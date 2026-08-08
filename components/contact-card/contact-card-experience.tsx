@@ -6,7 +6,6 @@ import { CONTACT } from "@/lib/contact";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { useTheme } from "@/lib/use-theme";
 import { useWebGLStatus } from "@/lib/use-webgl-status";
-import { CardControls, CONTROL_CLASSES } from "./card-controls";
 import { CardFallback } from "./card-fallback";
 import { CardScene } from "./card-scene";
 import { ContactPanel } from "./contact-panel";
@@ -14,6 +13,10 @@ import { ContactSheet } from "./contact-sheet";
 import { SceneErrorBoundary } from "./scene-error-boundary";
 
 const SHEET_TITLE = "Datos de contacto";
+
+/** Botón sobrio de la escena: se lee sobre cualquiera de los dos temas. */
+const CONTROL_CLASSES =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 px-5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink";
 
 export function ContactCardExperience() {
   const reducedMotion = useReducedMotion();
@@ -100,11 +103,18 @@ export function ContactCardExperience() {
         <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
           <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-3">
             {/* Voltear y recolocar solo existen con la escena: la tarjeta
-                plana se gira pulsándola. */}
+                plana se gira pulsándola. Van aquí en todos los tamaños y no
+                dentro de la hoja de datos: desde la hoja, el giro que
+                disparan queda tapado justo mientras ocurre. */}
             {status === "ready" && (
-              <div className="hidden flex-wrap gap-3 lg:flex">
-                <CardControls showingBack={showingBack} onFlip={flip} onReset={reset} />
-              </div>
+              <>
+                <button type="button" onClick={flip} className={CONTROL_CLASSES}>
+                  {showingBack ? "Ver el anverso" : "Ver el reverso"}
+                </button>
+                <button type="button" onClick={reset} className={CONTROL_CLASSES}>
+                  Recolocar
+                </button>
+              </>
             )}
 
             {/* La puerta a los datos no depende de la escena: en pantalla
@@ -156,11 +166,6 @@ export function ContactCardExperience() {
       </aside>
 
       <ContactSheet open={sheetOpen} onClose={closeSheet} title={SHEET_TITLE}>
-        {status === "ready" && (
-          <div className="flex flex-wrap gap-3">
-            <CardControls showingBack={showingBack} onFlip={flip} onReset={reset} />
-          </div>
-        )}
         <ContactPanel />
       </ContactSheet>
     </div>

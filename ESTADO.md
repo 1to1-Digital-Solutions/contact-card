@@ -45,7 +45,9 @@ arquitectura en `README.md`.
   anverso, de marca de agua, el positivo o el negativo según el tema.
 - En pantalla estrecha la tarjeta ocupa toda la pantalla, sin scroll, y los
   datos salen en una hoja (`<dialog>`) desde el botón «Ver los datos», con un
-  botón de copiar por dato.
+  botón de copiar por dato. La hoja solo lleva datos: voltear y recolocar van
+  en la banda de mandos, junto a «Ver los datos», en todos los tamaños, para
+  que el giro se vea al dispararlo.
 - Previsualización al compartir el enlace: `app/opengraph-image.tsx` dibuja el
   anverso de la tarjeta con `ImageResponse` (1200×630, tema oscuro) a partir de
   `lib/contact.ts` y `lib/brand.ts`, y `app/twitter-image.tsx` reexporta la
