@@ -14,9 +14,14 @@ import { SceneErrorBoundary } from "./scene-error-boundary";
 
 const SHEET_TITLE = "Datos de contacto";
 
-/** Botón sobrio de la escena: se lee sobre cualquiera de los dos temas. */
+/**
+ * Botón sobrio de la escena: se lee sobre cualquiera de los dos temas. El
+ * `pointer-events-auto` va en el botón y no en la fila que los agrupa: esa
+ * fila ocupa todo el ancho en cuanto los mandos se reparten en dos líneas, y
+ * desde ahí se tragaría el gesto en los huecos entre botones.
+ */
 const CONTROL_CLASSES =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 px-5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink";
+  "pointer-events-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 px-5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink";
 
 export function ContactCardExperience() {
   const reducedMotion = useReducedMotion();
@@ -101,7 +106,7 @@ export function ContactCardExperience() {
             esta franja cae encima de la escena —sobre la propia tarjeta en un
             móvil apaisado—, y sin esto sería una zona muerta de lado a lado. */}
         <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
-          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {/* Voltear y recolocar solo existen con la escena: la tarjeta
                 plana se gira pulsándola. Van aquí en todos los tamaños y no
                 dentro de la hoja de datos: desde la hoja, el giro que
