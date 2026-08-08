@@ -48,6 +48,9 @@ arquitectura en `README.md`.
   botón de copiar por dato. La hoja solo lleva datos: voltear y recolocar van
   en la banda de mandos, junto a «Ver los datos», en todos los tamaños, para
   que el giro se vea al dispararlo.
+- La tarjeta se voltea sin tocar los botones: dos toques rápidos sobre ella o
+  sacarla de la pantalla arrastrándola (entonces se suelta sola y vuelve al
+  centro por la otra cara). Las dos reglas viven en `lib/card-gestures.ts`.
 - Previsualización al compartir el enlace: `app/opengraph-image.tsx` dibuja el
   anverso de la tarjeta con `ImageResponse` (1200×630, tema oscuro) a partir de
   `lib/contact.ts` y `lib/brand.ts`, y `app/twitter-image.tsx` reexporta la
@@ -65,8 +68,8 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 243 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
-  elección de tema y de idioma), sobre el contraste de la paleta en los dos
+- 243 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
+  voltean la tarjeta, URL del sitio, elección de tema y de idioma), sobre el contraste de la paleta en los dos
   temas, sobre que `lib/brand.ts` no se desincronice de los tokens de
   `app/globals.css` ni del favicon `app/icon.svg` (este también en el encaje
   del isotipo), sobre que los dibujos de marca sigan donde `LOGO` dice, con su
@@ -89,6 +92,17 @@ arquitectura en `README.md`.
 Nada pendiente.
 
 ## Caveats y notas
+
+- El doble toque se reconoce con los eventos de puntero y no con `dblclick`:
+  ese evento es del ratón y en un móvil no llega. Su ventana es de 450 ms,
+  la que dan por buena las plataformas; con menos (se probó con 320 ms) un
+  dedo normal se queda fuera y el gesto parece que no existe.
+- «Sacar la tarjeta de la pantalla» no exige sacarla entera: basta con que
+  quede menos de un cuarto dentro. Con el dedo no se puede empujar más allá
+  del borde, así que el criterio estricto sería inalcanzable en un móvil.
+- Un solo `pointerup` sobre la tarjeta entra varias veces en el manejador,
+  una por cada malla que atraviesa el rayo. Por eso el toque se consume al
+  leerlo: si no, el volteo se aplicaría más de una vez.
 
 - La paleta de marca está duplicada a propósito en `lib/brand.ts` (para
   three.js) y en `app/globals.css` (para Tailwind). Si se cambia una, hay que

@@ -86,7 +86,8 @@ const es: Dictionary = {
   scene: {
     label: "Tarjeta de contacto interactiva",
     loading: "Cargando la tarjeta…",
-    hint: "Arrastra la tarjeta para moverla y el fondo para girarla.",
+    hint:
+      "Arrastra la tarjeta para moverla y el fondo para girarla. Dale dos toques, o sácala de la pantalla, y se da la vuelta.",
     noWebgl:
       "Tu navegador no puede mostrar gráficos 3D, así que esta es la versión plana. Pulsa la tarjeta para darle la vuelta.",
     failed:
@@ -140,7 +141,8 @@ const en: Dictionary = {
   scene: {
     label: "Interactive contact card",
     loading: "Loading the card…",
-    hint: "Drag the card to move it and the background to spin it.",
+    hint:
+      "Drag the card to move it and the background to spin it. Double-tap it, or drag it off screen, to flip it over.",
     noWebgl:
       "Your browser cannot show 3D graphics, so this is the flat version. Tap the card to turn it over.",
     failed:

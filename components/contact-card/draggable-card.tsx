@@ -4,6 +4,12 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { type ThemeName, CARD } from "@/lib/brand";
+import {
+  hasLeftView,
+  isDoubleTap,
+  isTap,
+  type PointerMark,
+} from "@/lib/card-gestures";
 import { isShowingBack, snapToHalfTurn } from "@/lib/card-orientation";
 import type { Language } from "@/lib/i18n";
 import { clamp, stepSpring, type SpringConfig, type SpringState } from "@/lib/motion";
@@ -106,6 +112,9 @@ export function DraggableCard({
     targetY: 0,
   });
   const showingBack = useRef(false);
+  /** Toque en curso sobre la tarjeta y último toque completado, para el doble. */
+  const pressed = useRef<PointerMark | null>(null);
+  const lastTap = useRef<PointerMark | null>(null);
   const scratch = useRef(new THREE.Vector3());
   const previousFlips = useRef(flipCount);
   const previousResets = useRef(resetCount);
@@ -121,9 +130,16 @@ export function DraggableCard({
     spin.current = { pitch: 0, turn: 0 };
   }, [resetCount]);
 
+  const markOf = (event: ThreeEvent<PointerEvent>): PointerMark => ({
+    x: event.clientX,
+    y: event.clientY,
+    time: event.timeStamp,
+  });
+
   const startMove = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     (event.target as Element).setPointerCapture(event.pointerId);
+    pressed.current = markOf(event);
     const current = group.current;
     drag.current.mode = "move";
     drag.current.grabX = event.point.x - (current?.position.x ?? 0);
@@ -150,6 +166,7 @@ export function DraggableCard({
    * de la captura del puntero.
    */
   const endDrag = useCallback(() => {
+    pressed.current = null;
     if (drag.current.mode === "idle") return;
     if (drag.current.mode === "rotate") {
       // Al soltar, la tarjeta encaja mostrando una cara entera.
@@ -163,6 +180,34 @@ export function DraggableCard({
   const release = (event: ThreeEvent<PointerEvent>) => {
     (event.target as Element).releasePointerCapture(event.pointerId);
     endDrag();
+  };
+
+  /**
+   * Soltar la tarjeta. Además de terminar el gesto, mira si lo que acaba de
+   * pasar es el segundo de dos toques rápidos: en ese caso la tarjeta se da
+   * la vuelta. El doble toque se reconoce aquí, con los eventos de puntero,
+   * y no con `dblclick`, porque ese evento es del ratón: en un móvil no
+   * llega (y donde llega, el navegador se lo reserva para el zoom).
+   *
+   * Un solo `pointerup` entra aquí varias veces, una por cada malla de la
+   * tarjeta que atraviesa el rayo, así que el toque se consume al leerlo:
+   * solo la primera entrega cuenta.
+   */
+  const releaseCard = (event: ThreeEvent<PointerEvent>) => {
+    const down = pressed.current;
+    pressed.current = null;
+    const up = markOf(event);
+    if (down && isTap(down, up)) {
+      if (isDoubleTap(lastTap.current, up)) {
+        spin.current.turn += Math.PI;
+        // Un tercer toque empieza cuenta nueva: si no, cada toque suelto a
+        // partir del segundo daría media vuelta más.
+        lastTap.current = null;
+      } else {
+        lastTap.current = up;
+      }
+    }
+    release(event);
   };
 
   /**
@@ -254,6 +299,26 @@ export function DraggableCard({
       showingBack.current = back;
       onFaceChange(back);
     }
+
+    // Sacarla de la pantalla es la otra forma de verle el reverso: cuando la
+    // tarjeta se va de la vista se suelta sola, y el muelle de vuelta la trae
+    // al centro ya girada y sin inclinación, como recién dejada.
+    if (
+      mode === "move" &&
+      hasLeftView(
+        {
+          x: position.current.x.value,
+          y: position.current.y.value,
+          halfWidth: (CARD.width * scale) / 2,
+          halfHeight: (CARD.height * scale) / 2,
+        },
+        { halfWidth: viewport.width / 2, halfHeight: viewport.height / 2 },
+      )
+    ) {
+      spin.current.turn = snapToHalfTurn(spin.current.turn) + Math.PI;
+      spin.current.pitch = 0;
+      endDrag();
+    }
   });
 
   return (
@@ -268,15 +333,7 @@ export function DraggableCard({
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      <group
-        ref={group}
-        onPointerDown={startMove}
-        onPointerUp={release}
-        onDoubleClick={(event) => {
-          event.stopPropagation();
-          spin.current.turn += Math.PI;
-        }}
-      >
+      <group ref={group} onPointerDown={startMove} onPointerUp={releaseCard}>
         <group scale={scale}>
           <CardMesh theme={theme} language={language} />
         </group>
