@@ -5,8 +5,8 @@ import type { ReactNode } from "react";
 /**
  * Botón sobrio de la escena: se lee sobre cualquiera de los dos temas. El
  * `pointer-events-auto` va en el botón y no en la fila que los agrupa: esa
- * fila ocupa todo el ancho, y desde ahí se tragaría el gesto en los huecos
- * entre botones.
+ * fila ocupa todo el ancho en cuanto los mandos se reparten en dos líneas, y
+ * desde ahí se tragaría el gesto en los huecos entre botones.
  */
 const CONTROL_CLASSES =
   "pointer-events-auto inline-flex size-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink sm:w-auto sm:px-5";
@@ -60,13 +60,18 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-/** Voltear: las dos mitades de una hoja abatiéndose sobre su eje. */
+/**
+ * Voltear: la tarjeta apaisada y la flecha que le da la vuelta. Dibujar en su
+ * lugar las dos mitades de una hoja abatiéndose sobre su eje deja un icono de
+ * corchetes que, a 20 px y sin rótulo al lado, se confunde con el encuadre de
+ * recolocar: los dos quedan reducidos a unas esquinas sueltas.
+ */
 export function FlipIcon() {
   return (
     <Icon>
-      <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
-      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
-      <path d="M12 3v2M12 9v2M12 15v2M12 21v-2" />
+      <rect x="3" y="11" width="18" height="10" rx="2" />
+      <path d="M6 8a6.5 6.5 0 0 1 12-1" />
+      <path d="M18 3v4h-4" />
     </Icon>
   );
 }
