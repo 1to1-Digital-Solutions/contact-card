@@ -48,8 +48,10 @@ interfaz, en otro: `lib/dictionary.ts`.
   primer HTML —a diferencia del tema, un script no puede corregirlo después—,
   así que `/` se renderiza en cada visita; el resto (imagen de compartir,
   `robots.txt`, sitemap) se sigue generando en build. El botón de la cabecera
-  cambia de idioma para esta visita, pensado para enseñar la tarjeta a alguien
-  que no lee el tuyo.
+  cambia de idioma, pensado para enseñar la tarjeta a alguien que no lee el
+  tuyo, y esa elección se recuerda en una cookie que el servidor lee antes de
+  escribir el texto (`lib/request-language.ts`); manda sobre la cabecera, y si
+  trae cualquier otro valor se ignora y se negocia como siempre.
 
 - **Las caras de la tarjeta se dibujan en un canvas 2D** en tiempo de
   ejecución (`card-textures.ts`), no son imágenes. Cambiar un dato o un
@@ -89,7 +91,7 @@ interfaz, en otro: `lib/dictionary.ts`.
 | Doble clic en la tarjeta       | Darle la vuelta                |
 | Botones «Ver el reverso» y «Recolocar» | Lo mismo, con teclado  |
 | Botón «sol/luna» de la cabecera | Cambiar entre tema claro y oscuro |
-| Botón «ES/EN» de la cabecera   | Cambiar de idioma en esta visita |
+| Botón «ES/EN» de la cabecera   | Cambiar de idioma; se recuerda |
 | «Ver los datos» (móvil)        | Abre la hoja con los datos, copiar y guardar |
 
 En pantalla estrecha la tarjeta ocupa toda la pantalla y no hay scroll: los
