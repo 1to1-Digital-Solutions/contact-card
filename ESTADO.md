@@ -68,7 +68,7 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 243 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
+- 260 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
   voltean la tarjeta, URL del sitio, elección de tema y de idioma), sobre el contraste de la paleta en los dos
   temas, sobre que `lib/brand.ts` no se desincronice de los tokens de
   `app/globals.css` ni del favicon `app/icon.svg` (este también en el encaje
