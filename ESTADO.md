@@ -62,19 +62,20 @@ arquitectura en `README.md`.
   cara de la tarjeta (3D y plana) y la vCard. Los textos de interfaz viven en
   `lib/dictionary.ts`; el cargo, que es un dato, en `JOB_TITLE` de
   `lib/contact.ts`. Un botón en la cabecera cambia de idioma para esta visita.
-- 222 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+- 225 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
   elección de tema y de idioma), sobre el contraste de la paleta en los dos
   temas, sobre que `lib/brand.ts` no se desincronice de los tokens de
   `app/globals.css` ni del favicon `app/icon.svg` (este también en el encaje
   del isotipo), sobre que los dibujos de marca sigan donde `LOGO` dice, con su
   lienzo y con la tinta que se lee sobre su cara, y sobre los píxeles de la
   imagen de Open Graph (que solo pinta colores de la paleta) y sus metadatos.
-  De la traducción se comprueban tres cosas: la elección de idioma con
-  cabeceras reales (varios pesos, comodín, `q=0`, ausente o rota), que los dos
-  diccionarios tengan las mismas claves sin nada vacío ni copiado del español,
-  y —recorriendo el árbol de sintaxis de `app/` y `components/`— que no quede
-  ningún texto escrito a mano en el JSX ni en un `aria-label`, `alt`, `title`
-  o `lang`.
+  De la traducción se comprueban cuatro cosas: la elección de idioma con
+  cabeceras reales (varios pesos, comodín, `q=0`, ausente o rota), que esa
+  elección se lea de la cabecera que manda el navegador y no de otra, que los
+  dos diccionarios tengan las mismas claves sin nada vacío ni copiado del
+  español, y —recorriendo el árbol de sintaxis de `app/` y `components/`— que
+  no quede ningún texto escrito a mano en el JSX ni en un `aria-label`, `alt`,
+  `title` o `lang`.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 

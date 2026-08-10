@@ -115,8 +115,11 @@ const es: Dictionary = {
   },
   copy: {
     action: (field) => `Copiar ${field.toLowerCase()}`,
-    done: (field) => `${field} copiado al portapapeles`,
-    failed: (field) => `No se ha podido copiar ${field.toLowerCase()}`,
+    // El rótulo va detrás y no delante del participio: los hay masculinos
+    // («Cargo», «Teléfono») y femeninos («Web»), así que pegarle «copiado»
+    // concuerda mal en la mitad de los casos. Con dos puntos vale para todos.
+    done: (field) => `Copiado al portapapeles: ${field}`,
+    failed: (field) => `No se ha podido copiar: ${field}`,
   },
 };
 
