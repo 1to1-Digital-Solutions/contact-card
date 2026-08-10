@@ -79,7 +79,9 @@ export function ContactSheet({
       aria-label={title}
       onClose={onClose}
       onClick={closeIfOutside}
-      className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 lg:hidden"
+      // `contact-sheet` es la entrada y la salida deslizándose desde abajo:
+      // vive en `app/globals.css` porque necesita `@starting-style`.
+      className="contact-sheet fixed inset-x-0 bottom-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 lg:hidden"
     >
       <div className="mx-auto flex max-w-md flex-col gap-6">
         <div className="flex items-start justify-between gap-4">

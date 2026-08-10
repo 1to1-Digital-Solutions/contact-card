@@ -90,6 +90,74 @@
     );
   }
 
+  /*
+    La hoja de datos entra y sale en lugar de aparecer de golpe. `display` y
+    `overlay` con `allow-discrete` son lo que deja al <dialog> quedarse en
+    pantalla mientras se va (sin ellos, el navegador lo esconde en el mismo
+    fotograma en que pierde `open`), y `@starting-style` da el estado del que
+    entra: sin él, la hoja se pintaría ya colocada y solo se animaría al
+    cerrarse. Las reglas viven aquí, y no en utilidades, porque nada de esto
+    se puede escribir como una clase de Tailwind.
+  */
+  .contact-sheet {
+    opacity: 0;
+    transition:
+      opacity 200ms ease,
+      display 200ms allow-discrete,
+      overlay 200ms allow-discrete;
+  }
+
+  .contact-sheet[open] {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .contact-sheet[open] {
+      opacity: 0;
+    }
+  }
+
+  .contact-sheet::backdrop {
+    opacity: 0;
+    transition:
+      opacity 200ms ease,
+      display 200ms allow-discrete,
+      overlay 200ms allow-discrete;
+  }
+
+  .contact-sheet[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .contact-sheet[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  /* El deslizamiento solo para quien no ha pedido menos movimiento; a quien lo
+     ha pedido le queda el fundido, que no desplaza nada. */
+  @media (prefers-reduced-motion: no-preference) {
+    .contact-sheet {
+      translate: 0 100%;
+      transition:
+        opacity 200ms ease,
+        translate 320ms cubic-bezier(0.32, 0.72, 0, 1),
+        display 320ms allow-discrete,
+        overlay 320ms allow-discrete;
+    }
+
+    .contact-sheet[open] {
+      translate: 0 0;
+    }
+
+    @starting-style {
+      .contact-sheet[open] {
+        translate: 0 100%;
+      }
+    }
+  }
+
   /* Textura de papel para la tarjeta plana: el grano se funde con el color de
      la cara en vez de pintarse encima, para no ensuciar el texto. */
   .paper-grain::after {
