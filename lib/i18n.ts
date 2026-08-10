@@ -121,7 +121,7 @@ export function applyLanguage(language: Language, title: string): void {
   document.title = title;
 }
 
-/** Un año: la elección no caduca sola mientras se siga usando la tarjeta. */
+/** Un año desde la última vez que se pulsa el conmutador, que es cuando se reescribe. */
 const LANGUAGE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /**
@@ -132,8 +132,16 @@ const LANGUAGE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
  * quien visita la página cambiara el idioma de su sistema.
  */
 export function rememberLanguage(language: Language): void {
-  // Sin `Secure` fuera de HTTPS: en desarrollo la cookie no llegaría a
-  // escribirse y la preferencia se perdería justo donde se prueba.
-  const secure = location.protocol === "https:" ? ";Secure" : "";
-  document.cookie = `${LANGUAGE_COOKIE}=${language};Path=/;Max-Age=${LANGUAGE_COOKIE_MAX_AGE};SameSite=Lax${secure}`;
+  try {
+    // Sin `Secure` fuera de HTTPS: en desarrollo la cookie no llegaría a
+    // escribirse y la preferencia se perdería justo donde se prueba.
+    const secure = location.protocol === "https:" ? ";Secure" : "";
+    document.cookie = `${LANGUAGE_COOKIE}=${language};Path=/;Max-Age=${LANGUAGE_COOKIE_MAX_AGE};SameSite=Lax${secure}`;
+  } catch (error) {
+    // Como con el tema: el idioma cambia igual en la página, lo único que se
+    // pierde es recordarlo. Escribir cookies revienta donde están prohibidas
+    // —un `iframe` en cajón de arena, por ejemplo—, y el conmutador no puede
+    // llevarse por delante el clic por eso.
+    console.warn("No se ha podido recordar el idioma elegido:", error);
+  }
 }

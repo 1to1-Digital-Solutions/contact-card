@@ -65,7 +65,7 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 242 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+- 243 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
   elección de tema y de idioma), sobre el contraste de la paleta en los dos
   temas, sobre que `lib/brand.ts` no se desincronice de los tokens de
   `app/globals.css` ni del favicon `app/icon.svg` (este también en el encaje
@@ -76,11 +76,11 @@ arquitectura en `README.md`.
   cabeceras reales (varios pesos, comodín, `q=0`, ausente o rota), que esa
   elección se lea de la cabecera que manda el navegador y no de otra, que la
   preferencia recordada gane a la cabecera y que una cookie con cualquier otro
-  valor caiga en la negociación normal (con los atributos que se escriben), que
-  los dos diccionarios tengan las mismas claves sin nada vacío ni copiado del
-  español, y —recorriendo el árbol de sintaxis de `app/` y `components/`— que
-  no quede ningún texto escrito a mano en el JSX ni en un `aria-label`, `alt`,
-  `title` o `lang`.
+  valor caiga en la negociación normal (con los atributos que se escriben y sin
+  romperse donde las cookies están prohibidas), que los dos diccionarios tengan
+  las mismas claves sin nada vacío ni copiado del español, y —recorriendo el
+  árbol de sintaxis de `app/` y `components/`— que no quede ningún texto escrito
+  a mano en el JSX ni en un `aria-label`, `alt`, `title` o `lang`.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 

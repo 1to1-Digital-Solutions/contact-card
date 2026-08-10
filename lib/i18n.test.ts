@@ -164,6 +164,27 @@ describe("rememberLanguage", () => {
 
     expect(attributes(document.cookie).includes("Secure")).toBe(marked);
   });
+
+  /**
+   * Donde las cookies están prohibidas —un `iframe` en cajón de arena—,
+   * escribirlas lanza. Eso no puede llevarse por delante el clic: el idioma ya
+   * ha cambiado en la página y lo único que se pierde es recordarlo, igual que
+   * con el tema cuando el almacenamiento está bloqueado.
+   */
+  it("no revienta si el navegador prohíbe escribir cookies", () => {
+    vi.stubGlobal("location", { protocol: "https:" });
+    vi.stubGlobal("document", {
+      set cookie(_value: string) {
+        throw new Error("The operation is insecure.");
+      },
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    expect(() => rememberLanguage("en")).not.toThrow();
+    expect(warn).toHaveBeenCalled();
+
+    warn.mockRestore();
+  });
 });
 
 describe("nextLanguage", () => {
