@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { dictionary } from "@/lib/dictionary";
+import type { Language } from "@/lib/i18n";
 
 type State = "idle" | "copied" | "failed";
 
@@ -12,7 +14,16 @@ const FEEDBACK_MS = 2000;
  * oye (el aviso vive en una región `status`), porque un botón que no confirma
  * nada deja a quien lo pulsa sin saber si ha funcionado.
  */
-export function CopyButton({ value, label }: { value: string; label: string }) {
+export function CopyButton({
+  value,
+  label,
+  language,
+}: {
+  value: string;
+  label: string;
+  language: Language;
+}) {
+  const t = dictionary(language).copy;
   const [state, setState] = useState<State>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -29,6 +40,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
       await navigator.clipboard.writeText(value);
       setState("copied");
     } catch (error) {
+      // El registro es para diagnosticar, no para leer: va sin traducir.
       console.warn(`No se ha podido copiar ${label}:`, error);
       setState("failed");
     }
@@ -41,7 +53,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
       <button
         type="button"
         onClick={copy}
-        aria-label={`Copiar ${label.toLowerCase()}`}
+        aria-label={t.action(label)}
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink-muted transition-colors hover:bg-ink/10 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
       >
         <svg
@@ -66,8 +78,8 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
       </button>
 
       <span role="status" className="sr-only">
-        {state === "copied" && `${label} copiado al portapapeles`}
-        {state === "failed" && `No se ha podido copiar ${label.toLowerCase()}`}
+        {state === "copied" && t.done(label)}
+        {state === "failed" && t.failed(label)}
       </span>
     </>
   );

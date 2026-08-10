@@ -1,4 +1,4 @@
-import { CONTACT } from "@/lib/contact";
+import type { Contact } from "@/lib/contact";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -16,22 +16,26 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-/** Ficha de la persona con su empresa, para buscadores y motores de IA. */
-export function personSchema() {
+/**
+ * Ficha de la persona con su empresa, para buscadores y motores de IA. Recibe
+ * el contacto ya resuelto en un idioma: el cargo va en el que se está
+ * sirviendo, que es el mismo que anuncia `<html lang>`.
+ */
+export function personSchema(contact: Contact) {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: CONTACT.name,
-    givenName: CONTACT.givenName,
-    familyName: CONTACT.familyName,
-    jobTitle: CONTACT.jobTitle,
-    email: `mailto:${CONTACT.email}`,
-    telephone: CONTACT.phoneE164,
+    name: contact.name,
+    givenName: contact.givenName,
+    familyName: contact.familyName,
+    jobTitle: contact.jobTitle,
+    email: `mailto:${contact.email}`,
+    telephone: contact.phoneE164,
     url: SITE_URL,
     worksFor: {
       "@type": "Organization",
-      name: CONTACT.company,
-      url: CONTACT.websiteUrl,
+      name: contact.company,
+      url: contact.websiteUrl,
     },
   };
 }

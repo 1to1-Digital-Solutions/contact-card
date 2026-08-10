@@ -1,6 +1,8 @@
 "use client";
 
 import type { ThemeName } from "@/lib/brand";
+import { dictionary } from "@/lib/dictionary";
+import type { Language } from "@/lib/i18n";
 
 /**
  * Cambia el tema de la página y, con él, el color de las dos caras de la
@@ -9,20 +11,23 @@ import type { ThemeName } from "@/lib/brand";
  */
 export function ThemeToggle({
   theme,
+  language,
   onToggle,
   className = "",
 }: {
   theme: ThemeName;
+  language: Language;
   onToggle: () => void;
   className?: string;
 }) {
+  const t = dictionary(language).theme;
   const goingLight = theme === "dark";
 
   return (
     <button
       type="button"
       onClick={onToggle}
-      aria-label={goingLight ? "Cambiar al tema claro" : "Cambiar al tema oscuro"}
+      aria-label={goingLight ? t.toLight : t.toDark}
       className={`inline-flex size-11 items-center justify-center rounded-full border border-ink/15 bg-ink/5 text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink ${className}`}
     >
       <svg

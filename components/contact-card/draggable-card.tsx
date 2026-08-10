@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { type ThemeName, CARD } from "@/lib/brand";
 import { isShowingBack, snapToHalfTurn } from "@/lib/card-orientation";
+import type { Language } from "@/lib/i18n";
 import { clamp, stepSpring, type SpringConfig, type SpringState } from "@/lib/motion";
 import { CardMesh } from "./card-mesh";
 
@@ -45,6 +46,7 @@ type Props = {
   onGrabChange: (grabbing: boolean) => void;
   reducedMotion: boolean;
   theme: ThemeName;
+  language: Language;
 };
 
 const spring = (value = 0): SpringState => ({ value, velocity: 0 });
@@ -72,6 +74,7 @@ export function DraggableCard({
   onGrabChange,
   reducedMotion,
   theme,
+  language,
 }: Props) {
   // La tarjeta se escala al hueco visible en lugar de mover la cámara: así
   // cabe con aire tanto en un móvil vertical como en una pantalla ancha, y
@@ -275,7 +278,7 @@ export function DraggableCard({
         }}
       >
         <group scale={scale}>
-          <CardMesh theme={theme} />
+          <CardMesh theme={theme} language={language} />
         </group>
       </group>
     </>

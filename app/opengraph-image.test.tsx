@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { BRAND, THEMES } from "@/lib/brand";
-import { CONTACT } from "@/lib/contact";
+import { contactIn, JOB_TITLE } from "@/lib/contact";
+import { DEFAULT_LANGUAGE } from "@/lib/i18n";
+import { buildMetadata } from "@/lib/metadata";
 import { DEFAULT_THEME } from "@/lib/theme";
-import { metadata } from "./layout";
 import Image, { alt, contentType, size } from "./opengraph-image";
 import * as twitter from "./twitter-image";
 
@@ -122,6 +123,10 @@ const PIXELS = image.width * image.height;
 /** El tema con el que se abre la página, que es del que va la imagen. */
 const THEME = THEMES[DEFAULT_THEME];
 
+/** La imagen va en un solo idioma, el de recurso: es el que lleva sus textos. */
+const CONTACT = contactIn(DEFAULT_LANGUAGE);
+const metadata = buildMetadata(DEFAULT_LANGUAGE);
+
 /** Los tokens que la imagen tiene derecho a pintar: la paleta y nada más. */
 const PALETTE = new Set<string>([...Object.values(BRAND), ...Object.values(THEME)]);
 
@@ -194,7 +199,8 @@ describe("imagen de Open Graph", () => {
    */
   it("no lleva ningún dato de contacto escrito a mano", () => {
     const code = source("./opengraph-image.tsx");
-    for (const value of Object.values(CONTACT)) expect(code).not.toContain(value);
+    const data = [...Object.values(CONTACT), ...Object.values(JOB_TITLE)];
+    for (const value of data) expect(code).not.toContain(value);
   });
 });
 

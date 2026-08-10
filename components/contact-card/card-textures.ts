@@ -8,7 +8,8 @@ import {
   LOGO,
   WATERMARK,
 } from "@/lib/brand";
-import type { Contact } from "@/lib/contact";
+import type { Contact, ContactData } from "@/lib/contact";
+import type { Dictionary } from "@/lib/dictionary";
 
 /**
  * Las dos caras de la tarjeta se dibujan en un canvas 2D en tiempo de
@@ -237,6 +238,7 @@ export function createFrontTexture(
   contact: Contact,
   palette: ThemePalette,
   theme: ThemeName,
+  labels: Dictionary["fields"],
 ): THREE.CanvasTexture {
   const { canvas, ctx } = createFaceCanvas(palette.card);
   ctx.textBaseline = "top";
@@ -270,9 +272,9 @@ export function createFrontTexture(
 
   // Bloque de datos anclado al borde inferior, con el mismo margen que arriba.
   const first = H - PAD - (58 + 54) - 2 * 160;
-  drawField(ctx, palette, first, "Email", contact.email);
-  drawField(ctx, palette, first + 160, "Teléfono", contact.phone);
-  drawField(ctx, palette, first + 320, "Web", contact.website);
+  drawField(ctx, palette, first, labels.email, contact.email);
+  drawField(ctx, palette, first + 160, labels.phone, contact.phone);
+  drawField(ctx, palette, first + 320, labels.website, contact.website);
 
   const texture = toTexture(canvas);
   refreshWhenDrawn(
@@ -287,10 +289,11 @@ export function createFrontTexture(
 /**
  * Reverso: el logotipo en verde de marca —el mismo en los dos temas— y la
  * web. El nombre de la empresa no se repite debajo porque el propio logotipo
- * ya lo dice.
+ * ya lo dice. Es la única cara sin texto traducible, así que le basta con los
+ * datos que no dependen del idioma.
  */
 export function createBackTexture(
-  contact: Contact,
+  contact: ContactData,
   palette: ThemePalette,
 ): THREE.CanvasTexture {
   const { canvas, ctx } = createFaceCanvas(palette.card);

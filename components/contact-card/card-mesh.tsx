@@ -3,7 +3,9 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { type ThemeName, CARD, THEMES } from "@/lib/brand";
-import { CONTACT } from "@/lib/contact";
+import { CONTACT, contactIn } from "@/lib/contact";
+import { dictionary } from "@/lib/dictionary";
+import type { Language } from "@/lib/i18n";
 import {
   createBackTexture,
   createFrontTexture,
@@ -48,7 +50,13 @@ function roundedRectShape(width: number, height: number, radius: number) {
  * cuando el anverso y el reverso no coincidían— las esquinas del reverso se
  * veían encendidas.
  */
-export function CardMesh({ theme }: { theme: ThemeName }) {
+export function CardMesh({
+  theme,
+  language,
+}: {
+  theme: ThemeName;
+  language: Language;
+}) {
   const palette = THEMES[theme];
 
   const geometry = useMemo(() => {
@@ -70,15 +78,24 @@ export function CardMesh({ theme }: { theme: ThemeName }) {
   }, []);
 
   const grain = useMemo(() => createGrainTexture(), []);
+  // El anverso lleva el cargo y los rótulos de los datos: se rehace al cambiar
+  // de idioma. El reverso solo lleva el logotipo y la web, que no se traducen.
   const front = useMemo(
-    () => createFrontTexture(CONTACT, palette, theme),
-    [palette, theme],
+    () =>
+      createFrontTexture(
+        contactIn(language),
+        palette,
+        theme,
+        dictionary(language).fields,
+      ),
+    [palette, theme, language],
   );
   const back = useMemo(() => createBackTexture(CONTACT, palette), [palette]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => grain.dispose(), [grain]);
-  // Las caras se rehacen al cambiar de tema: hay que soltar las anteriores.
+  // Las caras se rehacen al cambiar de tema o de idioma: hay que soltar las
+  // anteriores.
   useEffect(() => () => front.dispose(), [front]);
   useEffect(() => () => back.dispose(), [back]);
 

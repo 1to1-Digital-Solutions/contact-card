@@ -3,7 +3,9 @@
 import Image from "next/image";
 import { useState } from "react";
 import { LOGO } from "@/lib/brand";
-import { CONTACT } from "@/lib/contact";
+import { contactIn } from "@/lib/contact";
+import { dictionary } from "@/lib/dictionary";
+import type { Language } from "@/lib/i18n";
 
 /**
  * Tarjeta plana para cuando no hay WebGL o la escena 3D falla. Conserva lo
@@ -14,7 +16,15 @@ import { CONTACT } from "@/lib/contact";
  * El contenido visual se oculta a los lectores de pantalla porque los
  * mismos datos ya están, enlazables, en el panel de contacto.
  */
-export function CardFallback({ note }: { note: string }) {
+export function CardFallback({
+  note,
+  language,
+}: {
+  note: string;
+  language: Language;
+}) {
+  const t = dictionary(language).controls;
+  const contact = contactIn(language);
   const [showingBack, setShowingBack] = useState(false);
 
   return (
@@ -23,11 +33,7 @@ export function CardFallback({ note }: { note: string }) {
         <button
           type="button"
           onClick={() => setShowingBack((value) => !value)}
-          aria-label={
-            showingBack
-              ? "Ver el anverso de la tarjeta"
-              : "Ver el reverso de la tarjeta"
-          }
+          aria-label={showingBack ? t.flipToFront : t.flipToBack}
           // El `45dvh` es lo que la ata al alto y no solo al ancho: la página
           // ya no tiene scroll, así que en un hueco bajo —un móvil apaisado—
           // la tarjeta plana crecía hasta meterse debajo de la cabecera y de
@@ -53,19 +59,19 @@ export function CardFallback({ note }: { note: string }) {
             <span className="paper-grain absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border border-ink/10 border-l-[1cqw] border-l-accent bg-card p-[5.8cqw] text-left shadow-2xl [backface-visibility:hidden]">
               <span>
                 <span className="block text-[5.8cqw] font-semibold text-ink">
-                  {CONTACT.name}
+                  {contact.name}
                 </span>
                 <span className="mt-[1.2cqw] block text-[3.2cqw] text-ink-muted">
-                  {CONTACT.jobTitle}
+                  {contact.jobTitle}
                 </span>
                 <span className="mt-[1cqw] block text-[2.5cqw] font-semibold uppercase tracking-[0.2em] text-accent-ink">
-                  {CONTACT.company}
+                  {contact.company}
                 </span>
               </span>
               <span className="flex flex-col gap-[1cqw] text-[3.4cqw] text-ink">
-                <span>{CONTACT.email}</span>
-                <span>{CONTACT.phone}</span>
-                <span>{CONTACT.website}</span>
+                <span>{contact.email}</span>
+                <span>{contact.phone}</span>
+                <span>{contact.website}</span>
               </span>
             </span>
 
@@ -82,7 +88,7 @@ export function CardFallback({ note }: { note: string }) {
                 unoptimized
                 className="h-auto w-2/5"
               />
-              <span className="text-[2.9cqw] text-ink-muted">{CONTACT.website}</span>
+              <span className="text-[2.9cqw] text-ink-muted">{contact.website}</span>
             </span>
           </span>
         </button>

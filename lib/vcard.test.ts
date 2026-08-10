@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CONTACT, type Contact } from "./contact";
+import { type Contact, contactIn, JOB_TITLE } from "./contact";
+import { LANGUAGES } from "./i18n";
 import { buildVCard, escapeVCardValue, vCardFilename } from "./vcard";
+
+/** La vCard se comprueba en español; el cargo, además, en los dos idiomas. */
+const CONTACT = contactIn("es");
 
 describe("escapeVCardValue", () => {
   it("escapa los separadores del estándar", () => {
@@ -54,6 +58,16 @@ describe("buildVCard", () => {
   /** `TITLE` es el campo del cargo en el estándar; es lo que leen las agendas. */
   it("lleva el cargo en TITLE", () => {
     expect(lines).toContain("TITLE:Desarrollador full-stack");
+  });
+
+  /**
+   * Quien guarda la tarjeta se queda el cargo en su agenda para siempre: si no
+   * saliera en el idioma en el que la está leyendo, se lo lleva en uno ajeno.
+   */
+  it.each(LANGUAGES)("guarda el cargo en el idioma servido (%s)", (language) => {
+    expect(buildVCard(contactIn(language)).split("\r\n")).toContain(
+      `TITLE:${JOB_TITLE[language]}`,
+    );
   });
 
   it("escapa los datos de entrada en lugar de romper el formato", () => {

@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { NoToneMapping } from "three";
 import type { ThemeName } from "@/lib/brand";
 import { BRAND } from "@/lib/brand";
+import type { Language } from "@/lib/i18n";
 import { DraggableCard } from "./draggable-card";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
   onGrabChange: (grabbing: boolean) => void;
   reducedMotion: boolean;
   theme: ThemeName;
+  language: Language;
 };
 
 /**

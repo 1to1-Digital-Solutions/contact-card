@@ -3,15 +3,16 @@
  * Todo lo que se pinta (tarjeta 3D, panel HTML, vCard, JSON-LD) sale de aquí.
  */
 
-export type Contact = {
+import type { Language } from "./i18n";
+
+/** Los datos que se escriben igual en cualquier idioma, que son casi todos. */
+export type ContactData = {
   /** Nombre completo, tal y como se muestra. */
   name: string;
   /** Nombre de pila (para la vCard estructurada). */
   givenName: string;
   /** Apellidos (para la vCard estructurada). */
   familyName: string;
-  /** Cargo profesional: `TITLE` en la vCard, `jobTitle` en schema.org. */
-  jobTitle: string;
   company: string;
   email: string;
   /** Teléfono en formato legible, con separadores. */
@@ -24,11 +25,16 @@ export type Contact = {
   websiteUrl: string;
 };
 
-export const CONTACT: Contact = {
+/** Los datos ya resueltos en un idioma: así los consume todo lo que pinta. */
+export type Contact = ContactData & {
+  /** Cargo profesional: `TITLE` en la vCard, `jobTitle` en schema.org. */
+  jobTitle: string;
+};
+
+export const CONTACT: ContactData = {
   name: "César Peón Lamparero",
   givenName: "César",
   familyName: "Peón Lamparero",
-  jobTitle: "Desarrollador full-stack",
   company: "1to1 Digital Solutions",
   email: "cesarpl@1to1digital.solutions",
   phone: "+34 685 399 864",
@@ -36,3 +42,18 @@ export const CONTACT: Contact = {
   website: "1to1digital.solutions",
   websiteUrl: "https://1to1digital.solutions",
 };
+
+/**
+ * El cargo es el único dato que cambia con el idioma: el nombre, la empresa,
+ * el teléfono, el email y la web se escriben igual en los dos. Vive aquí y no
+ * en el diccionario porque es un dato de la ficha, no un texto de la interfaz.
+ */
+export const JOB_TITLE: Record<Language, string> = {
+  es: "Desarrollador full-stack",
+  en: "Full-stack developer",
+};
+
+/** Los datos de contacto en un idioma. */
+export function contactIn(language: Language): Contact {
+  return { ...CONTACT, jobTitle: JOB_TITLE[language] };
+}

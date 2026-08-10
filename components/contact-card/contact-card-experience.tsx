@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CONTACT } from "@/lib/contact";
+import { dictionary } from "@/lib/dictionary";
+import { applyLanguage, type Language, nextLanguage } from "@/lib/i18n";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { useTheme } from "@/lib/use-theme";
 import { useWebGLStatus } from "@/lib/use-webgl-status";
@@ -11,8 +14,6 @@ import { CardScene } from "./card-scene";
 import { ContactPanel } from "./contact-panel";
 import { ContactSheet } from "./contact-sheet";
 import { SceneErrorBoundary } from "./scene-error-boundary";
-
-const SHEET_TITLE = "Datos de contacto";
 
 /**
  * Botón sobrio de la escena: se lee sobre cualquiera de los dos temas. El
@@ -23,7 +24,16 @@ const SHEET_TITLE = "Datos de contacto";
 const CONTROL_CLASSES =
   "pointer-events-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 px-5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink";
 
-export function ContactCardExperience() {
+/**
+ * @param served Idioma negociado en el servidor, con el que se pintó el HTML.
+ *   El conmutador puede cambiarlo después, solo para esta visita: recordarlo
+ *   entre visitas exigiría releer el idioma en el servidor, y aquí el valor
+ *   está en enseñar la tarjeta a alguien delante, no en volver mañana.
+ */
+export function ContactCardExperience({ language: served }: { language: Language }) {
+  const [language, setLanguage] = useState(served);
+  const t = dictionary(language);
+
   const reducedMotion = useReducedMotion();
   const { theme, toggle } = useTheme();
   // La escena solo puede montarse en el navegador: dibuja las caras de la
@@ -35,9 +45,16 @@ export function ContactCardExperience() {
   const [grabbing, setGrabbing] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  // El `lang` de `<html>` y el título de la pestaña los pintó el servidor:
+  // viven fuera de este árbol y hay que moverlos a mano, como el tema.
+  useEffect(() => {
+    applyLanguage(language, dictionary(language).meta.title(CONTACT.name));
+  }, [language]);
+
   const flip = () => setFlipCount((value) => value + 1);
   const reset = () => setResetCount((value) => value + 1);
   const openSheet = () => setSheetOpen(true);
+  const switchLanguage = () => setLanguage(nextLanguage);
   // Estable: de él cuelga la suscripción al ancho de pantalla de la hoja.
   const closeSheet = useCallback(() => setSheetOpen(false), []);
 
@@ -46,7 +63,7 @@ export function ContactCardExperience() {
     // adorno al principio de una página por la que haya que bajar.
     <div className="flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[1fr_26rem]">
       <section
-        aria-label="Tarjeta de contacto interactiva"
+        aria-label={t.scene.label}
         className={`relative flex min-h-0 flex-1 flex-col justify-between overflow-hidden ${
           grabbing ? "cursor-grabbing" : "cursor-grab"
         }`}
@@ -59,13 +76,13 @@ export function ContactCardExperience() {
               role="status"
               className="flex h-full items-center justify-center text-sm text-ink-muted"
             >
-              Cargando la tarjeta…
+              {t.scene.loading}
             </p>
           )}
 
           {status === "unsupported" && (
             <div className="flex h-full items-center justify-center p-6">
-              <CardFallback note="Tu navegador no puede mostrar gráficos 3D, así que esta es la versión plana. Pulsa la tarjeta para darle la vuelta." />
+              <CardFallback note={t.scene.noWebgl} language={language} />
             </div>
           )}
 
@@ -73,7 +90,7 @@ export function ContactCardExperience() {
             <SceneErrorBoundary
               fallback={
                 <div className="flex h-full items-center justify-center p-6">
-                  <CardFallback note="No hemos podido cargar la tarjeta en 3D. Aquí tienes la versión plana: pulsa para darle la vuelta." />
+                  <CardFallback note={t.scene.failed} language={language} />
                 </div>
               }
             >
@@ -84,6 +101,7 @@ export function ContactCardExperience() {
                 onGrabChange={setGrabbing}
                 reducedMotion={reducedMotion}
                 theme={theme}
+                language={language}
               />
             </SceneErrorBoundary>
           )}
@@ -98,7 +116,19 @@ export function ContactCardExperience() {
               {CONTACT.company}
             </p>
           </div>
-          <ThemeToggle theme={theme} onToggle={toggle} className="pointer-events-auto" />
+          <div className="flex shrink-0 items-center gap-2">
+            <LanguageToggle
+              language={language}
+              onToggle={switchLanguage}
+              className="pointer-events-auto"
+            />
+            <ThemeToggle
+              theme={theme}
+              language={language}
+              onToggle={toggle}
+              className="pointer-events-auto"
+            />
+          </div>
         </header>
 
         {/* Como la cabecera: la banda deja pasar el gesto al lienzo y solo los
@@ -114,10 +144,10 @@ export function ContactCardExperience() {
             {status === "ready" && (
               <>
                 <button type="button" onClick={flip} className={CONTROL_CLASSES}>
-                  {showingBack ? "Ver el anverso" : "Ver el reverso"}
+                  {showingBack ? t.controls.showFront : t.controls.showBack}
                 </button>
                 <button type="button" onClick={reset} className={CONTROL_CLASSES}>
-                  Recolocar
+                  {t.controls.reset}
                 </button>
               </>
             )}
@@ -143,20 +173,18 @@ export function ContactCardExperience() {
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 11v5M12 7.6v.4" />
               </svg>
-              Ver los datos
+              {t.controls.showData}
             </button>
           </div>
 
           {status === "ready" && (
             <>
               <p className="text-center text-sm text-ink-muted lg:text-left">
-                Arrastra la tarjeta para moverla y el fondo para girarla.
+                {t.scene.hint}
               </p>
 
               <p role="status" className="sr-only">
-                {showingBack
-                  ? "La tarjeta muestra el reverso."
-                  : "La tarjeta muestra el anverso."}
+                {showingBack ? t.scene.showingBack : t.scene.showingFront}
               </p>
             </>
           )}
@@ -164,14 +192,19 @@ export function ContactCardExperience() {
       </section>
 
       <aside
-        aria-label={SHEET_TITLE}
+        aria-label={t.panel.title}
         className="hidden overflow-y-auto border-ink/10 bg-ink/5 p-6 sm:p-10 lg:block lg:border-l"
       >
-        <ContactPanel />
+        <ContactPanel language={language} />
       </aside>
 
-      <ContactSheet open={sheetOpen} onClose={closeSheet} title={SHEET_TITLE}>
-        <ContactPanel />
+      <ContactSheet
+        open={sheetOpen}
+        onClose={closeSheet}
+        title={t.panel.title}
+        closeLabel={t.panel.close}
+      >
+        <ContactPanel language={language} />
       </ContactSheet>
     </div>
   );

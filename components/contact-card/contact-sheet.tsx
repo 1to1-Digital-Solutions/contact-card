@@ -15,11 +15,13 @@ export function ContactSheet({
   open,
   onClose,
   title,
+  closeLabel,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  closeLabel: string;
   children: ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -85,7 +87,7 @@ export function ContactSheet({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar los datos de contacto"
+            aria-label={closeLabel}
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
           >
             <svg

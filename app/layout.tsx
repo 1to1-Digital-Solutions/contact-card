@@ -1,34 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { CONTACT } from "@/lib/contact";
-import { SITE_URL } from "@/lib/site";
+import { buildMetadata } from "@/lib/metadata";
+import { requestLanguage } from "@/lib/request-language";
 import { CHROME_COLOR, DEFAULT_THEME, THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-const TITLE = `${CONTACT.name} — Tarjeta de contacto`;
-const DESCRIPTION = `Tarjeta de contacto interactiva de ${CONTACT.name}, de ${CONTACT.company}: arrástrala, gírala y guarda los datos en tu agenda.`;
-
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "profile",
-    locale: "es_ES",
-    url: "/",
-    siteName: CONTACT.company,
-    title: TITLE,
-    description: DESCRIPTION,
-  },
-  // La imagen de la previsualización y su `alt` los declaran
-  // `app/opengraph-image.tsx` y `app/twitter-image.tsx`; aquí solo se pide la
-  // tarjeta grande, que es la que la enseña entera.
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-  },
-};
+/**
+ * El título y la descripción van en el idioma negociado, igual que la página:
+ * son lo que se lee al compartir el enlace.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata(await requestLanguage());
+}
 
 export const viewport: Viewport = {
   // El fondo de la página. No se declara por `prefers-color-scheme` porque el
@@ -37,13 +19,17 @@ export const viewport: Viewport = {
   themeColor: CHROME_COLOR[DEFAULT_THEME],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // El idioma sí viaja resuelto en el HTML: a diferencia del tema, no se puede
+  // corregir antes de pintar (para entonces el texto ya está escrito).
+  const language = await requestLanguage();
+
   return (
     // El tema de partida viaja en el HTML y el script lo corrige, antes de
     // pintar, con el que se recordó del navegador.
-    <html lang="es" className={DEFAULT_THEME} suppressHydrationWarning>
+    <html lang={language} className={DEFAULT_THEME} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
