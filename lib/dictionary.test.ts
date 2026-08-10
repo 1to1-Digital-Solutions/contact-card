@@ -65,6 +65,20 @@ describe("diccionarios", () => {
     },
   );
 
+  /**
+   * La pista corta existe para caber en una línea en un móvil: con `text-sm`
+   * (14 px) y los 24 px de margen a cada lado, en una pantalla de 375 px entran
+   * unos 46 caracteres. Se deja algo de holgura sobre ese número; si se pasa,
+   * vuelve a comerse dos líneas y con ellas el sitio de la tarjeta.
+   */
+  const SHORT_HINT_LIMIT = 44;
+
+  it.each(LANGUAGES)("dice la pista en corto para el móvil en %s", (language) => {
+    const { hint, hintShort } = dictionary(language).scene;
+    expect(hintShort.length).toBeLessThanOrEqual(SHORT_HINT_LIMIT);
+    expect(hintShort.length).toBeLessThan(hint.length);
+  });
+
   it.each(LANGUAGES)(
     "puede etiquetar el conmutador con su texto visible en %s",
     (language) => {

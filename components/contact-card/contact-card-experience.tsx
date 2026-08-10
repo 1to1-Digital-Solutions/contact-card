@@ -13,16 +13,8 @@ import { CardFallback } from "./card-fallback";
 import { CardScene } from "./card-scene";
 import { ContactPanel } from "./contact-panel";
 import { ContactSheet } from "./contact-sheet";
+import { DetailsIcon, FlipIcon, RecenterIcon, SceneControl } from "./scene-control";
 import { SceneErrorBoundary } from "./scene-error-boundary";
-
-/**
- * Botón sobrio de la escena: se lee sobre cualquiera de los dos temas. El
- * `pointer-events-auto` va en el botón y no en la fila que los agrupa: esa
- * fila ocupa todo el ancho en cuanto los mandos se reparten en dos líneas, y
- * desde ahí se tragaría el gesto en los huecos entre botones.
- */
-const CONTROL_CLASSES =
-  "pointer-events-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 px-5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink";
 
 /**
  * @param served Idioma con el que el servidor pintó el HTML: el que se eligió
@@ -142,50 +134,46 @@ export function ContactCardExperience({ language: served }: { language: Language
             esta franja cae encima de la escena —sobre la propia tarjeta en un
             móvil apaisado—, y sin esto sería una zona muerta de lado a lado. */}
         <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3">
             {/* Voltear y recolocar solo existen con la escena: la tarjeta
                 plana se gira pulsándola. Van aquí en todos los tamaños y no
                 dentro de la hoja de datos: desde la hoja, el giro que
                 disparan queda tapado justo mientras ocurre. */}
             {status === "ready" && (
               <>
-                <button type="button" onClick={flip} className={CONTROL_CLASSES}>
-                  {showingBack ? t.controls.showFront : t.controls.showBack}
-                </button>
-                <button type="button" onClick={reset} className={CONTROL_CLASSES}>
-                  {t.controls.reset}
-                </button>
+                <SceneControl
+                  label={showingBack ? t.controls.showFront : t.controls.showBack}
+                  icon={<FlipIcon />}
+                  onClick={flip}
+                />
+                <SceneControl
+                  label={t.controls.reset}
+                  icon={<RecenterIcon />}
+                  onClick={reset}
+                />
               </>
             )}
 
             {/* La puerta a los datos no depende de la escena: en pantalla
                 estrecha el panel lateral está oculto, así que este botón es
                 la única forma de llegar a ellos, también sin WebGL. */}
-            <button
-              type="button"
+            <SceneControl
+              label={t.controls.showData}
+              icon={<DetailsIcon />}
               onClick={openSheet}
-              className={`${CONTROL_CLASSES} lg:hidden`}
-            >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="size-4"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 11v5M12 7.6v.4" />
-              </svg>
-              {t.controls.showData}
-            </button>
+              className="lg:hidden"
+            />
           </div>
 
           {status === "ready" && (
             <>
-              <p className="text-center text-sm text-ink-muted lg:text-left">
+              {/* La misma pista, dicha en corto donde no cabe entera: en un
+                  móvil, cada línea de texto aquí abajo se la quita a la
+                  tarjeta. */}
+              <p className="text-center text-sm text-ink-muted sm:hidden">
+                {t.scene.hintShort}
+              </p>
+              <p className="hidden text-center text-sm text-ink-muted sm:block lg:text-left">
                 {t.scene.hint}
               </p>
 

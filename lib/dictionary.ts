@@ -34,6 +34,12 @@ export type Dictionary = {
     label: string;
     loading: string;
     hint: string;
+    /**
+     * La misma pista para una pantalla estrecha, donde el texto largo se come
+     * dos o tres líneas que le hacen falta a la tarjeta. `dictionary.test.ts`
+     * fija su tope de longitud: si crece, deja de caber en una línea.
+     */
+    hintShort: string;
     /** El navegador no puede con 3D: se enseña la tarjeta plana. */
     noWebgl: string;
     /** La escena 3D reventó al montarse: la misma tarjeta plana. */
@@ -88,6 +94,7 @@ const es: Dictionary = {
     loading: "Cargando la tarjeta…",
     hint:
       "Arrastra la tarjeta para moverla y el fondo para girarla. Dale dos toques, o sácala de la pantalla, y se da la vuelta.",
+    hintShort: "Arrástrala. Dos toques le dan la vuelta.",
     noWebgl:
       "Tu navegador no puede mostrar gráficos 3D, así que esta es la versión plana. Pulsa la tarjeta para darle la vuelta.",
     failed:
@@ -143,6 +150,7 @@ const en: Dictionary = {
     loading: "Loading the card…",
     hint:
       "Drag the card to move it and the background to spin it. Double-tap it, or drag it off screen, to flip it over.",
+    hintShort: "Drag it. A double tap flips it over.",
     noWebgl:
       "Your browser cannot show 3D graphics, so this is the flat version. Tap the card to turn it over.",
     failed:
