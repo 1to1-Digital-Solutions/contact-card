@@ -68,10 +68,11 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 260 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
-  voltean la tarjeta, URL del sitio, elección de tema y de idioma), sobre el contraste de la paleta en los dos
-  temas, sobre que `lib/brand.ts` no se desincronice de los tokens de
-  `app/globals.css` ni del favicon `app/icon.svg` (este también en el encaje
+- 266 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
+  voltean la tarjeta, URL del sitio, elección de tema y de idioma), sobre el
+  contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
+  desincronice de los tokens de `app/globals.css` ni del favicon
+  `app/icon.svg` (este también en el encaje
   del isotipo), sobre que los dibujos de marca sigan donde `LOGO` dice, con su
   lienzo y con la tinta que se lee sobre su cara, y sobre los píxeles de la
   imagen de Open Graph (que solo pinta colores de la paleta) y sus metadatos.
@@ -106,7 +107,14 @@ Nada pendiente.
   en `lib/card-gestures.test.ts`: subir el umbral deja el gesto sin alcance.
 - Un solo `pointerup` sobre la tarjeta entra varias veces en el manejador,
   una por cada malla que atraviesa el rayo. Por eso el toque se consume al
-  leerlo: si no, el volteo se aplicaría más de una vez.
+  leerlo: si no, el volteo se aplicaría más de una vez. Quien decide es
+  `readTap`, que también admite el soltar sin marca de las entregas
+  siguientes; el componente solo le pasa lo que ha medido.
+- Un toque se mide siempre contra el mismo dedo (`pointerId`). Con dos
+  apoyados sobre la tarjeta, el segundo pisa la marca del primero y, sin esa
+  comprobación, levantar uno se leería como un toque del otro. El doble
+  toque, en cambio, no compara dedos: en una pantalla táctil cada toque
+  estrena `pointerId`.
 - La paleta de marca está duplicada a propósito en `lib/brand.ts` (para
   three.js) y en `app/globals.css` (para Tailwind). Si se cambia una, hay que
   cambiar la otra: `lib/brand.test.ts` compara las dos listas y falla si dejan

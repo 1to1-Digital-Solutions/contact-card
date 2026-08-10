@@ -4,12 +4,7 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { type ThemeName, CARD } from "@/lib/brand";
-import {
-  hasLeftView,
-  isDoubleTap,
-  isTap,
-  type PointerMark,
-} from "@/lib/card-gestures";
+import { hasLeftView, readTap, type PointerMark } from "@/lib/card-gestures";
 import { isShowingBack, snapToHalfTurn } from "@/lib/card-orientation";
 import type { Language } from "@/lib/i18n";
 import { clamp, stepSpring, type SpringConfig, type SpringState } from "@/lib/motion";
@@ -74,11 +69,12 @@ function pointerToWorld(
 }
 
 /**
- * Dónde y cuándo cayó el puntero. React Three Fiber copia al evento de la
- * escena las propiedades del evento nativo, así que estas tres salen de él
- * tal cual y miden en píxeles de pantalla y milisegundos.
+ * Qué dedo, dónde y cuándo cayó el puntero. React Three Fiber copia al
+ * evento de la escena las propiedades del evento nativo, así que estas
+ * cuatro salen de él tal cual y miden en píxeles de pantalla y milisegundos.
  */
 const markOf = (event: ThreeEvent<PointerEvent>): PointerMark => ({
+  pointerId: event.pointerId,
   x: event.clientX,
   y: event.clientY,
   time: event.timeStamp,
@@ -196,22 +192,14 @@ export function DraggableCard({
    *
    * Un solo `pointerup` entra aquí varias veces, una por cada malla de la
    * tarjeta que atraviesa el rayo, así que el toque se consume al leerlo:
-   * solo la primera entrega cuenta.
+   * solo la primera entrega llega con marca y cuenta.
    */
   const releaseCard = (event: ThreeEvent<PointerEvent>) => {
     const down = pressed.current;
     pressed.current = null;
-    const up = markOf(event);
-    if (down && isTap(down, up)) {
-      if (isDoubleTap(lastTap.current, up)) {
-        spin.current.turn += Math.PI;
-        // Un tercer toque empieza cuenta nueva: si no, cada toque suelto a
-        // partir del segundo daría media vuelta más.
-        lastTap.current = null;
-      } else {
-        lastTap.current = up;
-      }
-    }
+    const reading = readTap(down, markOf(event), lastTap.current);
+    lastTap.current = reading.lastTap;
+    if (reading.flip) spin.current.turn += Math.PI;
     release(event);
   };
 

@@ -3,11 +3,17 @@ import {
   hasLeftView,
   isDoubleTap,
   isTap,
+  readTap,
   type CardBox,
   type ViewBox,
 } from "./card-gestures";
 
-const mark = (x: number, y: number, time: number) => ({ x, y, time });
+const mark = (x: number, y: number, time: number, pointerId = 1) => ({
+  pointerId,
+  x,
+  y,
+  time,
+});
 
 describe("isTap", () => {
   it("un toque corto y quieto es un toque", () => {
@@ -20,6 +26,56 @@ describe("isTap", () => {
 
   it("un arrastre no es un toque, por rápido que sea", () => {
     expect(isTap(mark(100, 100, 0), mark(180, 100, 80))).toBe(false);
+  });
+
+  it("no se mide un dedo contra otro", () => {
+    // Dos dedos juntos sobre la tarjeta: el segundo pisa la marca del
+    // primero, y al levantar el primero los extremos son de dedos distintos.
+    expect(isTap(mark(100, 100, 0, 2), mark(102, 99, 90, 1))).toBe(false);
+  });
+});
+
+describe("readTap", () => {
+  const previous = mark(100, 100, 0);
+
+  it("el primer toque solo se queda en la memoria", () => {
+    expect(readTap(mark(100, 100, 0), mark(101, 101, 80), null)).toEqual({
+      flip: false,
+      lastTap: mark(101, 101, 80),
+    });
+  });
+
+  it("el segundo toque da la vuelta a la tarjeta y vacía la memoria", () => {
+    expect(readTap(mark(104, 102, 180), mark(105, 103, 240), previous)).toEqual({
+      flip: true,
+      lastTap: null,
+    });
+  });
+
+  it("un tercer toque empieza cuenta nueva en vez de girar otra vez", () => {
+    const { lastTap } = readTap(mark(104, 102, 180), mark(105, 103, 240), previous);
+    expect(readTap(mark(104, 102, 400), mark(105, 103, 460), lastTap)).toEqual({
+      flip: false,
+      lastTap: mark(105, 103, 460),
+    });
+  });
+
+  it("un arrastre no cuenta y deja la memoria como estaba", () => {
+    expect(readTap(mark(100, 100, 100), mark(300, 100, 400), previous)).toEqual({
+      flip: false,
+      lastTap: previous,
+    });
+  });
+
+  it("la segunda entrega del mismo soltar, ya sin marca, no vuelve a girar", () => {
+    // El `pointerup` entra una vez por cada malla que atraviesa el rayo: el
+    // componente consume la marca, así que las demás llegan sin ella.
+    const up = mark(105, 103, 240);
+    expect(readTap(mark(104, 102, 180), up, previous)).toEqual({
+      flip: true,
+      lastTap: null,
+    });
+    expect(readTap(null, up, null)).toEqual({ flip: false, lastTap: null });
   });
 });
 
