@@ -56,13 +56,25 @@ arquitectura en `README.md`.
   nombre y la empresa en las dos caras del anverso (3D, versión plana y la
   imagen de compartir), en el panel de datos, en `TITLE` de la vCard y en
   `jobTitle` del JSON-LD.
-- 137 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
-  elección de tema), sobre el contraste de la paleta en los dos temas, sobre
-  que `lib/brand.ts` no se desincronice de los tokens de `app/globals.css` ni
-  del favicon `app/icon.svg` (este también en el encaje del isotipo), sobre
-  que los dibujos de marca sigan donde `LOGO` dice, con su lienzo y con la
-  tinta que se lee sobre su cara, y sobre los píxeles de la imagen de
-  Open Graph (que solo pinta colores de la paleta) y sus metadatos.
+- Español e inglés, según el navegador. El idioma se negocia en el servidor
+  con `Accept-Language` (`lib/i18n.ts`, sin librería) y llega resuelto en el
+  primer HTML: `<html lang>`, `og:locale`, título, descripción, JSON-LD, la
+  cara de la tarjeta (3D y plana) y la vCard. Los textos de interfaz viven en
+  `lib/dictionary.ts`; el cargo, que es un dato, en `JOB_TITLE` de
+  `lib/contact.ts`. Un botón en la cabecera cambia de idioma para esta visita.
+- 222 tests sobre la lógica pura (vCard, muelles, orientación, URL del sitio,
+  elección de tema y de idioma), sobre el contraste de la paleta en los dos
+  temas, sobre que `lib/brand.ts` no se desincronice de los tokens de
+  `app/globals.css` ni del favicon `app/icon.svg` (este también en el encaje
+  del isotipo), sobre que los dibujos de marca sigan donde `LOGO` dice, con su
+  lienzo y con la tinta que se lee sobre su cara, y sobre los píxeles de la
+  imagen de Open Graph (que solo pinta colores de la paleta) y sus metadatos.
+  De la traducción se comprueban tres cosas: la elección de idioma con
+  cabeceras reales (varios pesos, comodín, `q=0`, ausente o rota), que los dos
+  diccionarios tengan las mismas claves sin nada vacío ni copiado del español,
+  y —recorriendo el árbol de sintaxis de `app/` y `components/`— que no quede
+  ningún texto escrito a mano en el JSX ni en un `aria-label`, `alt`, `title`
+  o `lang`.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
@@ -107,4 +119,14 @@ Nada pendiente.
   sobre claro— más las luces de la escena.
 - `npm audit` reporta 3 vulnerabilidades altas heredadas de `next`
   (postcss y sharp internos). No hay arreglo sin bajar Next a la v9.
+- El idioma es lo único que saca a `/` del prerenderizado: leer una cabecera
+  la vuelve dinámica (`ƒ` en el build, junto a `/_not-found`, que cuelga del
+  mismo layout). No hay forma de negociar en un fichero estático y el texto no
+  se puede corregir con un script como el color del tema. El resto de rutas
+  —imagen de compartir, `robots.txt`, sitemap, favicon— siguen estáticas.
+- El botón de idioma no recuerda la elección entre visitas: hacerlo pediría una
+  cookie que el servidor leyera antes de pintar. Está creado como tarea aparte.
+- La imagen de compartir va en español (el de recurso), como va del tema de
+  partida, y su `alt` con ella: describe lo que pone la imagen, así que en la
+  página en inglés se emite un `og:image:alt` en español a propósito.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.

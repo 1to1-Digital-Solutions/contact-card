@@ -37,9 +37,19 @@ lib/                     Datos, marca y lógica pura (con sus tests al lado)
 ```
 
 Los datos de contacto viven en un único sitio, `lib/contact.ts`, y de ahí
-salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
+salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD. Los textos de la
+interfaz, en otro: `lib/dictionary.ts`.
 
 ## Decisiones que conviene conocer
+
+- **Español e inglés, según el navegador**: el idioma se negocia en el
+  servidor con `Accept-Language` (`lib/i18n.ts`), sin librería de i18n, y
+  español es el recurso cuando no hay coincidencia. Viaja resuelto en el
+  primer HTML —a diferencia del tema, un script no puede corregirlo después—,
+  así que `/` se renderiza en cada visita; el resto (imagen de compartir,
+  `robots.txt`, sitemap) se sigue generando en build. El botón de la cabecera
+  cambia de idioma para esta visita, pensado para enseñar la tarjeta a alguien
+  que no lee el tuyo.
 
 - **Las caras de la tarjeta se dibujan en un canvas 2D** en tiempo de
   ejecución (`card-textures.ts`), no son imágenes. Cambiar un dato o un
@@ -65,7 +75,9 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
 - **La previsualización al compartir también se genera desde el código**
   (`app/opengraph-image.tsx`, con `ImageResponse`): mismos datos y misma
   paleta que la tarjeta, así que no hay ningún PNG que reexportar. Twitter/X
-  reutiliza esa misma imagen.
+  reutiliza esa misma imagen. Va en un solo idioma —el único texto suyo que se
+  traduce es el cargo— porque quien la pide es el servicio de mensajería, que
+  no manda el idioma de nadie y cachea una imagen por URL para todos.
 
 ## Interacción
 
@@ -76,7 +88,8 @@ salen la tarjeta 3D, el panel HTML, la vCard y el JSON-LD.
 | Arrastrar el fondo             | Girarla; al soltar, encaja     |
 | Doble clic en la tarjeta       | Darle la vuelta                |
 | Botones «Ver el reverso» y «Recolocar» | Lo mismo, con teclado  |
-| Botón de la cabecera           | Cambiar entre tema claro y oscuro |
+| Botón «sol/luna» de la cabecera | Cambiar entre tema claro y oscuro |
+| Botón «ES/EN» de la cabecera   | Cambiar de idioma en esta visita |
 | «Ver los datos» (móvil)        | Abre la hoja con los datos, copiar y guardar |
 
 En pantalla estrecha la tarjeta ocupa toda la pantalla y no hay scroll: los
