@@ -1,10 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_LANGUAGE,
+  LANGUAGE_COOKIE,
   type Language,
   LANGUAGES,
   nextLanguage,
+  parseLanguage,
   pickLanguage,
+  rememberLanguage,
 } from "./i18n";
 
 /**
@@ -71,6 +74,95 @@ describe("pickLanguage", () => {
     expect(pickLanguage("=?!")).toBe(DEFAULT_LANGUAGE);
     // Basura por delante, pero la petición legítima sigue ahí.
     expect(pickLanguage(";;;,en;q=0.9")).toBe("en");
+  });
+});
+
+/**
+ * La otra fuente de idioma: la preferencia que dejó el conmutador. A
+ * diferencia de la cabecera, aquí no vale caer en el idioma de recurso cuando
+ * el valor no sirve —eso taparía la negociación con el navegador—, así que lo
+ * que se comprueba es que distinga «no hay nada» de «pidió español».
+ */
+describe("parseLanguage", () => {
+  it("reconoce los idiomas que servimos", () => {
+    expect(parseLanguage("es")).toBe("es");
+    expect(parseLanguage("en")).toBe("en");
+  });
+
+  it("devuelve `null` cuando no hay preferencia guardada", () => {
+    expect(parseLanguage(null)).toBeNull();
+    expect(parseLanguage(undefined)).toBeNull();
+    expect(parseLanguage("")).toBeNull();
+  });
+
+  it("devuelve `null` con cualquier otro valor, sin caer en el de recurso", () => {
+    // Ni un idioma que no servimos, ni uno nuestro con región o en mayúsculas:
+    // esto no es una cabecera que negociar, es un valor que escribimos nosotros.
+    for (const value of ["de", "es-ES", "EN", " es", "null", "<script>"]) {
+      expect(parseLanguage(value)).toBeNull();
+    }
+  });
+});
+
+describe("rememberLanguage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  /** Documento de mentira: solo la cookie, que es lo único que se escribe. */
+  function withDocument({ protocol = "https:" } = {}) {
+    const document = { cookie: "" };
+    vi.stubGlobal("document", document);
+    vi.stubGlobal("location", { protocol });
+    return document;
+  }
+
+  /** Los atributos de la cookie, sin el par `nombre=valor` de delante. */
+  function attributes(cookie: string) {
+    return cookie.split(";").slice(1).map((part) => part.trim());
+  }
+
+  /**
+   * El nombre y el valor tienen que ser exactamente los que espera el
+   * servidor: si se separan, la elección se escribe y no la lee nadie.
+   */
+  it.each(LANGUAGES)("guarda el idioma elegido (%s) donde lo lee el servidor", (language) => {
+    const document = withDocument();
+    rememberLanguage(language);
+
+    expect(document.cookie.startsWith(`${LANGUAGE_COOKIE}=${language};`)).toBe(true);
+    expect(parseLanguage(document.cookie.split(";")[0].split("=")[1])).toBe(language);
+  });
+
+  it("la guarda para todo el sitio y durante un año", () => {
+    const document = withDocument();
+    rememberLanguage("en");
+
+    expect(attributes(document.cookie)).toContain("Path=/");
+    expect(attributes(document.cookie)).toContain(`Max-Age=${60 * 60 * 24 * 365}`);
+  });
+
+  /** No se manda a terceros: la preferencia no tiene por qué viajar fuera. */
+  it("la limita al propio sitio", () => {
+    const document = withDocument();
+    rememberLanguage("en");
+
+    expect(attributes(document.cookie)).toContain("SameSite=Lax");
+  });
+
+  /**
+   * `Secure` en producción, pero no en desarrollo: sobre `http` el navegador
+   * descarta la cookie sin decir nada y la preferencia se perdería justo donde
+   * se prueba.
+   */
+  it.each([
+    ["https:", true],
+    ["http:", false],
+  ])("solo la marca `Secure` sobre HTTPS (%s)", (protocol, marked) => {
+    const document = withDocument({ protocol });
+    rememberLanguage("en");
+
+    expect(attributes(document.cookie).includes("Secure")).toBe(marked);
   });
 });
 

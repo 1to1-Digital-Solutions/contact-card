@@ -5,7 +5,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CONTACT } from "@/lib/contact";
 import { dictionary } from "@/lib/dictionary";
-import { applyLanguage, type Language, nextLanguage } from "@/lib/i18n";
+import { applyLanguage, type Language, nextLanguage, rememberLanguage } from "@/lib/i18n";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { useTheme } from "@/lib/use-theme";
 import { useWebGLStatus } from "@/lib/use-webgl-status";
@@ -25,10 +25,10 @@ const CONTROL_CLASSES =
   "pointer-events-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 px-5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink";
 
 /**
- * @param served Idioma negociado en el servidor, con el que se pintó el HTML.
- *   El conmutador puede cambiarlo después, solo para esta visita: recordarlo
- *   entre visitas exigiría releer el idioma en el servidor, y aquí el valor
- *   está en enseñar la tarjeta a alguien delante, no en volver mañana.
+ * @param served Idioma con el que el servidor pintó el HTML: el que se eligió
+ *   en una visita anterior o, si no hay elección guardada, el que negoció el
+ *   navegador. El conmutador lo cambia aquí y lo deja recordado para la
+ *   próxima visita.
  */
 export function ContactCardExperience({ language: served }: { language: Language }) {
   const [language, setLanguage] = useState(served);
@@ -54,7 +54,13 @@ export function ContactCardExperience({ language: served }: { language: Language
   const flip = () => setFlipCount((value) => value + 1);
   const reset = () => setResetCount((value) => value + 1);
   const openSheet = () => setSheetOpen(true);
-  const switchLanguage = () => setLanguage(nextLanguage);
+  const switchLanguage = () => {
+    const chosen = nextLanguage(language);
+    setLanguage(chosen);
+    // Fuera del actualizador de estado: React puede llamarlo dos veces, y
+    // esto sale del componente (escribe una cookie).
+    rememberLanguage(chosen);
+  };
   // Estable: de él cuelga la suscripción al ancho de pantalla de la hoja.
   const closeSheet = useCallback(() => setSheetOpen(false), []);
 

@@ -17,6 +17,15 @@ export type Language = (typeof LANGUAGES)[number];
 /** Idioma de recurso: el que se sirve cuando el navegador no pide ninguno de los dos. */
 export const DEFAULT_LANGUAGE: Language = "es";
 
+/**
+ * Dónde se recuerda el idioma elegido en el conmutador. Va en una cookie y no
+ * en el almacenamiento del navegador porque quien tiene que leerlo es el
+ * servidor, antes de escribir el texto: cuando corriera un script ya sería
+ * tarde. Es una preferencia funcional —no identifica a nadie ni se comparte—,
+ * así que no pide consentimiento.
+ */
+export const LANGUAGE_COOKIE = "contact-card-language";
+
 /** El `locale` de Open Graph, que lleva región y guion bajo. */
 export const OG_LOCALE: Record<Language, string> = {
   es: "es_ES",
@@ -25,6 +34,16 @@ export const OG_LOCALE: Record<Language, string> = {
 
 function isLanguage(value: string): value is Language {
   return (LANGUAGES as readonly string[]).includes(value);
+}
+
+/**
+ * El idioma guardado en una preferencia, o `null` si no es uno de los que
+ * servimos. Devuelve `null` en lugar del idioma de recurso a propósito: quien
+ * lee la preferencia tiene que poder distinguir «pidió español» de «aquí no
+ * hay nada que valga» para caer entonces en la negociación con el navegador.
+ */
+export function parseLanguage(value: string | null | undefined): Language | null {
+  return value && isLanguage(value) ? value : null;
 }
 
 /** El siguiente idioma de la lista, en círculo: el que ofrece el conmutador. */
@@ -100,4 +119,21 @@ export function pickLanguage(acceptLanguage: string | null | undefined): Languag
 export function applyLanguage(language: Language, title: string): void {
   document.documentElement.lang = language;
   document.title = title;
+}
+
+/** Un año: la elección no caduca sola mientras se siga usando la tarjeta. */
+const LANGUAGE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/**
+ * Recuerda para las próximas visitas el idioma que se acaba de elegir.
+ *
+ * Solo se escribe al pulsar el conmutador, nunca con el idioma negociado: si
+ * se guardara también ese, la cabecera del navegador dejaría de contar aunque
+ * quien visita la página cambiara el idioma de su sistema.
+ */
+export function rememberLanguage(language: Language): void {
+  // Sin `Secure` fuera de HTTPS: en desarrollo la cookie no llegaría a
+  // escribirse y la preferencia se perdería justo donde se prueba.
+  const secure = location.protocol === "https:" ? ";Secure" : "";
+  document.cookie = `${LANGUAGE_COOKIE}=${language};Path=/;Max-Age=${LANGUAGE_COOKIE_MAX_AGE};SameSite=Lax${secure}`;
 }
