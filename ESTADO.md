@@ -48,6 +48,16 @@ arquitectura en `README.md`.
   botón de copiar por dato. La hoja solo lleva datos: voltear y recolocar van
   en la banda de mandos, junto a «Ver los datos», en todos los tamaños, para
   que el giro se vea al dispararlo.
+- La banda de mandos cabe en una línea en un móvil: los tres botones son solo
+  el icono por debajo de `sm` y recuperan el rótulo al lado a partir de ahí
+  (`components/contact-card/scene-control.tsx`). La pista de abajo también se
+  dice en corto en móvil (`scene.hintShort`), que allí cada línea de texto se
+  la quita a la tarjeta.
+- La hoja de datos entra deslizándose desde abajo y sale por el mismo sitio,
+  con el fondo fundiéndose. Es CSS (`.contact-sheet` en `app/globals.css`):
+  `@starting-style` para el estado del que entra y `allow-discrete` en
+  `display` y `overlay` para que el `<dialog>` se quede en pantalla mientras se
+  va. Quien pide menos movimiento solo ve el fundido.
 - La tarjeta se voltea sin tocar los botones: dos toques rápidos sobre ella o
   sacarla de la pantalla arrastrándola (entonces se suelta sola y vuelve al
   centro por la otra cara). Las dos reglas viven en `lib/card-gestures.ts`.
@@ -68,7 +78,7 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 266 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
+- 277 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
   voltean la tarjeta, URL del sitio, elección de tema y de idioma), sobre el
   contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
   desincronice de los tokens de `app/globals.css` ni del favicon
@@ -84,7 +94,9 @@ arquitectura en `README.md`.
   romperse donde las cookies están prohibidas), que los dos diccionarios tengan
   las mismas claves sin nada vacío ni copiado del español, y —recorriendo el
   árbol de sintaxis de `app/` y `components/`— que no quede ningún texto escrito
-  a mano en el JSX ni en un `aria-label`, `alt`, `title` o `lang`.
+  a mano en el JSX ni en un `aria-label`, `alt`, `title` o `lang`. Del mando de
+  la escena se comprueba, pintándolo con `renderToStaticMarkup`, que el rótulo
+  sigue estando como etiqueta accesible cuando en el móvil solo se ve el icono.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
@@ -161,4 +173,12 @@ Nada pendiente.
 - La imagen de compartir va en español (el de recurso), como va del tema de
   partida, y su `alt` con ella: describe lo que pone la imagen, así que en la
   página en inglés se emite un `og:image:alt` en español a propósito.
+- La animación de la hoja no lleva red de seguridad en JavaScript a propósito:
+  un navegador sin `@starting-style` o sin `allow-discrete` se limita a
+  enseñarla y esconderla de golpe, que es lo que hacía antes. Cambiarlo
+  obligaría a retrasar el `close()` a mano y a atarlo al fin de la transición.
+- La pista corta del móvil tiene un tope de longitud en `dictionary.test.ts`:
+  con `text-sm` y los márgenes de la banda, a partir de ahí vuelve a ocupar dos
+  líneas y deja de cumplir su función. Si hace falta decir más, no es cosa de
+  alargarla sino de mover el texto a otro sitio.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
