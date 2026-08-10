@@ -134,7 +134,11 @@ export function ContactCardExperience({ language: served }: { language: Language
             esta franja cae encima de la escena —sobre la propia tarjeta en un
             móvil apaisado—, y sin esto sería una zona muerta de lado a lado. */}
         <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
-          <div className="flex items-center justify-center gap-3">
+          {/* En un móvil los tres mandos son solo el icono y caben de sobra en
+              una línea; el `flex-wrap` es para el rótulo que aparece a partir
+              de `sm`, que crece con el idioma: sin él, un texto más largo que
+              el de hoy se saldría de la pantalla en vez de bajar de línea. */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
             {/* Voltear y recolocar solo existen con la escena: la tarjeta
                 plana se gira pulsándola. Van aquí en todos los tamaños y no
                 dentro de la hoja de datos: desde la hoja, el giro que
