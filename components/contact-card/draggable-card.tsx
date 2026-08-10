@@ -73,6 +73,17 @@ function pointerToWorld(
   return out.multiplyScalar(-camera.position.z / out.z).add(camera.position);
 }
 
+/**
+ * Dónde y cuándo cayó el puntero. React Three Fiber copia al evento de la
+ * escena las propiedades del evento nativo, así que estas tres salen de él
+ * tal cual y miden en píxeles de pantalla y milisegundos.
+ */
+const markOf = (event: ThreeEvent<PointerEvent>): PointerMark => ({
+  x: event.clientX,
+  y: event.clientY,
+  time: event.timeStamp,
+});
+
 export function DraggableCard({
   flipCount,
   resetCount,
@@ -129,12 +140,6 @@ export function DraggableCard({
     previousResets.current = resetCount;
     spin.current = { pitch: 0, turn: 0 };
   }, [resetCount]);
-
-  const markOf = (event: ThreeEvent<PointerEvent>): PointerMark => ({
-    x: event.clientX,
-    y: event.clientY,
-    time: event.timeStamp,
-  });
 
   const startMove = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();

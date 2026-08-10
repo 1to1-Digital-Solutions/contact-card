@@ -99,11 +99,14 @@ Nada pendiente.
   dedo normal se queda fuera y el gesto parece que no existe.
 - «Sacar la tarjeta de la pantalla» no exige sacarla entera: basta con que
   quede menos de un cuarto dentro. Con el dedo no se puede empujar más allá
-  del borde, así que el criterio estricto sería inalcanzable en un móvil.
+  del borde, así que el criterio estricto sería inalcanzable en un móvil. Del
+  cuarto sale el trato, y no depende del tamaño de la pantalla: la tarjeta se
+  va si se la agarra por la mitad exterior de su lado, y no si se la agarra
+  por el centro (ahí siempre queda media tarjeta dentro). Lo fijan dos tests
+  en `lib/card-gestures.test.ts`: subir el umbral deja el gesto sin alcance.
 - Un solo `pointerup` sobre la tarjeta entra varias veces en el manejador,
   una por cada malla que atraviesa el rayo. Por eso el toque se consume al
   leerlo: si no, el volteo se aplicaría más de una vez.
-
 - La paleta de marca está duplicada a propósito en `lib/brand.ts` (para
   three.js) y en `app/globals.css` (para Tailwind). Si se cambia una, hay que
   cambiar la otra: `lib/brand.test.ts` compara las dos listas y falla si dejan
