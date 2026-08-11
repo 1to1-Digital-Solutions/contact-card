@@ -1,21 +1,47 @@
 "use client";
 
 import { CopyButton } from "@/components/copy-button";
-import { type Contact, contactIn } from "@/lib/contact";
+import { type Contact, contactIn, PROFILES } from "@/lib/contact";
 import { type Dictionary, dictionary } from "@/lib/dictionary";
 import type { Language } from "@/lib/i18n";
 import { buildVCard, vCardFilename } from "@/lib/vcard";
 
-/** Alto de objetivo táctil incluido: el valor va emparejado con su botón. */
-const VALUE_CLASSES = "inline-flex min-h-11 items-center break-all text-lg text-ink";
+/**
+ * Alto de objetivo táctil incluido: el valor va emparejado con su botón. Los
+ * que no caben en una línea —la dirección de un perfil— parten por sus guiones
+ * antes que a mitad de palabra, y solo si no hay más remedio.
+ */
+const VALUE_CLASSES = "inline-flex min-h-11 items-center break-words text-lg text-ink";
 
-/** El cargo no lleva `href`: es un dato de la ficha, no algo que se pueda abrir. */
-function fieldsOf(contact: Contact, labels: Dictionary["fields"]) {
+/** Un dato del panel: rótulo, valor que se ve y se copia, y a dónde lleva. */
+type PanelField = {
+  label: string;
+  value: string;
+  href?: string;
+  /** Los perfiles salen del sitio: no les cuentes de dónde viene quien pulsa. */
+  rel?: string;
+  /** Nombre accesible cuando el texto visible es solo una dirección. */
+  linkLabel?: string;
+};
+
+/**
+ * El cargo no lleva `href`: es un dato de la ficha, no algo que se pueda abrir.
+ * Los perfiles van al final, detrás de las formas de contactar, y salen de
+ * `PROFILES` para que las direcciones estén escritas en un solo sitio.
+ */
+function fieldsOf(contact: Contact, t: Dictionary): PanelField[] {
   return [
-    { label: labels.jobTitle, value: contact.jobTitle },
-    { label: labels.email, value: contact.email, href: `mailto:${contact.email}` },
-    { label: labels.phone, value: contact.phone, href: `tel:${contact.phoneE164}` },
-    { label: labels.website, value: contact.website, href: contact.websiteUrl },
+    { label: t.fields.jobTitle, value: contact.jobTitle },
+    { label: t.fields.email, value: contact.email, href: `mailto:${contact.email}` },
+    { label: t.fields.phone, value: contact.phone, href: `tel:${contact.phoneE164}` },
+    { label: t.fields.website, value: contact.website, href: contact.websiteUrl },
+    ...PROFILES.map((profile) => ({
+      label: profile.name,
+      value: profile.address,
+      href: profile.url,
+      rel: "noreferrer",
+      linkLabel: t.panel.profile(profile.name, profile.address),
+    })),
   ];
 }
 
@@ -47,7 +73,7 @@ export function ContactPanel({ language }: { language: Language }) {
   return (
     <div className="flex flex-col gap-6">
       <dl className="flex flex-col gap-1">
-        {fieldsOf(contact, t.fields).map((field) => (
+        {fieldsOf(contact, t).map((field) => (
           <div key={field.label} className="border-t border-ink/10 py-2">
             <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
               {field.label}
@@ -57,6 +83,8 @@ export function ContactPanel({ language }: { language: Language }) {
                 <a
                   className={`${VALUE_CLASSES} underline decoration-ink/25 underline-offset-4 transition-colors hover:decoration-accent-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink`}
                   href={field.href}
+                  rel={field.rel}
+                  aria-label={field.linkLabel}
                 >
                   {field.value}
                 </a>

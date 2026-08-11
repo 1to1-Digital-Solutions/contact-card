@@ -1,4 +1,4 @@
-import type { Contact } from "@/lib/contact";
+import { type Contact, PROFILES } from "@/lib/contact";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -32,6 +32,9 @@ export function personSchema(contact: Contact) {
     email: `mailto:${contact.email}`,
     telephone: contact.phoneE164,
     url: SITE_URL,
+    // `sameAs` es como se dice «esta persona es también la de estos perfiles»:
+    // es lo que ata la ficha a LinkedIn y a GitHub.
+    sameAs: PROFILES.map((profile) => profile.url),
     worksFor: {
       "@type": "Organization",
       name: contact.company,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { JOB_TITLE } from "./contact";
+import { JOB_TITLE, PROFILES } from "./contact";
 import { DICTIONARIES, dictionary } from "./dictionary";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "./i18n";
 
@@ -87,6 +87,19 @@ describe("diccionarios", () => {
       // se anuncia «Switch to English».
       const { code, switchTo } = dictionary(language).language;
       expect(switchTo.toLowerCase()).toContain(code.toLowerCase());
+    },
+  );
+
+  it.each(LANGUAGES)(
+    "nombra el enlace de cada perfil sin perder lo que se ve en %s",
+    (language) => {
+      // Misma regla que en el conmutador (WCAG 2.5.3): el nombre accesible del
+      // enlace tiene que contener el texto visible, que aquí es la dirección.
+      for (const { name, address } of PROFILES) {
+        const label = dictionary(language).panel.profile(name, address);
+        expect(label).toContain(address);
+        expect(label).toContain(name);
+      }
     },
   );
 });

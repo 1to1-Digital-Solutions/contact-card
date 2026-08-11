@@ -68,6 +68,13 @@ export type Dictionary = {
     title: string;
     close: string;
     save: string;
+    /**
+     * Nombre accesible del enlace a un perfil: el nombre de la red no se
+     * traduce, pero decir de qué es el enlace, sí. Lleva también la dirección
+     * que se ve porque el nombre accesible de un enlace debe contener su texto
+     * visible (WCAG 2.5.3), y `dictionary.test.ts` lo comprueba.
+     */
+    profile: (network: string, address: string) => string;
   };
   copy: {
     action: (field: string) => string;
@@ -128,6 +135,7 @@ const es: Dictionary = {
     title: "Datos de contacto",
     close: "Cerrar los datos de contacto",
     save: "Guardar contacto (.vcf)",
+    profile: (network, address) => `Perfil de ${network}: ${address}`,
   },
   copy: {
     action: (field) => `Copiar ${field.toLowerCase()}`,
@@ -186,6 +194,7 @@ const en: Dictionary = {
     title: "Contact details",
     close: "Close the contact details",
     save: "Save contact (.vcf)",
+    profile: (network, address) => `${network} profile: ${address}`,
   },
   copy: {
     action: (field) => `Copy ${field.toLowerCase()}`,

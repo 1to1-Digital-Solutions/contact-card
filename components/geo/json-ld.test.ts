@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contactIn, JOB_TITLE } from "@/lib/contact";
+import { contactIn, JOB_TITLE, PROFILES } from "@/lib/contact";
 import { LANGUAGES } from "@/lib/i18n";
 import { personSchema } from "./json-ld";
 
@@ -27,5 +27,18 @@ describe("personSchema", () => {
    */
   it.each(LANGUAGES)("declara el cargo en el idioma servido (%s)", (language) => {
     expect(personSchema(contactIn(language)).jobTitle).toBe(JOB_TITLE[language]);
+  });
+
+  /**
+   * `sameAs` es la propiedad con la que se dice que la persona de la ficha es
+   * también la de esos perfiles. Sin ella, la página y el LinkedIn de César son
+   * dos desconocidos para quien la lee.
+   */
+  it("declara los perfiles públicos en `sameAs`", () => {
+    expect(schema.sameAs).toEqual(PROFILES.map((profile) => profile.url));
+    expect(schema.sameAs.map((url) => new URL(url).host).sort()).toEqual([
+      "github.com",
+      "www.linkedin.com",
+    ]);
   });
 });
