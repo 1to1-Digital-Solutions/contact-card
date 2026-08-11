@@ -93,6 +93,12 @@ interfaz, en otro: `lib/dictionary.ts`.
 | Botón «sol/luna» de la cabecera | Cambiar entre tema claro y oscuro |
 | Botón «ES/EN» de la cabecera   | Cambiar de idioma; se recuerda |
 | «Ver los datos» (móvil)        | Abre la hoja con los datos, copiar y guardar |
+| Mover el ratón por la página   | La tarjeta se asoma hacia el puntero, sin moverse del sitio |
+
+Al abrir la página la tarjeta cae desde fuera de la pantalla y se balancea una
+vez, para que se vea que se puede coger (`lib/card-intro.ts`). El balanceo se
+corta con el primer gesto y no vuelve. Quien pide menos movimiento se encuentra
+la tarjeta ya colocada y quieta, y sin el asomo hacia el puntero.
 
 En pantalla estrecha la tarjeta ocupa toda la pantalla y no hay scroll: los
 datos viven en esa hoja. A partir de `lg` están siempre a la vista en el panel

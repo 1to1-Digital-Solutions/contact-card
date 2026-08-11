@@ -58,6 +58,17 @@ arquitectura en `README.md`.
   `@starting-style` para el estado del que entra y `allow-discrete` en
   `display` y `overlay` para que el `<dialog>` se quede en pantalla mientras se
   va. Quien pide menos movimiento solo ve el fundido.
+- La tarjeta se presenta sola al abrir la página: cae desde fuera de la
+  pantalla por arriba y, ya en el centro, se balancea una vez de lado a lado
+  para enseñar que se puede coger. Las dos cosas viven en `lib/card-intro.ts`
+  (`entryOffsetY` y `introSway`, funciones puras del tiempo); el balanceo se
+  corta con el primer gesto —arrastrar, girar o cualquiera de los dos mandos—
+  y no vuelve.
+- Con ratón, la tarjeta se asoma hacia el puntero sin moverse del sitio
+  (`pointerTilt`, en `lib/card-orientation.ts`): el lado por el que pasa el
+  cursor se hunde, como si lo empujara. Solo donde el puntero es fino
+  (`lib/use-media-query.ts`): en una pantalla táctil el puntero se queda
+  donde se tocó por última vez y la tarjeta se quedaría torcida.
 - La tarjeta se voltea sin tocar los botones: dos toques rápidos sobre ella o
   sacarla de la pantalla arrastrándola (entonces se suelta sola y vuelve al
   centro por la otra cara). Las dos reglas viven en `lib/card-gestures.ts`.
@@ -78,7 +89,8 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 277 tests sobre la lógica pura (vCard, muelles, orientación, gestos que
+- 292 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
+  puntero, llegada y balanceo de bienvenida, gestos que
   voltean la tarjeta, URL del sitio, elección de tema y de idioma), sobre el
   contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
   desincronice de los tokens de `app/globals.css` ni del favicon
@@ -181,4 +193,21 @@ Nada pendiente.
   con `text-sm` y los márgenes de la banda, a partir de ahí vuelve a ocupar dos
   líneas y deja de cumplir su función. Si hace falta decir más, no es cosa de
   alargarla sino de mover el texto a otro sitio.
+- La llegada no tiene muelle propio: la tarjeta empieza fuera de la pantalla y
+  la trae el mismo muelle con el que vuelve al centro al soltarla, que llega
+  con un rebote corto. Si se toca ese muelle, se toca también la entrada.
+- El balanceo de bienvenida va envuelto en una campana que entra y sale por
+  cero. Sin ella habría que cortarlo justo en un paso por el centro para que
+  el desplazamiento no diera un tirón, y la inclinación —que va un cuarto de
+  oscilación por delante— nunca está a cero en ese punto. Lo fija el test
+  «entra y sale sin tirón» de `lib/card-intro.test.ts`.
+- El recorrido de ese balanceo se mide en anchos de tarjeta y no en unidades
+  de mundo: en un móvil de pie la tarjeta ocupa menos de la mitad que en un
+  escritorio, y un recorrido fijo se saldría de la pantalla allí o no se
+  notaría aquí.
+- El asomo hacia el puntero se suma al giro que pide el usuario, así que se
+  queda en un gesto pequeño (0,22 rad de giro y 0,14 de cabeceo): si creciera,
+  bastaría pasar el ratón para acabar viendo el canto de la tarjeta.
+- Con `prefers-reduced-motion` no hay ni caída, ni balanceo, ni asomo hacia el
+  puntero: la tarjeta aparece colocada y solo se mueve cuando se la mueve.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
