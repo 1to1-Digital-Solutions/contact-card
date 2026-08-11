@@ -63,8 +63,8 @@ function Icon({ children }: { children: ReactNode }) {
 /**
  * Voltear: la tarjeta apaisada y la flecha que le da la vuelta. Dibujar en su
  * lugar las dos mitades de una hoja abatiéndose sobre su eje deja un icono de
- * corchetes que, a 20 px y sin rótulo al lado, se confunde con el encuadre de
- * recolocar: los dos quedan reducidos a unas esquinas sueltas.
+ * corchetes que, a 20 px y sin rótulo al lado, se lee como un encuadre y no
+ * como una vuelta: queda reducido a unas esquinas sueltas.
  */
 export function FlipIcon() {
   return (
@@ -76,15 +76,18 @@ export function FlipIcon() {
   );
 }
 
-/** Recolocar: el encuadre al que vuelve la tarjeta, con su centro. */
+/**
+ * Recolocar: cuatro flechas que traen la tarjeta al centro. Un encuadre con
+ * un punto en medio dice lo mismo sobre el papel, pero es el visor de una
+ * cámara: puesto en un botón, parece que va a hacer una foto.
+ */
 export function RecenterIcon() {
   return (
     <Icon>
-      <path d="M4 8V6a2 2 0 0 1 2-2h2" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v2" />
-      <path d="M20 16v2a2 2 0 0 1-2 2h-2" />
-      <path d="M8 20H6a2 2 0 0 1-2-2v-2" />
-      <circle cx="12" cy="12" r="2.5" />
+      <path d="M4 4l5 5M9 5.5V9H5.5" />
+      <path d="M20 4l-5 5M15 5.5V9h3.5" />
+      <path d="M4 20l5-5M9 18.5V15H5.5" />
+      <path d="M20 20l-5-5M15 18.5V15h3.5" />
     </Icon>
   );
 }
