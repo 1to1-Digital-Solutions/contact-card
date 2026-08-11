@@ -19,7 +19,12 @@ describe("panel de datos", () => {
     const html = markup(language);
     for (const profile of PROFILES) {
       expect(html).toContain(`href="${profile.url}"`);
-      expect(html).toContain(profile.address);
+      // El texto del enlace, y no solo la dirección en algún sitio del marcado:
+      // el `aria-label` la lleva también, así que buscarla suelta pasaría igual
+      // aunque en pantalla se leyera otra cosa. Y es justo la mitad del trato de
+      // WCAG 2.5.3 que sostiene ese `aria-label`: si lo visible cambia y la
+      // etiqueta no, el enlace deja de poder pulsarse por voz.
+      expect(html).toContain(`>${profile.address}</a>`);
     }
   });
 

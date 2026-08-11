@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Contact, contactIn, JOB_TITLE } from "./contact";
+import { type Contact, contactIn, JOB_TITLE, PROFILES } from "./contact";
 import { LANGUAGES } from "./i18n";
 import { buildVCard, escapeVCardValue, vCardFilename } from "./vcard";
 
@@ -53,6 +53,19 @@ describe("buildVCard", () => {
     expect(lines).toContain("TEL;TYPE=CELL,WORK:+34685399864");
     expect(lines).toContain("ORG:1to1 Digital Solutions");
     expect(lines).toContain("URL:https://1to1digital.solutions");
+  });
+
+  /**
+   * Los perfiles se quedan fuera a propósito: la agenda guarda formas de
+   * contactar, no enlaces a redes. Como salen de la misma fuente que el resto
+   * de datos, meterlos aquí de `URL:` es el descuido natural, y quien guardara
+   * la tarjeta se llevaría para siempre unos enlaces que no pidió.
+   */
+  it("no se lleva a la agenda los perfiles, que no son formas de contactar", () => {
+    for (const { url, address } of PROFILES) {
+      expect(vcard).not.toContain(url);
+      expect(vcard).not.toContain(address);
+    }
   });
 
   /** `TITLE` es el campo del cargo en el estándar; es lo que leen las agendas. */

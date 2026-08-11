@@ -96,7 +96,7 @@ arquitectura en `README.md`.
   traducido que incluye la dirección que se ve. Las mismas URL son el `sameAs`
   del JSON-LD, que es como se dice que la persona de la ficha es la de esos
   perfiles.
-- 333 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
+- 334 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
   puntero, llegada y balanceo de bienvenida, gestos que voltean la tarjeta, URL
   del sitio, caminos de compartir y el aviso que deja cada uno, elección de
   tema y de idioma), sobre el
@@ -117,10 +117,12 @@ arquitectura en `README.md`.
   a mano en el JSX ni en un `aria-label`, `alt`, `title` o `lang`. Del mando de
   la escena se comprueba, pintándolo con `renderToStaticMarkup`, que el rótulo
   sigue estando como etiqueta accesible cuando en el móvil solo se ve el icono.
-  Del panel, con el mismo método, que cada perfil se enlaza a su dirección, con
-  `rel="noreferrer"` y con su nombre accesible en los dos idiomas; y de
-  `PROFILES`, que la dirección que se enseña es la del enlace y que la URL está
-  escrita ya codificada.
+  Del panel, con el mismo método, que cada perfil se enlaza a su dirección
+  —y que esa dirección es el texto del enlace, no solo algo que aparezca en el
+  marcado—, con `rel="noreferrer"` y con su nombre accesible en los dos idiomas;
+  y de `PROFILES`, que la dirección que se enseña es la del enlace y que la URL
+  está escrita ya codificada. La vCard, por su parte, comprueba que no se lleva
+  ningún perfil.
 - Un cuarto mando, «Compartir», al final de la banda: abre el diálogo del
   sistema (`navigator.share`) con el título de la tarjeta en el idioma que se
   esté viendo y con `SITE_URL`. Donde no hay diálogo copia el enlace y lo
@@ -248,7 +250,9 @@ Nada pendiente.
   foto. Cualquier icono nuevo hay que mirarlo a ese tamaño, no en grande.
 - Los perfiles se quedan en el panel a propósito: no van a la vCard (la agenda
   guarda formas de contactar, no perfiles) ni a las caras de la tarjeta, que
-  están deliberadamente limpias. No es un olvido.
+  están deliberadamente limpias. No es un olvido, y `vcard.test.ts` lo deja
+  fijado: como los perfiles salen de la misma fuente que el resto de datos,
+  colarlos de `URL:` es el descuido natural.
 - La ruta del perfil de LinkedIn lleva los acentos percent-encoded
   (`c%C3%A9sar-pe%C3%B3n`). Escribirla con las tildes literales cambia la URL
   canónica, así que se copia tal cual; el texto que se ve, en cambio, va con
