@@ -70,7 +70,7 @@ describe("introSway", () => {
     // parezca que algo tira de ella y no que se desliza de canto.
     const times = samples(0, INTRO_SWAY_END);
     const speeds = new Map(times.map((t) => [t, speedAt(t)]));
-    const fastest = Math.max(...speeds.values().map(Math.abs));
+    const fastest = Math.max(...[...speeds.values()].map(Math.abs));
 
     for (const [t, speed] of speeds) {
       if (Math.abs(speed) < fastest * 0.5) continue;
@@ -82,12 +82,11 @@ describe("introSway", () => {
     // Ahí el vaivén se para para volver, y una tarjeta parada no se inclina:
     // la inclinación va un cuarto de oscilación por delante del recorrido.
     const times = samples(0, INTRO_SWAY_END);
-    const reach = Math.max(...times.map((t) => Math.abs(introSway(t).x)));
     const tilts = times.map((t) => Math.abs(introSway(t).roll));
-    const atReach = times.find((t) => Math.abs(introSway(t).x) > reach - 0.001);
-
-    expect(Math.abs(introSway(atReach as number).roll)).toBeLessThan(
-      Math.max(...tilts) * 0.25,
+    const atReach = times.reduce((furthest, t) =>
+      Math.abs(introSway(t).x) > Math.abs(introSway(furthest).x) ? t : furthest,
     );
+
+    expect(Math.abs(introSway(atReach).roll)).toBeLessThan(Math.max(...tilts) * 0.25);
   });
 });
