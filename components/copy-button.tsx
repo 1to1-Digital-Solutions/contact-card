@@ -1,13 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import { dictionary } from "@/lib/dictionary";
 import type { Language } from "@/lib/i18n";
-
-type State = "idle" | "copied" | "failed";
-
-/** Cuánto se queda el aviso antes de volver el botón a su estado normal. */
-const FEEDBACK_MS = 2000;
+import { useFeedback } from "@/lib/use-feedback";
 
 /**
  * Copia un dato al portapapeles. El resultado se ve (el icono cambia) y se
@@ -24,29 +20,20 @@ export function CopyButton({
   language: Language;
 }) {
   const t = dictionary(language).copy;
-  const [state, setState] = useState<State>("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, []);
+  const [feedback, announce] = useFeedback();
 
   const copy = useCallback(async () => {
     try {
       // No existe en contextos no seguros: ahí `writeText` revienta y se
       // avisa igual, en vez de fingir que se ha copiado.
       await navigator.clipboard.writeText(value);
-      setState("copied");
+      announce("done");
     } catch (error) {
       // El registro es para diagnosticar, no para leer: va sin traducir.
       console.warn(`No se ha podido copiar ${label}:`, error);
-      setState("failed");
+      announce("failed");
     }
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setState("idle"), FEEDBACK_MS);
-  }, [value, label]);
+  }, [value, label, announce]);
 
   return (
     <>
@@ -66,9 +53,9 @@ export function CopyButton({
           strokeLinejoin="round"
           className="size-4"
         >
-          {state === "copied" && <path d="m5 12.5 4.5 4.5L19 7" />}
-          {state === "failed" && <path d="M6 6l12 12M18 6 6 18" />}
-          {state === "idle" && (
+          {feedback === "done" && <path d="m5 12.5 4.5 4.5L19 7" />}
+          {feedback === "failed" && <path d="M6 6l12 12M18 6 6 18" />}
+          {feedback === "idle" && (
             <>
               <rect x="9" y="9" width="11" height="11" rx="2.5" />
               <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5" />
@@ -78,8 +65,8 @@ export function CopyButton({
       </button>
 
       <span role="status" className="sr-only">
-        {state === "copied" && t.done(label)}
-        {state === "failed" && t.failed(label)}
+        {feedback === "done" && t.done(label)}
+        {feedback === "failed" && t.failed(label)}
       </span>
     </>
   );
