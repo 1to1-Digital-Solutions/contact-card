@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { type ThemeName, CARD } from "@/lib/brand";
 import { hasLeftView, readTap, type PointerMark } from "@/lib/card-gestures";
+import { entryOffsetY, INTRO_SWAY_END, introSway } from "@/lib/card-intro";
 import { isShowingBack, snapToHalfTurn } from "@/lib/card-orientation";
 import type { Language } from "@/lib/i18n";
 import { clamp, stepSpring, type SpringConfig, type SpringState } from "@/lib/motion";
@@ -35,6 +36,12 @@ const MAX_SCALE = 1.15;
 const SWAY_GAIN = 0.05;
 const MAX_SWAY = 0.45;
 const MAX_PITCH = 1.1;
+/**
+ * Recorrido del vaivén de bienvenida, en anchos de tarjeta. Se mide sobre la
+ * tarjeta y no sobre la pantalla porque la tarjeta ya se escala al hueco:
+ * así el gesto se ve igual de grande en un móvil que en un escritorio.
+ */
+const SWAY_REACH = 0.12;
 
 type Mode = "idle" | "move" | "rotate";
 
@@ -103,9 +110,16 @@ export function DraggableCard({
     MIN_SCALE,
     MAX_SCALE,
   );
+  const half = { width: (CARD.width * scale) / 2, height: (CARD.height * scale) / 2 };
 
   const group = useRef<THREE.Group>(null);
-  const position = useRef({ x: spring(), y: spring() });
+  // La tarjeta llega desde fuera de la pantalla: empieza por encima del borde
+  // y el muelle de reposo la deja en el centro. A quien pide menos movimiento
+  // se le enseña ya colocada.
+  const position = useRef({
+    x: spring(),
+    y: spring(reducedMotion ? 0 : entryOffsetY(viewport.height / 2, half.height)),
+  });
   const rotation = useRef({ x: spring(), y: spring(), z: spring() });
   /** Giro acumulado por el usuario, aparte del vaivén en reposo. */
   const spin = useRef({ pitch: 0, turn: 0 });
@@ -125,20 +139,34 @@ export function DraggableCard({
   const scratch = useRef(new THREE.Vector3());
   const previousFlips = useRef(flipCount);
   const previousResets = useRef(resetCount);
+  /**
+   * El vaivén de bienvenida: cuándo apareció la tarjeta —se fija en el primer
+   * frame, que es cuando se la ve— y si todavía toca enseñarlo.
+   */
+  const intro = useRef({ start: -1, live: true });
+
+  /** Quien ya ha tocado la tarjeta no necesita que le enseñen a moverla. */
+  const cancelIntro = useCallback(() => {
+    intro.current.live = false;
+  }, []);
 
   useEffect(() => {
+    if (flipCount === previousFlips.current) return;
     spin.current.turn += (flipCount - previousFlips.current) * Math.PI;
     previousFlips.current = flipCount;
-  }, [flipCount]);
+    cancelIntro();
+  }, [flipCount, cancelIntro]);
 
   useEffect(() => {
     if (resetCount === previousResets.current) return;
     previousResets.current = resetCount;
     spin.current = { pitch: 0, turn: 0 };
-  }, [resetCount]);
+    cancelIntro();
+  }, [resetCount, cancelIntro]);
 
   const startMove = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
+    cancelIntro();
     (event.target as Element).setPointerCapture(event.pointerId);
     pressed.current = markOf(event);
     const current = group.current;
@@ -154,6 +182,7 @@ export function DraggableCard({
   };
 
   const startRotate = (event: ThreeEvent<PointerEvent>) => {
+    cancelIntro();
     (event.target as Element).setPointerCapture(event.pointerId);
     drag.current.mode = "rotate";
     drag.current.lastPointerX = event.pointer.x;
@@ -265,12 +294,19 @@ export function DraggableCard({
           )
         : 0;
 
+    // Bienvenida: la tarjeta se balancea sola una vez para enseñar que se
+    // mueve. Se apaga al terminar y también al primer gesto.
+    if (intro.current.start < 0) intro.current.start = t;
+    const introElapsed = t - intro.current.start;
+    if (introElapsed > INTRO_SWAY_END) intro.current.live = false;
+    const welcome = idle && intro.current.live ? introSway(introElapsed) : null;
+
     const targets = {
-      x: drag.current.targetX,
+      x: drag.current.targetX + (welcome ? welcome.x * CARD.width * scale * SWAY_REACH : 0),
       y: drag.current.targetY + (idle ? Math.sin(t * 0.5) * 0.03 : 0),
       pitch: spin.current.pitch + (idle ? Math.sin(t * 0.6) * 0.05 : 0),
       turn: spin.current.turn + (idle ? Math.sin(t * 0.45) * 0.07 : 0),
-      roll: swayFromDrag,
+      roll: swayFromDrag + (welcome?.roll ?? 0),
     };
 
     const move = mode === "move" ? GRAB : RELEASE;
@@ -302,8 +338,8 @@ export function DraggableCard({
         {
           x: position.current.x.value,
           y: position.current.y.value,
-          halfWidth: (CARD.width * scale) / 2,
-          halfHeight: (CARD.height * scale) / 2,
+          halfWidth: half.width,
+          halfHeight: half.height,
         },
         { halfWidth: viewport.width / 2, halfHeight: viewport.height / 2 },
       )
