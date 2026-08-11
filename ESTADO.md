@@ -89,9 +89,10 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 292 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
+- 312 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
   puntero, llegada y balanceo de bienvenida, gestos que
-  voltean la tarjeta, URL del sitio, elección de tema y de idioma), sobre el
+  voltean la tarjeta, URL del sitio, caminos de compartir, elección de tema y
+  de idioma), sobre el
   contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
   desincronice de los tokens de `app/globals.css` ni del favicon
   `app/icon.svg` (este también en el encaje
@@ -109,6 +110,12 @@ arquitectura en `README.md`.
   a mano en el JSX ni en un `aria-label`, `alt`, `title` o `lang`. Del mando de
   la escena se comprueba, pintándolo con `renderToStaticMarkup`, que el rótulo
   sigue estando como etiqueta accesible cuando en el móvil solo se ve el icono.
+- Un cuarto mando, «Compartir», al final de la banda: abre el diálogo del
+  sistema (`navigator.share`) con el título de la tarjeta en el idioma que se
+  esté viendo y con `SITE_URL`. Donde no hay diálogo copia el enlace y lo
+  confirma como los botones de copiar. La elección de camino es una función
+  pura (`lib/share.ts`) y el aviso pasajero, un hook compartido con esos
+  botones (`lib/use-feedback.ts`).
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 
@@ -214,6 +221,14 @@ Nada pendiente.
   lateral de `lg`, la barra del navegador): la escena solo se entera del ratón
   por los eventos que le llegan. Se dejó así a propósito, que es lo que hace
   cualquier paralaje; enderezarla pediría escuchar el `pointerleave` del canvas.
+- Cancelar el diálogo del sistema no copia el enlace a la espalda: quien se
+  arrepiente quiere quedarse como estaba, no acabar con el enlace en el
+  portapapeles. La cancelación llega como un `AbortError` y se distingue por
+  ahí de un fallo de verdad, que sí cae en copiar.
+- Lo que se comparte es `SITE_URL` y no `location.href`: al enlace de la barra
+  le sobran los parámetros de campaña y el `#` con los que se haya llegado.
+  Como efecto lateral, en una vista previa de despliegue se comparte la
+  dirección de producción salvo que `NEXT_PUBLIC_SITE_URL` diga otra cosa.
 - El icono de recolocar son cuatro flechas hacia dentro. Antes era un encuadre
   con un punto en medio y, a 20 px y sin rótulo —que es como se ve en un
   móvil—, se leía como el visor de una cámara: parecía que iba a hacer una

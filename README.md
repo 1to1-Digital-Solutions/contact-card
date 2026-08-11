@@ -74,6 +74,11 @@ interfaz, en otro: `lib/dictionary.ts`.
   una pared; el volumen lo dan el bisel, las luces y el mapa de entorno.
 - **Todo funciona sin WebGL**: si el navegador no puede con 3D, se enseña la
   misma tarjeta en CSS. Los datos, además, están siempre en HTML.
+- **Compartir va por el diálogo del sistema** (`navigator.share`), que es el
+  camino bueno en un móvil; donde no existe se copia el enlace, con el mismo
+  aviso que los botones de copiar. Lo que se manda es el título de la tarjeta
+  en el idioma que se esté viendo y la dirección canónica del sitio, no la de
+  la barra del navegador (`lib/share.ts`).
 - **La previsualización al compartir también se genera desde el código**
   (`app/opengraph-image.tsx`, con `ImageResponse`): mismos datos y misma
   paleta que la tarjeta, así que no hay ningún PNG que reexportar. Twitter/X
@@ -93,6 +98,7 @@ interfaz, en otro: `lib/dictionary.ts`.
 | Botón «sol/luna» de la cabecera | Cambiar entre tema claro y oscuro |
 | Botón «ES/EN» de la cabecera   | Cambiar de idioma; se recuerda |
 | «Ver los datos» (móvil)        | Abre la hoja con los datos, copiar y guardar |
+| «Compartir»                    | Diálogo del sistema; donde no lo hay, copia el enlace |
 | Mover el ratón por la página   | La tarjeta se asoma hacia el puntero, sin moverse del sitio |
 
 Al abrir la página la tarjeta cae desde fuera de la pantalla y se balancea una
