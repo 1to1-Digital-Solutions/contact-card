@@ -89,7 +89,14 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 317 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
+- LinkedIn y GitHub en el panel de datos, detrás de la web y con su botón de
+  copiar. Las direcciones viven en `PROFILES` (`lib/contact.ts`), fuera de
+  `CONTACT` porque no son datos de la ficha: no van a la vCard ni a las caras de
+  la tarjeta. Los enlaces llevan `rel="noreferrer"` y un nombre accesible
+  traducido que incluye la dirección que se ve. Las mismas URL son el `sameAs`
+  del JSON-LD, que es como se dice que la persona de la ficha es la de esos
+  perfiles.
+- 333 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
   puntero, llegada y balanceo de bienvenida, gestos que voltean la tarjeta, URL
   del sitio, caminos de compartir y el aviso que deja cada uno, elección de
   tema y de idioma), sobre el
@@ -110,6 +117,10 @@ arquitectura en `README.md`.
   a mano en el JSX ni en un `aria-label`, `alt`, `title` o `lang`. Del mando de
   la escena se comprueba, pintándolo con `renderToStaticMarkup`, que el rótulo
   sigue estando como etiqueta accesible cuando en el móvil solo se ve el icono.
+  Del panel, con el mismo método, que cada perfil se enlaza a su dirección, con
+  `rel="noreferrer"` y con su nombre accesible en los dos idiomas; y de
+  `PROFILES`, que la dirección que se enseña es la del enlace y que la URL está
+  escrita ya codificada.
 - Un cuarto mando, «Compartir», al final de la banda: abre el diálogo del
   sistema (`navigator.share`) con el título de la tarjeta en el idioma que se
   esté viendo y con `SITE_URL`. Donde no hay diálogo copia el enlace y lo
@@ -235,4 +246,18 @@ Nada pendiente.
   con un punto en medio y, a 20 px y sin rótulo —que es como se ve en un
   móvil—, se leía como el visor de una cámara: parecía que iba a hacer una
   foto. Cualquier icono nuevo hay que mirarlo a ese tamaño, no en grande.
+- Los perfiles se quedan en el panel a propósito: no van a la vCard (la agenda
+  guarda formas de contactar, no perfiles) ni a las caras de la tarjeta, que
+  están deliberadamente limpias. No es un olvido.
+- La ruta del perfil de LinkedIn lleva los acentos percent-encoded
+  (`c%C3%A9sar-pe%C3%B3n`). Escribirla con las tildes literales cambia la URL
+  canónica, así que se copia tal cual; el texto que se ve, en cambio, va con
+  ellas y es lo que se copia al portapapeles.
+- El valor del panel parte con `break-words` y no con `break-all`: la dirección
+  de LinkedIn no cabe en una línea en ningún tamaño, y partirla por sus guiones
+  se lee; a mitad de palabra («…césar-peón-lampa / rero»), no.
+- El botón de copiar de un perfil se anuncia «Copiar linkedin», en minúscula:
+  `copy.action` baja el rótulo de caso porque los demás son nombres comunes
+  («Copiar teléfono»). Se oye bien y no se ve en pantalla, así que se dejó como
+  está antes que meter una excepción por dos campos.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
