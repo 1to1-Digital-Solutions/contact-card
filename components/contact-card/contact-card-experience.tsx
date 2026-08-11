@@ -15,6 +15,7 @@ import { ContactPanel } from "./contact-panel";
 import { ContactSheet } from "./contact-sheet";
 import { DetailsIcon, FlipIcon, RecenterIcon, SceneControl } from "./scene-control";
 import { SceneErrorBoundary } from "./scene-error-boundary";
+import { ShareControl } from "./share-control";
 
 /**
  * @param served Idioma con el que el servidor pintó el HTML: el que se eligió
@@ -167,6 +168,11 @@ export function ContactCardExperience({ language: served }: { language: Language
               onClick={openSheet}
               className="lg:hidden"
             />
+
+            {/* Compartir va el último y con el mismo aspecto sobrio que sus
+                vecinos: la acción principal sigue siendo «Guardar contacto»,
+                que es el único botón con el color de marca. */}
+            <ShareControl language={language} />
           </div>
 
           {status === "ready" && (

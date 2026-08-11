@@ -52,6 +52,7 @@ export type Dictionary = {
     showBack: string;
     reset: string;
     showData: string;
+    share: string;
     /** Etiquetas de la tarjeta plana, que se voltea pulsándola. */
     flipToFront: string;
     flipToBack: string;
@@ -72,6 +73,12 @@ export type Dictionary = {
     action: (field: string) => string;
     done: (field: string) => string;
     failed: (field: string) => string;
+    /**
+     * Cómo se llama el enlace de la tarjeta en esos avisos. Compartir sin
+     * diálogo del sistema acaba copiándolo, y entonces se confirma igual que
+     * cualquier otro dato: con `done` y con este rótulo.
+     */
+    link: string;
   };
 };
 
@@ -107,6 +114,7 @@ const es: Dictionary = {
     showBack: "Ver el reverso",
     reset: "Recolocar",
     showData: "Ver los datos",
+    share: "Compartir",
     flipToFront: "Ver el anverso de la tarjeta",
     flipToBack: "Ver el reverso de la tarjeta",
   },
@@ -128,6 +136,7 @@ const es: Dictionary = {
     // concuerda mal en la mitad de los casos. Con dos puntos vale para todos.
     done: (field) => `Copiado al portapapeles: ${field}`,
     failed: (field) => `No se ha podido copiar: ${field}`,
+    link: "Enlace de la tarjeta",
   },
 };
 
@@ -163,6 +172,7 @@ const en: Dictionary = {
     showBack: "See the back",
     reset: "Recenter",
     showData: "See the details",
+    share: "Share",
     flipToFront: "See the front of the card",
     flipToBack: "See the back of the card",
   },
@@ -181,6 +191,7 @@ const en: Dictionary = {
     action: (field) => `Copy ${field.toLowerCase()}`,
     done: (field) => `${field} copied to the clipboard`,
     failed: (field) => `Could not copy ${field.toLowerCase()}`,
+    link: "Card link",
   },
 };
 

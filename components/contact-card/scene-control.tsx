@@ -101,3 +101,35 @@ export function DetailsIcon() {
     </Icon>
   );
 }
+
+/**
+ * Compartir: la flecha que sale de la bandeja. Es el dibujo con el que abren
+ * el diálogo del sistema tanto el móvil como el escritorio, así que anuncia lo
+ * que va a pasar al pulsarlo mejor que cualquier otro.
+ */
+export function ShareIcon() {
+  return (
+    <Icon>
+      <path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
+      <path d="m8 7 4-4 4 4" />
+      <path d="M12 3v12" />
+    </Icon>
+  );
+}
+
+/** Hecho y no hecho, con el mismo trazo: los avisos de los botones de copiar. */
+export function DoneIcon() {
+  return (
+    <Icon>
+      <path d="m5 12.5 4.5 4.5L19 7" />
+    </Icon>
+  );
+}
+
+export function FailedIcon() {
+  return (
+    <Icon>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </Icon>
+  );
+}

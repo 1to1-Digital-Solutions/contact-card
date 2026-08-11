@@ -1,7 +1,15 @@
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { DetailsIcon, FlipIcon, RecenterIcon, SceneControl } from "./scene-control";
+import {
+  DetailsIcon,
+  DoneIcon,
+  FailedIcon,
+  FlipIcon,
+  RecenterIcon,
+  SceneControl,
+  ShareIcon,
+} from "./scene-control";
 
 /**
  * En un móvil el mando enseña solo el icono, así que el rótulo deja de estar a
@@ -14,6 +22,11 @@ const ICONS = [
   ["voltear", <FlipIcon key="flip" />],
   ["recolocar", <RecenterIcon key="recenter" />],
   ["ver los datos", <DetailsIcon key="details" />],
+  ["compartir", <ShareIcon key="share" />],
+  // Los dos avisos del mando de compartir: el rótulo no cambia con ellos, así
+  // que el botón sigue teniendo nombre mientras se enseña el resultado.
+  ["compartir, hecho", <DoneIcon key="done" />],
+  ["compartir, fallido", <FailedIcon key="failed" />],
 ] as const;
 
 const render = (label: string, icon: ReactNode) =>
