@@ -6,9 +6,10 @@ import * as THREE from "three";
 import { type ThemeName, CARD } from "@/lib/brand";
 import { hasLeftView, readTap, type PointerMark } from "@/lib/card-gestures";
 import { entryOffsetY, INTRO_SWAY_END, introSway } from "@/lib/card-intro";
-import { isShowingBack, snapToHalfTurn } from "@/lib/card-orientation";
+import { isShowingBack, pointerTilt, snapToHalfTurn } from "@/lib/card-orientation";
 import type { Language } from "@/lib/i18n";
 import { clamp, stepSpring, type SpringConfig, type SpringState } from "@/lib/motion";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { CardMesh } from "./card-mesh";
 
 /** Mientras se agarra, la tarjeta persigue al puntero de cerca. */
@@ -42,6 +43,12 @@ const MAX_PITCH = 1.1;
  * así el gesto se ve igual de grande en un móvil que en un escritorio.
  */
 const SWAY_REACH = 0.12;
+/**
+ * Hay ratón: solo entonces la tarjeta se asoma hacia el puntero. En una
+ * pantalla táctil el puntero no se mueve si nadie la toca, y la tarjeta se
+ * quedaría girada hacia el último sitio que se tocó.
+ */
+const FINE_POINTER = "(pointer: fine)";
 
 type Mode = "idle" | "move" | "rotate";
 
@@ -111,6 +118,7 @@ export function DraggableCard({
     MAX_SCALE,
   );
   const half = { width: (CARD.width * scale) / 2, height: (CARD.height * scale) / 2 };
+  const finePointer = useMediaQuery(FINE_POINTER);
 
   const group = useRef<THREE.Group>(null);
   // La tarjeta llega desde fuera de la pantalla: empieza por encima del borde
@@ -301,11 +309,16 @@ export function DraggableCard({
     if (introElapsed > INTRO_SWAY_END) intro.current.live = false;
     const welcome = idle && intro.current.live ? introSway(introElapsed) : null;
 
+    // Con ratón, la tarjeta se asoma hacia donde esté el puntero sin moverse
+    // del sitio: basta con pasar por encima para verle el volumen.
+    const tilt = idle && finePointer ? pointerTilt(state.pointer.x, state.pointer.y) : null;
+
     const targets = {
       x: drag.current.targetX + (welcome ? welcome.x * CARD.width * scale * SWAY_REACH : 0),
       y: drag.current.targetY + (idle ? Math.sin(t * 0.5) * 0.03 : 0),
-      pitch: spin.current.pitch + (idle ? Math.sin(t * 0.6) * 0.05 : 0),
-      turn: spin.current.turn + (idle ? Math.sin(t * 0.45) * 0.07 : 0),
+      pitch:
+        spin.current.pitch + (idle ? Math.sin(t * 0.6) * 0.05 : 0) + (tilt?.pitch ?? 0),
+      turn: spin.current.turn + (idle ? Math.sin(t * 0.45) * 0.07 : 0) + (tilt?.turn ?? 0),
       roll: swayFromDrag + (welcome?.roll ?? 0),
     };
 

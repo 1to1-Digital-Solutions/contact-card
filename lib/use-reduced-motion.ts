@@ -1,22 +1,8 @@
-import { useSyncExternalStore } from "react";
+import { useMediaQuery } from "./use-media-query";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
-function subscribe(onChange: () => void) {
-  const media = window.matchMedia(QUERY);
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
-}
-
-/**
- * `true` si el sistema pide reducir el movimiento. En el servidor devuelve
- * `false` para que el primer render coincida con el del cliente antes de
- * hidratar; el valor real llega en cuanto hay `window`.
- */
+/** `true` si el sistema pide reducir el movimiento. */
 export function useReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(QUERY).matches,
-    () => false,
-  );
+  return useMediaQuery(QUERY);
 }
