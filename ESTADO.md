@@ -210,4 +210,12 @@ Nada pendiente.
   bastaría pasar el ratón para acabar viendo el canto de la tarjeta.
 - Con `prefers-reduced-motion` no hay ni caída, ni balanceo, ni asomo hacia el
   puntero: la tarjeta aparece colocada y solo se mueve cuando se la mueve.
+- El asomo se queda como esté cuando el puntero sale del lienzo (la banda
+  lateral de `lg`, la barra del navegador): la escena solo se entera del ratón
+  por los eventos que le llegan. Se dejó así a propósito, que es lo que hace
+  cualquier paralaje; enderezarla pediría escuchar el `pointerleave` del canvas.
+- El icono de recolocar son cuatro flechas hacia dentro. Antes era un encuadre
+  con un punto en medio y, a 20 px y sin rótulo —que es como se ve en un
+  móvil—, se leía como el visor de una cámara: parecía que iba a hacer una
+  foto. Cualquier icono nuevo hay que mirarlo a ese tamaño, no en grande.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
