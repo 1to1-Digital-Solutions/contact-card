@@ -84,3 +84,24 @@ export async function shareCard(
     return "failed";
   }
 }
+
+/**
+ * Qué aviso deja cada final, o ninguno. Compartir de verdad no lleva aviso
+ * —el propio diálogo del sistema ya lo es— y cancelarlo tampoco: quien se
+ * arrepiente no ha roto nada, y enseñarle un error le contaría lo contrario.
+ *
+ * Va en la tabla y no en un par de `if` dentro del botón porque el tipo obliga
+ * a decidirlo para cada final: un camino nuevo en `ShareOutcome` no puede
+ * colarse sin que alguien diga qué se le cuenta a quien pulsa.
+ */
+const FEEDBACK: Record<ShareOutcome, "done" | "failed" | null> = {
+  shared: null,
+  dismissed: null,
+  copied: "done",
+  failed: "failed",
+};
+
+/** El aviso pasajero del botón para este final, o `null` si no toca ninguno. */
+export function shareFeedback(outcome: ShareOutcome): "done" | "failed" | null {
+  return FEEDBACK[outcome];
+}

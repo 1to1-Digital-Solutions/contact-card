@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { dictionary } from "@/lib/dictionary";
 import type { Language } from "@/lib/i18n";
-import { shareCard, shareTarget } from "@/lib/share";
+import { shareCard, shareFeedback, shareTarget } from "@/lib/share";
 import { type Feedback, useFeedback } from "@/lib/use-feedback";
 import { DoneIcon, FailedIcon, SceneControl, ShareIcon } from "./scene-control";
 
@@ -35,8 +35,8 @@ export function ShareControl({ language }: { language: Language }) {
       warn: (error) => console.warn("No se ha podido compartir la tarjeta:", error),
     });
 
-    if (outcome === "copied") announce("done");
-    if (outcome === "failed") announce("failed");
+    const result = shareFeedback(outcome);
+    if (result) announce(result);
   };
 
   return (

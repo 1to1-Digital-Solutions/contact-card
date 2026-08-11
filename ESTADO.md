@@ -89,10 +89,10 @@ arquitectura en `README.md`.
   elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
   datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
   la tarjeta abre en el idioma que se eligió.
-- 312 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
-  puntero, llegada y balanceo de bienvenida, gestos que
-  voltean la tarjeta, URL del sitio, caminos de compartir, elección de tema y
-  de idioma), sobre el
+- 317 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
+  puntero, llegada y balanceo de bienvenida, gestos que voltean la tarjeta, URL
+  del sitio, caminos de compartir y el aviso que deja cada uno, elección de
+  tema y de idioma), sobre el
   contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
   desincronice de los tokens de `app/globals.css` ni del favicon
   `app/icon.svg` (este también en el encaje
@@ -115,7 +115,9 @@ arquitectura en `README.md`.
   esté viendo y con `SITE_URL`. Donde no hay diálogo copia el enlace y lo
   confirma como los botones de copiar. La elección de camino es una función
   pura (`lib/share.ts`) y el aviso pasajero, un hook compartido con esos
-  botones (`lib/use-feedback.ts`).
+  botones (`lib/use-feedback.ts`). Qué aviso deja cada final está en una tabla
+  del mismo fichero, indexada por `ShareOutcome`: un camino nuevo no compila
+  sin que alguien diga qué se le cuenta a quien pulsó.
 - Verificado en navegador real (Playwright + captura) además de
   typecheck, lint, build y tests.
 

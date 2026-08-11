@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 import { CONTACT } from "./contact";
 import { dictionary } from "./dictionary";
 import { LANGUAGES } from "./i18n";
-import { shareCard, type ShareTarget, type ShareTools, shareTarget } from "./share";
+import {
+  shareCard,
+  shareFeedback,
+  type ShareTarget,
+  type ShareTools,
+  shareTarget,
+} from "./share";
 import { SITE_URL } from "./site";
 
 /**
@@ -69,6 +75,32 @@ describe("shareCard", () => {
 
     await expect(shareCard(TARGET, tools)).resolves.toBe("failed");
     expect(tools.warn).toHaveBeenCalledWith(denied);
+  });
+});
+
+describe("shareFeedback", () => {
+  it("confirma la copia como cualquier otro dato copiado", () => {
+    expect(shareFeedback("copied")).toBe("done");
+  });
+
+  it("solo enseña el fallo cuando no quedaba nada que intentar", () => {
+    expect(shareFeedback("failed")).toBe("failed");
+  });
+
+  it("se calla cuando lo recogió el diálogo del sistema", () => {
+    // El diálogo ya es la confirmación: un aviso encima sobra.
+    expect(shareFeedback("shared")).toBeNull();
+  });
+
+  it("se calla también cuando el diálogo se cerró sin compartir", () => {
+    expect(shareFeedback("dismissed")).toBeNull();
+  });
+
+  /** Lo que de verdad hace el botón: los dos trozos, uno detrás del otro. */
+  it("no enseña ningún aviso a quien cancela el diálogo del sistema", async () => {
+    const tools = toolsWith({ share: vi.fn(async () => Promise.reject(dismissal())) });
+
+    expect(shareFeedback(await shareCard(TARGET, tools))).toBeNull();
   });
 });
 
