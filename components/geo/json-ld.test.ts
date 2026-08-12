@@ -32,6 +32,29 @@ describe("personSchema", () => {
   });
 
   /**
+   * `description` es donde schema.org dice a qué se dedica alguien, y es lo que
+   * lee un motor de IA cuando le preguntan por él. Va la línea de servicios, la
+   * misma que se ve en el panel de datos: el lema promete, pero no dice a qué se
+   * dedica nadie.
+   */
+  it("declara a qué se dedica en `description`", () => {
+    expect(schema.description).toBe("Desarrollo de software personalizado");
+  });
+
+  it.each(LANGUAGES)("declara a qué se dedica en el idioma servido (%s)", (language) => {
+    expect(personSchema(contactIn(language)).description).toBe(
+      TRANSLATED.services[language],
+    );
+  });
+
+  /** La empresa se dedica a lo mismo, y a ella también se le pregunta qué hace. */
+  it.each(LANGUAGES)("dice a qué se dedica la empresa (%s)", (language) => {
+    expect(personSchema(contactIn(language)).worksFor.description).toBe(
+      TRANSLATED.services[language],
+    );
+  });
+
+  /**
    * `sameAs` es la propiedad con la que se dice que la persona de la ficha es
    * también la de esos perfiles. Sin ella, la página y el LinkedIn de César son
    * dos desconocidos para quien la lee.

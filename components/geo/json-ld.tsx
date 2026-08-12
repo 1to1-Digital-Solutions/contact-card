@@ -18,8 +18,8 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
 
 /**
  * Ficha de la persona con su empresa, para buscadores y motores de IA. Recibe
- * el contacto ya resuelto en un idioma: el cargo va en el que se está
- * sirviendo, que es el mismo que anuncia `<html lang>`.
+ * el contacto ya resuelto en un idioma: el cargo y a qué se dedica van en el
+ * que se está sirviendo, que es el mismo que anuncia `<html lang>`.
  */
 export function personSchema(contact: Contact) {
   return {
@@ -29,6 +29,10 @@ export function personSchema(contact: Contact) {
     givenName: contact.givenName,
     familyName: contact.familyName,
     jobTitle: contact.jobTitle,
+    // A qué se dedica, que es lo que se responde cuando preguntan por alguien.
+    // Va la línea de servicios y no el lema: el lema promete, y aquí se declara
+    // lo que se hace. Es además el texto que se lee en el panel de datos.
+    description: contact.services,
     email: `mailto:${contact.email}`,
     telephone: contact.phoneE164,
     url: SITE_URL,
@@ -39,6 +43,7 @@ export function personSchema(contact: Contact) {
       "@type": "Organization",
       name: contact.company,
       url: contact.websiteUrl,
+      description: contact.services,
     },
   };
 }

@@ -109,7 +109,10 @@ arquitectura en `README.md`.
   tinta apagada y en jerarquía secundaria: en 3D, en la versión plana y en la
   imagen de compartir. En el panel de datos, detrás del cargo, la línea de
   servicios («Desarrollo de software personalizado»).
-- 358 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
+- Esa línea de servicios es también el `description` del JSON-LD, tanto de la
+  persona como de la empresa (`worksFor`): es la propiedad por la que un motor
+  de IA sabe a qué se dedica alguien. Va en el idioma servido, como `jobTitle`.
+- 363 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
   orientación, asomo hacia el puntero, llegada y balanceo de bienvenida, gestos
   que voltean la tarjeta, URL del sitio, caminos de compartir y el aviso que
   deja cada uno, elección de tema y de idioma), sobre el
@@ -164,8 +167,10 @@ Nada pendiente.
   nuevo no compila hasta estar completo, y los tests los recorren todos en vez
   de nombrarlos uno a uno.
 - Ni el lema ni los servicios van a la vCard: la agenda guarda formas de
-  contactar, y acabarían de relleno en el único campo libre que hay. Tampoco
-  van al JSON-LD; el `description` de schema.org es tarea aparte.
+  contactar, y acabarían de relleno en el único campo libre que hay.
+- El `description` del JSON-LD lleva los servicios y no el lema: schema.org lo
+  define como qué es la cosa, y lo leen máquinas. El lema es una promesa
+  comercial y su sitio en el estándar sería `slogan`, que hoy no se declara.
 - La amortiguación del puntero no se aplica con el dedo (`pointer: coarse`) ni
   con `prefers-reduced-motion`. Con el dedo la tarjeta se toca, y cualquier
   retardo se lee como que se despega de él; el muestreo táctil, además, ya
