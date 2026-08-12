@@ -82,9 +82,10 @@ interfaz, en otro: `lib/dictionary.ts`.
 - **La previsualización al compartir también se genera desde el código**
   (`app/opengraph-image.tsx`, con `ImageResponse`): mismos datos y misma
   paleta que la tarjeta, así que no hay ningún PNG que reexportar. Twitter/X
-  reutiliza esa misma imagen. Va en un solo idioma —el único texto suyo que se
-  traduce es el cargo— porque quien la pide es el servicio de mensajería, que
-  no manda el idioma de nadie y cachea una imagen por URL para todos.
+  reutiliza esa misma imagen. Va en un solo idioma —los únicos textos suyos que
+  se traducen son el cargo y el lema— porque quien la pide es el servicio de
+  mensajería, que no manda el idioma de nadie y cachea una imagen por URL para
+  todos.
 
 ## Interacción
 

@@ -84,11 +84,11 @@ arquitectura en `README.md`.
   con `Accept-Language` (`lib/i18n.ts`, sin librería) y llega resuelto en el
   primer HTML: `<html lang>`, `og:locale`, título, descripción, JSON-LD, la
   cara de la tarjeta (3D y plana) y la vCard. Los textos de interfaz viven en
-  `lib/dictionary.ts`; el cargo, que es un dato, en `JOB_TITLE` de
-  `lib/contact.ts`. Un botón en la cabecera cambia de idioma y deja la
-  elección en una cookie (`contact-card-language`, un año, `SameSite=Lax`, sin
-  datos personales) que `requestLanguage` lee antes de la cabecera: al volver,
-  la tarjeta abre en el idioma que se eligió.
+  `lib/dictionary.ts`; el cargo, el lema y los servicios, que son datos, en
+  `TRANSLATED` de `lib/contact.ts`. Un botón en la cabecera cambia de idioma y
+  deja la elección en una cookie (`contact-card-language`, un año,
+  `SameSite=Lax`, sin datos personales) que `requestLanguage` lee antes de la
+  cabecera: al volver, la tarjeta abre en el idioma que se eligió.
 - LinkedIn y GitHub en el panel de datos, detrás de la web y con su botón de
   copiar. Las direcciones viven en `PROFILES` (`lib/contact.ts`), fuera de
   `CONTACT` porque no son datos de la ficha: no van a la vCard ni a las caras de
@@ -101,17 +101,18 @@ arquitectura en `README.md`.
   `lib/motion.ts`) con vida media de 40 ms. Filtra el puntero, no la tarjeta,
   así que de un solo sitio salen suavizados el arrastre, el giro y el asomo, y
   el balanceo —que se calcula de la velocidad del gesto— deja de dar respingos.
-  Con el dedo y con `prefers-reduced-motion` el puntero pasa sin filtrar.
+  Con el dedo y con `prefers-reduced-motion` el puntero pasa sin filtrar. Al
+  soltar tras girar, el giro se cobra el trozo del gesto que el filtro aún no
+  había repartido: así la tarjeta encaja donde la dejó el ratón, no antes.
 - El lema de la empresa («Tú creas tu negocio, nosotros nos encargamos de tu
   tecnología.») en el anverso, por debajo del nombre, el cargo y la empresa, en
   tinta apagada y en jerarquía secundaria: en 3D, en la versión plana y en la
   imagen de compartir. En el panel de datos, detrás del cargo, la línea de
   servicios («Desarrollo de software personalizado»).
-- 357 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
-  orientación, asomo hacia el
-  puntero, llegada y balanceo de bienvenida, gestos que voltean la tarjeta, URL
-  del sitio, caminos de compartir y el aviso que deja cada uno, elección de
-  tema y de idioma), sobre el
+- 358 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
+  orientación, asomo hacia el puntero, llegada y balanceo de bienvenida, gestos
+  que voltean la tarjeta, URL del sitio, caminos de compartir y el aviso que
+  deja cada uno, elección de tema y de idioma), sobre el
   contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
   desincronice de los tokens de `app/globals.css` ni del favicon
   `app/icon.svg` (este también en el encaje
@@ -133,8 +134,10 @@ arquitectura en `README.md`.
   —y que esa dirección es el texto del enlace, no solo algo que aparezca en el
   marcado—, con `rel="noreferrer"` y con su nombre accesible en los dos idiomas;
   y de `PROFILES`, que la dirección que se enseña es la del enlace y que la URL
-  está escrita ya codificada. La vCard, por su parte, comprueba que no se lleva
-  ningún perfil.
+  está escrita ya codificada. De la tarjeta plana, que dice lo mismo que el
+  anverso 3D —nombre, cargo, empresa y lema en los dos idiomas— y que no se
+  trae la línea de servicios, que es del panel. La vCard, por su parte,
+  comprueba que no se lleva ningún perfil, ni el lema ni los servicios.
 - Un cuarto mando, «Compartir», al final de la banda: abre el diálogo del
   sistema (`navigator.share`) con el título de la tarjeta en el idioma que se
   esté viendo y con `SITE_URL`. Donde no hay diálogo copia el enlace y lo

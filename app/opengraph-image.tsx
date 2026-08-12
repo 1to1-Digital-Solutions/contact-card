@@ -16,16 +16,16 @@ import { DEFAULT_THEME } from "@/lib/theme";
  * Es una sola imagen y la página tiene dos temas, así que va con el de
  * partida (`DEFAULT_THEME`, hoy el oscuro): el que se ve al abrir el enlace.
  *
- * Y va en un solo idioma, el de recurso, por la misma razón y una más: el
- * único texto de la imagen que se traduce es el cargo (el nombre, la empresa
- * y los datos se escriben igual), y una previsualización no se negocia. Quien
- * la pide es el servicio de mensajería, que no manda el idioma de nadie y
- * cachea una sola imagen por URL para todos los que ven el mensaje: dos
- * imágenes no llegarían a quien toca.
+ * Y va en un solo idioma, el de recurso, por la misma razón y una más: los
+ * únicos textos de la imagen que se traducen son el cargo y el lema (el
+ * nombre, la empresa y los datos se escriben igual), y una previsualización no
+ * se negocia. Quien la pide es el servicio de mensajería, que no manda el
+ * idioma de nadie y cachea una sola imagen por URL para todos los que ven el
+ * mensaje: dos imágenes no llegarían a quien toca.
  *
  * El `alt` va con ella y no con la página: describe lo que pone la imagen, así
  * que se queda en el idioma en el que está escrita. Traducirlo describiría en
- * inglés un cargo que en la imagen está en español.
+ * inglés unas frases que en la imagen están en español.
  */
 
 const CONTACT = contactIn(DEFAULT_LANGUAGE);
