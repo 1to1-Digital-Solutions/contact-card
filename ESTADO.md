@@ -96,7 +96,19 @@ arquitectura en `README.md`.
   traducido que incluye la dirección que se ve. Las mismas URL son el `sameAs`
   del JSON-LD, que es como se dice que la persona de la ficha es la de esos
   perfiles.
-- 334 tests sobre la lógica pura (vCard, muelles, orientación, asomo hacia el
+- Con ratón, la tarjeta ya no persigue el puntero en crudo: entre el navegador
+  y la escena hay una amortiguación de primer orden (`smoothTowards`, en
+  `lib/motion.ts`) con vida media de 40 ms. Filtra el puntero, no la tarjeta,
+  así que de un solo sitio salen suavizados el arrastre, el giro y el asomo, y
+  el balanceo —que se calcula de la velocidad del gesto— deja de dar respingos.
+  Con el dedo y con `prefers-reduced-motion` el puntero pasa sin filtrar.
+- El lema de la empresa («Tú creas tu negocio, nosotros nos encargamos de tu
+  tecnología.») en el anverso, por debajo del nombre, el cargo y la empresa, en
+  tinta apagada y en jerarquía secundaria: en 3D, en la versión plana y en la
+  imagen de compartir. En el panel de datos, detrás del cargo, la línea de
+  servicios («Desarrollo de software personalizado»).
+- 357 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
+  orientación, asomo hacia el
   puntero, llegada y balanceo de bienvenida, gestos que voltean la tarjeta, URL
   del sitio, caminos de compartir y el aviso que deja cada uno, elección de
   tema y de idioma), sobre el
@@ -139,6 +151,31 @@ arquitectura en `README.md`.
 Nada pendiente.
 
 ## Caveats y notas
+
+- El lema y la línea de servicios viven en `TRANSLATED` (`lib/contact.ts`),
+  junto al cargo, y no en el diccionario: son datos de la ficha y de la marca
+  —lo que la tarjeta dice de quién es y de qué hace—, no rótulos de la
+  interfaz. Sus rótulos («Servicios») sí están en el diccionario. `TRANSLATED`
+  sustituye al antiguo `JOB_TITLE`: el tipo obliga a que cada texto esté en los
+  dos idiomas y `Contact` a que `contactIn` no se deje ninguno, así que un dato
+  nuevo no compila hasta estar completo, y los tests los recorren todos en vez
+  de nombrarlos uno a uno.
+- Ni el lema ni los servicios van a la vCard: la agenda guarda formas de
+  contactar, y acabarían de relleno en el único campo libre que hay. Tampoco
+  van al JSON-LD; el `description` de schema.org es tarea aparte.
+- La amortiguación del puntero no se aplica con el dedo (`pointer: coarse`) ni
+  con `prefers-reduced-motion`. Con el dedo la tarjeta se toca, y cualquier
+  retardo se lee como que se despega de él; el muestreo táctil, además, ya
+  llega suave. Los 40 ms de vida media son un compromiso: por debajo no se
+  nota y por encima la tarjeta empieza a despegarse del cursor.
+- El filtro se planta en el objetivo por debajo de `rest` en vez de acercarse
+  eternamente, y al empezar un gesto se planta en el puntero: sin lo primero la
+  tarjeta seguiría moviéndose con el ratón ya quieto, y sin lo segundo, pulsar
+  tras mover el ratón deprisa la movería sola terminando el viaje a medias.
+- En la imagen de compartir el lema lleva menos respiro por encima que en la
+  cara de la tarjeta (1,6% del ancho frente a 3%): esa tarjeta es mucho más
+  apaisada y entre los dos bloques quedan unos pocos píxeles, así que el margen
+  de la cara separaría el lema de la identidad y lo pegaría a los datos.
 
 - El doble toque se reconoce con los eventos de puntero y no con `dblclick`:
   ese evento es del ratón y en un móvil no llega. Su ventana es de 450 ms,
