@@ -25,13 +25,16 @@ type PanelField = {
 };
 
 /**
- * El cargo no lleva `href`: es un dato de la ficha, no algo que se pueda abrir.
- * Los perfiles van al final, detrás de las formas de contactar, y salen de
- * `PROFILES` para que las direcciones estén escritas en un solo sitio.
+ * El cargo y los servicios no llevan `href`: son datos de la ficha, no algo que
+ * se pueda abrir. Van los primeros porque dicen quién es y a qué se dedica, que
+ * es lo que se mira antes de decidir si hace falta escribirle. Los perfiles van
+ * al final, detrás de las formas de contactar, y salen de `PROFILES` para que
+ * las direcciones estén escritas en un solo sitio.
  */
 function fieldsOf(contact: Contact, t: Dictionary): PanelField[] {
   return [
     { label: t.fields.jobTitle, value: contact.jobTitle },
+    { label: t.fields.services, value: contact.services },
     { label: t.fields.email, value: contact.email, href: `mailto:${contact.email}` },
     { label: t.fields.phone, value: contact.phone, href: `tel:${contact.phoneE164}` },
     { label: t.fields.website, value: contact.website, href: contact.websiteUrl },

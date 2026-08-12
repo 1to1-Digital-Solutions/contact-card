@@ -67,6 +67,14 @@ export function CardFallback({
                 <span className="mt-[1cqw] block text-[2.5cqw] font-semibold uppercase tracking-[0.2em] text-accent-ink">
                   {contact.company}
                 </span>
+                {/* El lema, con el mismo respiro por encima que en la cara 3D:
+                    va aparte del bloque de identidad y por debajo de él en
+                    jerarquía. Aquí puede caer en dos líneas cuando la tarjeta
+                    se estrecha, y caben: el hueco entre los dos bloques da de
+                    sobra hasta en un móvil apaisado, que es el más bajo. */}
+                <span className="mt-[3cqw] block text-[2.6cqw] leading-snug text-ink-muted">
+                  {contact.tagline}
+                </span>
               </span>
               <span className="flex flex-col gap-[1cqw] text-[3.4cqw] text-ink">
                 <span>{contact.email}</span>

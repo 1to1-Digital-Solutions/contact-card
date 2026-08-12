@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { PROFILES } from "@/lib/contact";
+import { contactIn, PROFILES } from "@/lib/contact";
 import { dictionary } from "@/lib/dictionary";
 import { LANGUAGES } from "@/lib/i18n";
 import { ContactPanel } from "./contact-panel";
@@ -39,6 +39,18 @@ describe("panel de datos", () => {
       const label = dictionary(language).panel.profile(profile.name, profile.address);
       expect(html).toContain(`aria-label="${label}"`);
     }
+  });
+
+  /**
+   * El panel es donde alguien mira para saber si le encajas, así que a qué se
+   * dedica se dice aquí en claro y con su rótulo, en los dos idiomas. En la
+   * tarjeta no sale: allí está el lema, que es otra cosa.
+   */
+  it.each(LANGUAGES)("dice a qué se dedica, con su rótulo, en %s", (language) => {
+    const html = markup(language);
+    const { services } = contactIn(language);
+    expect(html).toContain(services);
+    expect(html).toContain(dictionary(language).fields.services);
   });
 
   /** Los datos de siempre no salen fuera: ese `rel` es solo de los perfiles. */

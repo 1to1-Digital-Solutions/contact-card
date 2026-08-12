@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { JOB_TITLE } from "./contact";
+import { TRANSLATED } from "./contact";
 import { dictionary } from "./dictionary";
 import { LANGUAGES } from "./i18n";
 
@@ -116,7 +116,7 @@ describe("cobertura de la traducción", () => {
       const code = read(path);
       const translated = [
         ...LANGUAGES.flatMap((language) => texts(dictionary(language))),
-        ...Object.values(JOB_TITLE),
+        ...texts(TRANSLATED),
       ];
 
       const copied = translated.filter((text) =>

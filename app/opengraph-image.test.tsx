@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { BRAND, THEMES } from "@/lib/brand";
-import { contactIn, JOB_TITLE } from "@/lib/contact";
+import { contactIn, TRANSLATED } from "@/lib/contact";
 import { DEFAULT_LANGUAGE } from "@/lib/i18n";
 import { buildMetadata } from "@/lib/metadata";
 import { DEFAULT_THEME } from "@/lib/theme";
@@ -157,7 +157,7 @@ describe("imagen de Open Graph", () => {
     [THEME.card, "la cara de la tarjeta"],
     [THEME.cardEdge, "el canto que la separa del fondo"],
     [THEME.ink, "el nombre y los datos"],
-    [THEME.inkMuted, "el cargo"],
+    [THEME.inkMuted, "el cargo y el lema"],
     [THEME.accentInk, "la empresa"],
     [BRAND.accent, "el filete y el logotipo"],
   ];
@@ -199,7 +199,10 @@ describe("imagen de Open Graph", () => {
    */
   it("no lleva ningún dato de contacto escrito a mano", () => {
     const code = source("./opengraph-image.tsx");
-    const data = [...Object.values(CONTACT), ...Object.values(JOB_TITLE)];
+    const data = [
+      ...Object.values(CONTACT),
+      ...Object.values(TRANSLATED).flatMap((byLanguage) => Object.values(byLanguage)),
+    ];
     for (const value of data) expect(code).not.toContain(value);
   });
 });
@@ -209,6 +212,8 @@ describe("metadatos de la previsualización", () => {
     expect(alt).toContain(CONTACT.name);
     expect(alt).toContain(CONTACT.jobTitle);
     expect(alt).toContain(CONTACT.company);
+    // El lema se ve en la imagen: quien no la ve tiene que enterarse igual.
+    expect(alt).toContain(CONTACT.tagline);
   });
 
   it("da a Twitter/X la misma imagen que a Open Graph", () => {

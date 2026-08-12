@@ -60,6 +60,8 @@ export type Dictionary = {
   /** Rótulos de los datos: valen para el panel y para la cara de la tarjeta. */
   fields: {
     jobTitle: string;
+    /** Encabeza la línea de a qué se dedica, que solo sale en el panel. */
+    services: string;
     email: string;
     phone: string;
     website: string;
@@ -127,6 +129,7 @@ const es: Dictionary = {
   },
   fields: {
     jobTitle: "Cargo",
+    services: "Servicios",
     email: "Email",
     phone: "Teléfono",
     website: "Web",
@@ -186,6 +189,7 @@ const en: Dictionary = {
   },
   fields: {
     jobTitle: "Role",
+    services: "Services",
     email: "Email",
     phone: "Phone",
     website: "Website",

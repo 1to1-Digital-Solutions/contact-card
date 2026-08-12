@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Contact, contactIn, JOB_TITLE, PROFILES } from "./contact";
+import { type Contact, contactIn, PROFILES, TRANSLATED } from "./contact";
 import { LANGUAGES } from "./i18n";
 import { buildVCard, escapeVCardValue, vCardFilename } from "./vcard";
 
@@ -79,8 +79,20 @@ describe("buildVCard", () => {
    */
   it.each(LANGUAGES)("guarda el cargo en el idioma servido (%s)", (language) => {
     expect(buildVCard(contactIn(language)).split("\r\n")).toContain(
-      `TITLE:${JOB_TITLE[language]}`,
+      `TITLE:${TRANSLATED.jobTitle[language]}`,
     );
+  });
+
+  /**
+   * El lema y a qué se dedica tampoco van a la agenda: son el reclamo de la
+   * tarjeta, no una forma de contactar, y en una ficha de contacto acabarían de
+   * relleno en el único campo libre que hay. Como los trae `contactIn` junto al
+   * resto de datos, colarlos aquí es el descuido natural.
+   */
+  it.each(LANGUAGES)("no se lleva a la agenda el lema ni los servicios (%s)", (language) => {
+    const vcard = buildVCard(contactIn(language));
+    expect(vcard).not.toContain(TRANSLATED.tagline[language]);
+    expect(vcard).not.toContain(TRANSLATED.services[language]);
   });
 
   it("escapa los datos de entrada en lugar de romper el formato", () => {

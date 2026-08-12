@@ -32,7 +32,7 @@ const CONTACT = contactIn(DEFAULT_LANGUAGE);
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = `Tarjeta de contacto de ${CONTACT.name}, ${CONTACT.jobTitle} de ${CONTACT.company}, con su email, su teléfono y su web.`;
+export const alt = `Tarjeta de contacto de ${CONTACT.name}, ${CONTACT.jobTitle} de ${CONTACT.company}. «${CONTACT.tagline}» Con su email, su teléfono y su web.`;
 
 /**
  * El tema de partida de la página, no el oscuro por su nombre: si mañana la
@@ -112,6 +112,24 @@ export default function Image() {
               }}
             >
               {CONTACT.company.toUpperCase()}
+            </span>
+            {/* El lema entra en la previsualización porque entra en la tarjeta:
+                a este cuerpo cabe en una línea con holgura, y es lo que hace
+                que quien ve el enlace compartido sepa a qué se dedica.
+
+                Su respiro es menor que el de la cara de la tarjeta: aquí el
+                papel es mucho más apaisado y el aire que queda entre los dos
+                bloques es escaso, así que un margen mayor separaría el lema de
+                la identidad y lo pegaría a los datos, que es lo contrario de a
+                dónde pertenece. */}
+            <span
+              style={{
+                marginTop: of(0.016),
+                fontSize: of(0.024),
+                color: PALETTE.inkMuted,
+              }}
+            >
+              {CONTACT.tagline}
             </span>
           </div>
 

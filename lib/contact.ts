@@ -25,11 +25,23 @@ export type ContactData = {
   websiteUrl: string;
 };
 
-/** Los datos ya resueltos en un idioma: así los consume todo lo que pinta. */
-export type Contact = ContactData & {
+/**
+ * Lo que la ficha dice distinto en cada idioma. Son datos, no interfaz: hablan
+ * de quién es y de qué hace, y salen impresos en la tarjeta como el nombre o el
+ * email. Cambian si cambia el negocio, no si cambia la pantalla, así que viven
+ * aquí y no en `lib/dictionary.ts`, donde están los rótulos que los acompañan.
+ */
+export type ContactText = {
   /** Cargo profesional: `TITLE` en la vCard, `jobTitle` en schema.org. */
   jobTitle: string;
+  /** Lema de la empresa: lo que promete, en la propia tarjeta. */
+  tagline: string;
+  /** A qué se dedica, dicho en claro. Va en el panel de datos, no en la tarjeta. */
+  services: string;
 };
+
+/** Los datos ya resueltos en un idioma: así los consume todo lo que pinta. */
+export type Contact = ContactData & ContactText;
 
 export const CONTACT: ContactData = {
   name: "César Peón Lamparero",
@@ -75,16 +87,35 @@ export const PROFILES: readonly Profile[] = [
 ];
 
 /**
- * El cargo es el único dato que cambia con el idioma: el nombre, la empresa,
- * el teléfono, el email y la web se escriben igual en los dos. Vive aquí y no
- * en el diccionario porque es un dato de la ficha, no un texto de la interfaz.
+ * Los textos de la ficha, idioma a idioma: son lo único que cambia con él,
+ * porque el nombre, la empresa, el teléfono, el email y la web se escriben
+ * igual en los dos.
+ *
+ * El tipo obliga a que cada uno esté en todos los idiomas, y `Contact` a que
+ * `contactIn` no se deje ninguno sin resolver: añadir un texto nuevo no compila
+ * hasta que está escrito en los dos sitios.
  */
-export const JOB_TITLE: Record<Language, string> = {
-  es: "Desarrollador full-stack",
-  en: "Full-stack developer",
+export const TRANSLATED: Record<keyof ContactText, Record<Language, string>> = {
+  jobTitle: {
+    es: "Desarrollador full-stack",
+    en: "Full-stack developer",
+  },
+  tagline: {
+    es: "Tú creas tu negocio, nosotros nos encargamos de tu tecnología.",
+    en: "You build your business, we take care of your technology.",
+  },
+  services: {
+    es: "Desarrollo de software personalizado",
+    en: "Custom software development",
+  },
 };
 
 /** Los datos de contacto en un idioma. */
 export function contactIn(language: Language): Contact {
-  return { ...CONTACT, jobTitle: JOB_TITLE[language] };
+  return {
+    ...CONTACT,
+    jobTitle: TRANSLATED.jobTitle[language],
+    tagline: TRANSLATED.tagline[language],
+    services: TRANSLATED.services[language],
+  };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { JOB_TITLE, PROFILES } from "./contact";
+import { PROFILES, TRANSLATED } from "./contact";
 import { DICTIONARIES, dictionary } from "./dictionary";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "./i18n";
 
@@ -104,14 +104,39 @@ describe("diccionarios", () => {
   );
 });
 
-describe("cargo profesional", () => {
-  it("está escrito en todos los idiomas y en cada uno el suyo", () => {
-    expect(Object.keys(JOB_TITLE).sort()).toEqual([...LANGUAGES].sort());
-    expect(new Set(Object.values(JOB_TITLE)).size).toBe(LANGUAGES.length);
-    for (const title of Object.values(JOB_TITLE)) expect(title.trim()).not.toBe("");
+/**
+ * Los textos de la ficha —el cargo, el lema y a qué se dedica— viven en
+ * `lib/contact.ts` y no en el diccionario, pero corren el mismo riesgo: que
+ * alguno se quede sin traducir o repetido del español. Se recorren todos en vez
+ * de nombrarlos uno a uno para que el próximo entre solo.
+ */
+describe("textos de la ficha", () => {
+  const entries = Object.entries(TRANSLATED);
+
+  it("cubre los que hay, que son los que resuelve `contactIn`", () => {
+    expect(entries.map(([key]) => key)).toEqual(["jobTitle", "tagline", "services"]);
+  });
+
+  it.each(entries)("escribe %s en todos los idiomas y en cada uno el suyo", (key, byLanguage) => {
+    expect(Object.keys(byLanguage).sort()).toEqual([...LANGUAGES].sort());
+    expect(new Set(Object.values(byLanguage)).size, key).toBe(LANGUAGES.length);
+    for (const text of Object.values(byLanguage)) expect(text.trim()).not.toBe("");
   });
 
   it("sale en español cuando el navegador no pide nada", () => {
-    expect(JOB_TITLE[DEFAULT_LANGUAGE]).toBe("Desarrollador full-stack");
+    expect(TRANSLATED.jobTitle[DEFAULT_LANGUAGE]).toBe("Desarrollador full-stack");
+    expect(TRANSLATED.services[DEFAULT_LANGUAGE]).toBe(
+      "Desarrollo de software personalizado",
+    );
+  });
+
+  /**
+   * El lema se imprime en una línea de la tarjeta, y ahí no hay reflujo que
+   * valga: si crece, se sale del papel. El tope sale del cuerpo con el que se
+   * dibuja (38 px sobre 2048 de ancho, con 150 de margen a cada lado) dejando
+   * un tercio de holgura para las fuentes anchas.
+   */
+  it.each(LANGUAGES)("dice el lema en una línea de tarjeta en %s", (language) => {
+    expect(TRANSLATED.tagline[language].length).toBeLessThanOrEqual(70);
   });
 });

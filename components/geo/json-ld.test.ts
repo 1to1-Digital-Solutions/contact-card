@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contactIn, JOB_TITLE, PROFILES } from "@/lib/contact";
+import { contactIn, PROFILES, TRANSLATED } from "@/lib/contact";
 import { LANGUAGES } from "@/lib/i18n";
 import { personSchema } from "./json-ld";
 
@@ -26,7 +26,9 @@ describe("personSchema", () => {
    * estaría contando al buscador un idioma que no es.
    */
   it.each(LANGUAGES)("declara el cargo en el idioma servido (%s)", (language) => {
-    expect(personSchema(contactIn(language)).jobTitle).toBe(JOB_TITLE[language]);
+    expect(personSchema(contactIn(language)).jobTitle).toBe(
+      TRANSLATED.jobTitle[language],
+    );
   });
 
   /**

@@ -265,6 +265,16 @@ export function createFrontTexture(
   setTracking(ctx, 10);
   ctx.fillText(contact.company.toUpperCase(), PAD, 460);
 
+  // El lema, separado del bloque de identidad por un respiro para que se lea
+  // como una frase aparte y no como una cuarta línea del nombre. Va en tinta
+  // apagada y más pequeño que el cargo: dice qué hace la empresa sin quitarle
+  // el sitio a quien firma la tarjeta. A este cuerpo cabe de sobra en una línea
+  // en los dos idiomas, con más de un tercio del ancho libre.
+  ctx.fillStyle = palette.inkMuted;
+  ctx.font = font(38, 400);
+  setTracking(ctx, 0);
+  ctx.fillText(contact.tagline, PAD, 560);
+
   ctx.fillStyle = palette.inkMuted;
   ctx.globalAlpha = 0.3;
   ctx.fillRect(PAD, 680, W - PAD * 2, 2);
