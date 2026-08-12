@@ -143,6 +143,30 @@ describe("smoothTowards", () => {
     expect(travelled).toBeCloseTo(0.8, 10);
   });
 
+  /**
+   * El de arriba mide un objetivo quieto. Con el objetivo en marcha el filtro
+   * va por detrás y en todo momento le queda un trozo sin repartir: a la
+   * velocidad de un golpe de muñeca son ~0,17 unidades de puntero, que en el
+   * giro de la tarjeta pasan de 30°. Por eso quien sume los avances frame a
+   * frame —el gesto de girar— tiene que cobrarse ese resto al soltar: lo
+   * repartido más lo que falta es, exactamente, todo lo que se movió.
+   */
+  it("va por detrás de un objetivo en marcha y deja un resto sin repartir", () => {
+    /** Tres unidades de puntero por segundo: un ratón moviéndose deprisa. */
+    const STEP = 3 * FRAME;
+    let value = 0;
+    let target = 0;
+    let delivered = 0;
+    for (let i = 0; i < 30; i++) {
+      target += STEP;
+      const next = smoothTowards(value, target, SMOOTH, FRAME);
+      delivered += next - value;
+      value = next;
+    }
+    expect(target - value).toBeGreaterThan(0.1);
+    expect(delivered + (target - value)).toBeCloseTo(target, 10);
+  });
+
   it("no sobrepasa el objetivo ni rebota, a diferencia del muelle", () => {
     let value = 0;
     for (let i = 0; i < 60; i++) {

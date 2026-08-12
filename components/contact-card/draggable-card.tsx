@@ -172,6 +172,13 @@ export function DraggableCard({
    * ya al día y no arrastre el retraso de lo que se movió antes.
    */
   const pointer = useRef(new THREE.Vector2());
+  /**
+   * El puntero sin filtrar, tal y como lo deja el navegador. La escena guarda
+   * siempre el mismo vector y lo reescribe en cada evento, así que se puede
+   * leer fuera del bucle de render: al soltar hace falta saber dónde acabó el
+   * gesto de verdad, no dónde iba el filtro.
+   */
+  const rawPointer = useThree((state) => state.pointer);
   const showingBack = useRef(false);
   /** Toque en curso sobre la tarjeta y último toque completado, para el doble. */
   const pressed = useRef<PointerMark | null>(null);
@@ -248,13 +255,20 @@ export function DraggableCard({
     pressed.current = null;
     if (drag.current.mode === "idle") return;
     if (drag.current.mode === "rotate") {
+      // El giro suma el recorrido del puntero amortiguado, que va por detrás
+      // del de verdad: al soltar siempre le queda un trozo del gesto sin
+      // repartir. Se le cobra aquí, antes de encajar, para que la tarjeta gire
+      // lo que se movió el ratón y no menos. Sin esto, un giro rápido se queda
+      // corto —a la velocidad de un golpe de muñeca, más de 30°— y encaja en la
+      // cara de la que venía: el gesto parecería no haber servido de nada.
+      spin.current.turn += (rawPointer.x - drag.current.lastPointerX) * SPIN_GAIN;
       // Al soltar, la tarjeta encaja mostrando una cara entera.
       spin.current.turn = snapToHalfTurn(spin.current.turn);
       spin.current.pitch = 0;
     }
     drag.current.mode = "idle";
     onGrabChange(false);
-  }, [onGrabChange]);
+  }, [onGrabChange, rawPointer]);
 
   const release = (event: ThreeEvent<PointerEvent>) => {
     (event.target as Element).releasePointerCapture(event.pointerId);
