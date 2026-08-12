@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { clamp, stepSpring, type SpringConfig, type SpringState } from "./motion";
+import {
+  clamp,
+  smoothTowards,
+  stepSpring,
+  type SmoothConfig,
+  type SpringConfig,
+  type SpringState,
+} from "./motion";
 
 const CONFIG: SpringConfig = { stiffness: 180, damping: 26 };
 
@@ -77,6 +84,89 @@ describe("stepSpring", () => {
       mass: 4,
     });
     expect(pesado.value).toBeLessThan(ligero.value);
+  });
+});
+
+describe("smoothTowards", () => {
+  const SMOOTH: SmoothConfig = { halfLife: 0.04, rest: 0.0005 };
+  const FRAME = 1 / 60;
+
+  /** Suaviza `seconds` segundos a 60 fps hacia un objetivo que no se mueve. */
+  function follow(from: number, target: number, seconds: number, config = SMOOTH) {
+    let value = from;
+    for (let t = 0; t < seconds; t += FRAME) {
+      value = smoothTowards(value, target, config, FRAME);
+    }
+    return value;
+  }
+
+  it("recorre la mitad de lo que falta en cada vida media", () => {
+    expect(smoothTowards(0, 1, SMOOTH, SMOOTH.halfLife)).toBeCloseTo(0.5, 6);
+    expect(smoothTowards(0, 1, SMOOTH, SMOOTH.halfLife * 2)).toBeCloseTo(0.75, 6);
+  });
+
+  /**
+   * Los recorridos van en coordenadas de puntero, que es donde se usa el
+   * filtro: de -1 a 1, así que 1 es media pantalla y 2 el peor caso posible.
+   */
+  it("se planta en el objetivo en vez de quedarse flotando cerca", () => {
+    // Sin el umbral de reposo esto seguiría acercándose sin llegar nunca, y la
+    // tarjeta seguiría moviéndose —cada vez menos— con el ratón ya quieto.
+    expect(follow(0, 1, 0.5)).toBe(1);
+  });
+
+  it("no tarda en pararse: medio segundo basta para el recorrido más largo", () => {
+    expect(follow(1, -1, 0.5)).toBe(-1);
+  });
+
+  it("no depende de la tasa de refresco", () => {
+    // Los mismos 200 ms en 12 pasos (60 fps) y en 6 (30 fps) dejan la señal en
+    // el mismo sitio: quien va a 30 fps ve el mismo gesto, no uno más lento.
+    const over = (steps: number) => {
+      let value = 0;
+      for (let i = 0; i < steps; i++) value = smoothTowards(value, 1, SMOOTH, 0.2 / steps);
+      return value;
+    };
+    expect(over(6)).toBeCloseTo(over(12), 6);
+  });
+
+  it("reparte el recorrido en el tiempo pero no se come nada", () => {
+    // El giro suma los avances del puntero amortiguado frame a frame: si el
+    // filtro perdiera parte del camino, el mismo gesto giraría menos que antes.
+    let value = 0;
+    let travelled = 0;
+    for (let i = 0; i < 60; i++) {
+      const next = smoothTowards(value, 0.8, SMOOTH, FRAME);
+      travelled += next - value;
+      value = next;
+    }
+    expect(travelled).toBeCloseTo(0.8, 10);
+  });
+
+  it("no sobrepasa el objetivo ni rebota, a diferencia del muelle", () => {
+    let value = 0;
+    for (let i = 0; i < 60; i++) {
+      const next = smoothTowards(value, 1, SMOOTH, FRAME);
+      expect(next).toBeGreaterThanOrEqual(value);
+      expect(next).toBeLessThanOrEqual(1);
+      value = next;
+    }
+  });
+
+  it("sin vida media deja pasar el objetivo tal cual", () => {
+    // Es lo que reciben el dedo y quien ha pedido menos movimiento: el gesto
+    // sin filtrar, igual que antes de que existiera este suavizado.
+    const direct: SmoothConfig = { halfLife: 0, rest: 0 };
+    expect(smoothTowards(0, 0.37, direct, FRAME)).toBe(0.37);
+  });
+
+  it("ignora los deltas nulos o negativos", () => {
+    expect(smoothTowards(3, 0, SMOOTH, 0)).toBe(3);
+    expect(smoothTowards(3, 0, SMOOTH, -1)).toBe(3);
+  });
+
+  it("funciona igual acercándose desde arriba", () => {
+    expect(follow(1, -0.4, 0.5)).toBe(-0.4);
   });
 });
 

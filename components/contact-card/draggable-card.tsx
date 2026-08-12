@@ -8,7 +8,14 @@ import { hasLeftView, readTap, type PointerMark } from "@/lib/card-gestures";
 import { entryOffsetY, INTRO_SWAY_END, introSway } from "@/lib/card-intro";
 import { isShowingBack, pointerTilt, snapToHalfTurn } from "@/lib/card-orientation";
 import type { Language } from "@/lib/i18n";
-import { clamp, stepSpring, type SpringConfig, type SpringState } from "@/lib/motion";
+import {
+  clamp,
+  smoothTowards,
+  stepSpring,
+  type SmoothConfig,
+  type SpringConfig,
+  type SpringState,
+} from "@/lib/motion";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { CardMesh } from "./card-mesh";
 
@@ -49,6 +56,25 @@ const SWAY_REACH = 0.12;
  * quedaría girada hacia el último sitio que se tocó.
  */
 const FINE_POINTER = "(pointer: fine)";
+
+/**
+ * Amortiguación del puntero antes de que la tarjeta lo persiga. El ratón es
+ * preciso y rápido, y entre frame y frame da saltos que el muelle del arrastre
+ * repite tal cual: el movimiento se ve a tirones y el balanceo, que se calcula
+ * de la velocidad del gesto, da respingos. Filtrando el puntero se arreglan los
+ * dos de una vez, y el gesto sigue llegando entero a donde iba.
+ *
+ * La vida media es un compromiso: por debajo no se nota y por encima la tarjeta
+ * empieza a despegarse del cursor. El reposo va en coordenadas de puntero (de
+ * -1 a 1, media pantalla por unidad), así que es de menos de un píxel.
+ */
+const POINTER_SMOOTHING: SmoothConfig = { halfLife: 0.04, rest: 0.0005 };
+/**
+ * El puntero sin filtrar, que es lo que quieren el dedo y quien ha pedido menos
+ * movimiento: con el dedo la tarjeta se toca, y cualquier retardo se lee como
+ * que se despega de él; el muestreo táctil, además, ya llega suave.
+ */
+const POINTER_DIRECT: SmoothConfig = { halfLife: 0, rest: 0 };
 
 type Mode = "idle" | "move" | "rotate";
 
@@ -140,6 +166,12 @@ export function DraggableCard({
     targetX: 0,
     targetY: 0,
   });
+  /**
+   * El puntero amortiguado: es este y no el del navegador el que mueve, gira e
+   * inclina la tarjeta. Se sigue filtrando en reposo para que un gesto empiece
+   * ya al día y no arrastre el retraso de lo que se movió antes.
+   */
+  const pointer = useRef(new THREE.Vector2());
   const showingBack = useRef(false);
   /** Toque en curso sobre la tarjeta y último toque completado, para el doble. */
   const pressed = useRef<PointerMark | null>(null);
@@ -172,10 +204,22 @@ export function DraggableCard({
     cancelIntro();
   }, [resetCount, cancelIntro]);
 
+  /**
+   * Un gesto empieza justo donde está el puntero: el filtro se planta en él en
+   * lugar de arrastrar el retraso que llevara acumulado. Si no, mover el ratón
+   * deprisa y pulsar movería o giraría la tarjeta un poco sola, terminando el
+   * viaje que el filtro traía a medias.
+   */
+  const startGesture = (event: ThreeEvent<PointerEvent>) => {
+    cancelIntro();
+    pointer.current.copy(event.pointer);
+    (event.target as Element).setPointerCapture(event.pointerId);
+    onGrabChange(true);
+  };
+
   const startMove = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
-    cancelIntro();
-    (event.target as Element).setPointerCapture(event.pointerId);
+    startGesture(event);
     pressed.current = markOf(event);
     const current = group.current;
     drag.current.mode = "move";
@@ -186,16 +230,13 @@ export function DraggableCard({
     // inclina de golpe.
     drag.current.targetX = current?.position.x ?? 0;
     drag.current.targetY = current?.position.y ?? 0;
-    onGrabChange(true);
   };
 
   const startRotate = (event: ThreeEvent<PointerEvent>) => {
-    cancelIntro();
-    (event.target as Element).setPointerCapture(event.pointerId);
+    startGesture(event);
     drag.current.mode = "rotate";
-    drag.current.lastPointerX = event.pointer.x;
-    drag.current.lastPointerY = event.pointer.y;
-    onGrabChange(true);
+    drag.current.lastPointerX = pointer.current.x;
+    drag.current.lastPointerY = pointer.current.y;
   };
 
   /**
@@ -267,8 +308,18 @@ export function DraggableCard({
     const { mode } = drag.current;
     const previousTargetX = drag.current.targetX;
 
+    // El puntero que manda es el amortiguado. De él salen las tres cosas que
+    // siguen al ratón —a dónde va la tarjeta, cuánto gira y hacia dónde se
+    // asoma—, así que suavizarlo aquí las suaviza todas.
+    const smoothing =
+      finePointer && !reducedMotion ? POINTER_SMOOTHING : POINTER_DIRECT;
+    pointer.current.set(
+      smoothTowards(pointer.current.x, state.pointer.x, smoothing, dt),
+      smoothTowards(pointer.current.y, state.pointer.y, smoothing, dt),
+    );
+
     if (mode === "move") {
-      const world = pointerToWorld(state.pointer, state.camera, scratch.current);
+      const world = pointerToWorld(pointer.current, state.camera, scratch.current);
       drag.current.targetX = world.x - drag.current.grabX;
       drag.current.targetY = world.y - drag.current.grabY;
     } else {
@@ -277,10 +328,10 @@ export function DraggableCard({
     }
 
     if (mode === "rotate") {
-      const dx = state.pointer.x - drag.current.lastPointerX;
-      const dy = state.pointer.y - drag.current.lastPointerY;
-      drag.current.lastPointerX = state.pointer.x;
-      drag.current.lastPointerY = state.pointer.y;
+      const dx = pointer.current.x - drag.current.lastPointerX;
+      const dy = pointer.current.y - drag.current.lastPointerY;
+      drag.current.lastPointerX = pointer.current.x;
+      drag.current.lastPointerY = pointer.current.y;
       spin.current.turn += dx * SPIN_GAIN;
       spin.current.pitch = clamp(
         spin.current.pitch - dy * SPIN_GAIN * 0.6,
@@ -311,7 +362,8 @@ export function DraggableCard({
 
     // Con ratón, la tarjeta se asoma hacia donde esté el puntero sin moverse
     // del sitio: basta con pasar por encima para verle el volumen.
-    const tilt = idle && finePointer ? pointerTilt(state.pointer.x, state.pointer.y) : null;
+    const tilt =
+      idle && finePointer ? pointerTilt(pointer.current.x, pointer.current.y) : null;
 
     const targets = {
       x: drag.current.targetX + (welcome ? welcome.x * CARD.width * scale * SWAY_REACH : 0),
