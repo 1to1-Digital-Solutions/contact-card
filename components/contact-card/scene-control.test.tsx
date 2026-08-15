@@ -6,6 +6,7 @@ import {
   DoneIcon,
   FailedIcon,
   FlipIcon,
+  MotionIcon,
   RecenterIcon,
   SceneControl,
   ShareIcon,
@@ -23,6 +24,9 @@ const ICONS = [
   ["recolocar", <RecenterIcon key="recenter" />],
   ["ver los datos", <DetailsIcon key="details" />],
   ["compartir", <ShareIcon key="share" />],
+  // El del permiso de los sensores, que solo sale en un móvil: ahí es donde
+  // el rótulo no se ve nunca y el nombre accesible es todo lo que hay.
+  ["usar el movimiento", <MotionIcon key="motion" />],
   // Los dos avisos del mando de compartir: el rótulo no cambia con ellos, así
   // que el botón sigue teniendo nombre mientras se enseña el resultado.
   ["compartir, hecho", <DoneIcon key="done" />],

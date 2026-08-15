@@ -140,7 +140,7 @@ arquitectura en `README.md`.
 - Esa línea de servicios es también el `description` del JSON-LD, tanto de la
   persona como de la empresa (`worksFor`): es la propiedad por la que un motor
   de IA sabe a qué se dedica alguien. Va en el idioma servido, como `jobTitle`.
-- 400 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
+- 402 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
   orientación, asomo hacia el puntero y hacia el giroscopio, reparto del hueco
   entre la tarjeta y la pantalla, detección de la sacudida, llegada y balanceo
   de bienvenida, gestos
@@ -356,11 +356,19 @@ Nada pendiente.
   pequeño que se deshace enseguida.
 - Los sensores no se escuchan con ratón (`pointer: fine`) aunque el navegador
   los ofrezca: en un escritorio los eventos existen pero no los provoca nadie,
-  y la pista hablaría de agitar un móvil que no está.
+  y la pista hablaría de agitar un móvil que no está. Por lo mismo, el mando
+  «Usar el movimiento» tampoco sale con ratón: un iPad con teclado pide
+  permiso y a la vez dice `pointer: fine`, así que el botón abriría el diálogo
+  del sistema para conceder algo que después no se usa.
 - El permiso de iOS solo se puede pedir desde un gesto, y su «no» dura hasta
   que se recarga la página. Por eso el mando «Usar el movimiento» desaparece
   tanto si se concede como si se deniega: dejarlo ahí sería un botón que ya no
   abre ningún diálogo.
+- La columna de mandos del apaisado se centra en lo que queda por debajo de la
+  cabecera (`top-14`: su relleno más el alto de un botón) y no en la pantalla
+  entera. Con los cinco mandos —los cuatro de siempre más el del permiso de
+  iOS— mide 252 px, y centrada en un móvil de 320 px de alto se subía encima
+  de los conmutadores de idioma y tema, que están en esa misma columna.
 - La hoja de datos en apaisado se queda como está, ocupando el 82% del alto y
   con scroll: cabe, pero se ven dos datos por pantallazo. Rehacerla como panel
   lateral en ese modo es una tarea aparte.

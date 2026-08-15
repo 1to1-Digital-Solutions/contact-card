@@ -161,8 +161,13 @@ export function ContactCardExperience({ language: served }: { language: Language
               de sobra, que crece con el idioma: sin él, un texto más largo que
               el de hoy se saldría de la pantalla en vez de bajar de línea.
               Apaisado no hay alto que gastar en una banda: los mandos se van
-              en columna al borde derecho, flotando sobre la tarjeta. */}
-          <div className="flex flex-wrap items-center justify-center gap-3 phone-landscape:absolute phone-landscape:right-3 phone-landscape:top-1/2 phone-landscape:-translate-y-1/2 phone-landscape:flex-col phone-landscape:flex-nowrap phone-landscape:gap-2">
+              en columna al borde derecho, flotando sobre la tarjeta. Se
+              centran en lo que queda por debajo de la cabecera (`top-14`, que
+              es su relleno más el alto de un botón) y no en la pantalla
+              entera: con los cinco mandos —los cuatro de siempre más el del
+              permiso de iOS— la columna mide más que el hueco libre de un
+              móvil bajo y se subiría encima de los conmutadores. */}
+          <div className="flex flex-wrap items-center justify-center gap-3 phone-landscape:absolute phone-landscape:top-14 phone-landscape:bottom-0 phone-landscape:right-3 phone-landscape:flex-col phone-landscape:flex-nowrap phone-landscape:gap-2">
             {/* Voltear y recolocar solo existen con la escena: la tarjeta
                 plana se gira pulsándola. Van aquí en todos los tamaños y no
                 dentro de la hoja de datos: desde la hoja, el giro que
@@ -183,8 +188,11 @@ export function ContactCardExperience({ language: served }: { language: Language
                 {/* Solo donde el navegador exige permiso para leer los
                     sensores (iOS), y solo hasta que se conceda: donde no hace
                     falta pedirlo, la tarjeta ya responde al móvil sin que
-                    nadie pulse nada. */}
-                {motionAccess === "prompt" && (
+                    nadie pulse nada. Con ratón tampoco se ofrece: un iPad con
+                    teclado dice `pointer: fine` y ahí los sensores no se
+                    escuchan, así que el botón abriría el diálogo del sistema
+                    para pedir un permiso que no se va a usar. */}
+                {motionAccess === "prompt" && !finePointer && (
                   <SceneControl
                     label={t.controls.useMotion}
                     icon={<MotionIcon />}
