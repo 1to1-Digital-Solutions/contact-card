@@ -25,8 +25,13 @@ export function isShowingBack(angleY: number): boolean {
   return Math.cos(angleY) < 0;
 }
 
-/** Cuánto se asoma la tarjeta hacia el puntero, en radianes. */
-const TO_POINTER = { turn: 0.22, pitch: 0.14 } as const;
+/**
+ * Cuánto llega a asomarse la tarjeta, en radianes, en el extremo del gesto.
+ * Lo comparten el asomo hacia el puntero y el del giroscopio (`device-tilt.ts`):
+ * son el mismo gesto con dos mandos, y con dos alcances distintos se leerían
+ * como dos animaciones diferentes al pasar del ratón al móvil.
+ */
+export const TILT_REACH = { turn: 0.22, pitch: 0.14 } as const;
 
 /** Lo que el puntero le suma a la orientación de la tarjeta, en radianes. */
 export type PointerTilt = {
@@ -49,7 +54,7 @@ export type PointerTilt = {
  */
 export function pointerTilt(pointerX: number, pointerY: number): PointerTilt {
   return {
-    turn: clamp(pointerX, -1, 1) * TO_POINTER.turn,
-    pitch: -clamp(pointerY, -1, 1) * TO_POINTER.pitch,
+    turn: clamp(pointerX, -1, 1) * TILT_REACH.turn,
+    pitch: -clamp(pointerY, -1, 1) * TILT_REACH.pitch,
   };
 }

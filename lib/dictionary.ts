@@ -40,6 +40,12 @@ export type Dictionary = {
      * fija su tope de longitud: si crece, deja de caber en una línea.
      */
     hintShort: string;
+    /**
+     * La pista corta cuando el móvil mueve la tarjeta: con sensores, agitarlo
+     * es la forma más rápida de darle la vuelta, y no se descubre sola. Mismo
+     * tope de longitud que `hintShort`.
+     */
+    hintMotion: string;
     /** El navegador no puede con 3D: se enseña la tarjeta plana. */
     noWebgl: string;
     /** La escena 3D reventó al montarse: la misma tarjeta plana. */
@@ -53,6 +59,11 @@ export type Dictionary = {
     reset: string;
     showData: string;
     share: string;
+    /**
+     * Da permiso a la página para leer los sensores del móvil. Solo aparece
+     * donde el navegador lo exige, y solo lo concede si se pulsa.
+     */
+    useMotion: string;
     /** Etiquetas de la tarjeta plana, que se voltea pulsándola. */
     flipToFront: string;
     flipToBack: string;
@@ -111,6 +122,7 @@ const es: Dictionary = {
     hint:
       "Arrastra la tarjeta para moverla y el fondo para girarla. Dale dos toques, o sácala de la pantalla, y se da la vuelta.",
     hintShort: "Arrástrala. Dos toques le dan la vuelta.",
+    hintMotion: "Arrástrala. Agítalo y se da la vuelta.",
     noWebgl:
       "Tu navegador no puede mostrar gráficos 3D, así que esta es la versión plana. Pulsa la tarjeta para darle la vuelta.",
     failed:
@@ -124,6 +136,7 @@ const es: Dictionary = {
     reset: "Recolocar",
     showData: "Ver los datos",
     share: "Compartir",
+    useMotion: "Usar el movimiento",
     flipToFront: "Ver el anverso de la tarjeta",
     flipToBack: "Ver el reverso de la tarjeta",
   },
@@ -171,6 +184,7 @@ const en: Dictionary = {
     hint:
       "Drag the card to move it and the background to spin it. Double-tap it, or drag it off screen, to flip it over.",
     hintShort: "Drag it. A double tap flips it over.",
+    hintMotion: "Drag it. Shake the phone to flip it.",
     noWebgl:
       "Your browser cannot show 3D graphics, so this is the flat version. Tap the card to turn it over.",
     failed:
@@ -184,6 +198,7 @@ const en: Dictionary = {
     reset: "Recenter",
     showData: "See the details",
     share: "Share",
+    useMotion: "Use motion",
     flipToFront: "See the front of the card",
     flipToBack: "See the back of the card",
   },

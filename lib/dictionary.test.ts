@@ -74,9 +74,11 @@ describe("diccionarios", () => {
   const SHORT_HINT_LIMIT = 44;
 
   it.each(LANGUAGES)("dice la pista en corto para el móvil en %s", (language) => {
-    const { hint, hintShort } = dictionary(language).scene;
-    expect(hintShort.length).toBeLessThanOrEqual(SHORT_HINT_LIMIT);
-    expect(hintShort.length).toBeLessThan(hint.length);
+    const { hint, hintShort, hintMotion } = dictionary(language).scene;
+    for (const short of [hintShort, hintMotion]) {
+      expect(short.length).toBeLessThanOrEqual(SHORT_HINT_LIMIT);
+      expect(short.length).toBeLessThan(hint.length);
+    }
   });
 
   it.each(LANGUAGES)(
