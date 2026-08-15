@@ -86,7 +86,14 @@ export function ContactSheet({
       // Apaisado no hay alto que repartir —la hoja de abajo dejaba ver dos
       // datos por pantallazo— y sí ancho de sobra: se va al borde derecho, de
       // arriba abajo, y los datos se reparten en dos columnas (`ContactPanel`).
-      className="contact-sheet fixed bottom-0 left-0 right-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 phone-landscape:left-auto phone-landscape:top-0 phone-landscape:h-full phone-landscape:max-h-none phone-landscape:w-[min(40rem,76vw)] phone-landscape:rounded-l-3xl phone-landscape:rounded-tr-none phone-landscape:border-l phone-landscape:border-t-0 phone-landscape:p-4 lg:hidden"
+      //
+      // El relleno de desplazamiento es lo que reserva el sitio de las dos
+      // franjas pegadas: al ir con el tabulador, el navegador solo desplaza
+      // hasta que el dato entra en la hoja, y sin esto el último se quedaba
+      // debajo del botón de guardar, enfocado y sin verse. Son sus altos:
+      // arriba, el botón de salir (44px) más su relleno (16); abajo, el del
+      // guardar (44) más el suyo (8 arriba y 16 abajo).
+      className="contact-sheet fixed bottom-0 left-0 right-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 phone-landscape:left-auto phone-landscape:top-0 phone-landscape:h-dvh phone-landscape:max-h-none phone-landscape:w-[min(40rem,76vw)] phone-landscape:scroll-pt-15 phone-landscape:scroll-pb-17 phone-landscape:rounded-l-3xl phone-landscape:rounded-tr-none phone-landscape:border-l phone-landscape:border-t-0 phone-landscape:p-4 lg:hidden"
     >
       <div className="mx-auto flex max-w-md flex-col gap-6 phone-landscape:max-w-none phone-landscape:gap-3">
         {/* Con la hoja de arriba abajo, el título y la salida se quedan a la

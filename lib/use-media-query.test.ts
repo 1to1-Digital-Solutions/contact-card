@@ -42,9 +42,9 @@ describe("consulta del móvil apaisado", () => {
  * desde abajo hasta un sitio en el que ya está.
  */
 describe("entrada de la hoja de datos", () => {
-  /** El cuerpo de `@variant phone-landscape`, con sus llaves equilibradas. */
-  const landscapeRules = () => {
-    const start = CSS.indexOf("@variant phone-landscape");
+  /** El cuerpo del bloque que abre `marker`, con sus llaves equilibradas. */
+  const blockAt = (marker: string) => {
+    const start = CSS.indexOf(marker);
     if (start < 0) return "";
     const from = CSS.indexOf("{", start);
     let depth = 0;
@@ -58,6 +58,8 @@ describe("entrada de la hoja de datos", () => {
     return "";
   };
 
+  const landscapeRules = () => blockAt("@variant phone-landscape");
+
   it("va por el eje X en apaisado y por el Y en el resto", () => {
     const landscape = landscapeRules();
     expect(landscape).toContain("translate: 100% 0");
@@ -68,9 +70,11 @@ describe("entrada de la hoja de datos", () => {
 
   it("solo se mueve para quien no ha pedido menos movimiento", () => {
     // El deslizamiento entero —los dos ejes— cuelga de esa preferencia: a quien
-    // pide menos movimiento le queda el fundido, que no desplaza nada.
-    const reduced = CSS.indexOf("@media (prefers-reduced-motion: no-preference)");
-    expect(reduced).toBeGreaterThan(-1);
-    expect(CSS.indexOf("translate: 100% 0")).toBeGreaterThan(reduced);
+    // pide menos movimiento le queda el fundido, que no desplaza nada. Se mira
+    // que la variante esté DENTRO de ese bloque, y no que aparezca más abajo en
+    // el fichero: sacarla fuera la dejaría igual de abajo y ya no colgaría.
+    const reduced = blockAt("@media (prefers-reduced-motion: no-preference)");
+    expect(reduced).toContain("@variant phone-landscape");
+    expect(reduced).toContain("translate: 100% 0");
   });
 });

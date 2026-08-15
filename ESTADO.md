@@ -391,4 +391,14 @@ Nada pendiente.
   apaisada con un desplazamiento negativo (`-top-4`/`-bottom-4`) y relleno
   propio: sin eso se pegan al borde del contenido y no al de la hoja, y los
   datos asoman por la franja del relleno al pasar por detrás.
+- Esas dos franjas obligan a que la hoja apaisada lleve relleno de
+  desplazamiento (`scroll-pt-15`/`scroll-pb-17`, que son sus altos: 44 px de
+  botón más el relleno de cada una). Al ir con el tabulador, el navegador solo
+  desplaza hasta que el dato entra en la hoja, y el último ya estaba dentro:
+  se quedaba enfocado detrás del botón de guardar, sin verse. Si cambia el alto
+  de una franja, cambia su número.
+- La hoja apaisada mide `h-dvh` y no `h-full`: el 100% de un elemento fijo es
+  el alto de la pantalla con las barras del navegador desplegadas, así que con
+  ellas recogidas quedaría una franja de fondo por debajo. Es la misma unidad
+  con la que se miden la página (`h-dvh`) y la hoja de abajo (`82dvh`).
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
