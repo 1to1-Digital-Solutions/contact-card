@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { type ThemeName, CARD } from "@/lib/brand";
 import { hasLeftView, readTap, type PointerMark } from "@/lib/card-gestures";
 import { entryOffsetY, INTRO_SWAY_END, introSway } from "@/lib/card-intro";
+import { cardScale } from "@/lib/card-layout";
 import { isShowingBack, pointerTilt, snapToHalfTurn } from "@/lib/card-orientation";
 import type { Language } from "@/lib/i18n";
 import {
@@ -16,7 +17,9 @@ import {
   type SpringConfig,
   type SpringState,
 } from "@/lib/motion";
-import { useMediaQuery } from "@/lib/use-media-query";
+import { useDeviceTilt } from "@/lib/use-device-tilt";
+import { FINE_POINTER, PHONE_LANDSCAPE, useMediaQuery } from "@/lib/use-media-query";
+import { useShake } from "@/lib/use-shake";
 import { CardMesh } from "./card-mesh";
 
 /** Mientras se agarra, la tarjeta persigue al puntero de cerca. */
@@ -28,18 +31,6 @@ const TILT: SpringConfig = { stiffness: 110, damping: 16 };
 
 /** Radianes de giro por cada unidad de recorrido del puntero (que va de -1 a 1). */
 const SPIN_GAIN = 3.4;
-/**
- * Parte del ancho y del alto visibles que ocupa la tarjeta en reposo. En un
- * hueco más alto que ancho —un móvil de pie— el ancho es el recurso escaso y
- * sobra alto: ahí la tarjeta se estira casi de borde a borde para no perder
- * protagonismo.
- */
-const SHARE = {
-  landscape: { width: 0.62, height: 0.55 },
-  portrait: { width: 0.9, height: 0.6 },
-} as const;
-const MIN_SCALE = 0.25;
-const MAX_SCALE = 1.15;
 /** Cuánto se inclina la tarjeta al arrastrarla rápido. */
 const SWAY_GAIN = 0.05;
 const MAX_SWAY = 0.45;
@@ -50,12 +41,6 @@ const MAX_PITCH = 1.1;
  * así el gesto se ve igual de grande en un móvil que en un escritorio.
  */
 const SWAY_REACH = 0.12;
-/**
- * Hay ratón: solo entonces la tarjeta se asoma hacia el puntero. En una
- * pantalla táctil el puntero no se mueve si nadie la toca, y la tarjeta se
- * quedaría girada hacia el último sitio que se tocó.
- */
-const FINE_POINTER = "(pointer: fine)";
 
 /**
  * Amortiguación del puntero antes de que la tarjeta lo persiga. El ratón es
@@ -86,6 +71,8 @@ type Props = {
   onFaceChange: (showingBack: boolean) => void;
   onGrabChange: (grabbing: boolean) => void;
   reducedMotion: boolean;
+  /** Se pueden leer los sensores del móvil: el giroscopio y las sacudidas. */
+  motionEnabled: boolean;
   theme: ThemeName;
   language: Language;
 };
@@ -126,6 +113,7 @@ export function DraggableCard({
   onFaceChange,
   onGrabChange,
   reducedMotion,
+  motionEnabled,
   theme,
   language,
 }: Props) {
@@ -133,16 +121,8 @@ export function DraggableCard({
   // cabe con aire tanto en un móvil vertical como en una pantalla ancha, y
   // el arrastre sigue trabajando en coordenadas de mundo sin corrección.
   const viewport = useThree((state) => state.viewport);
-  const share =
-    viewport.height > viewport.width ? SHARE.portrait : SHARE.landscape;
-  const scale = clamp(
-    Math.min(
-      (viewport.width * share.width) / CARD.width,
-      (viewport.height * share.height) / CARD.height,
-    ),
-    MIN_SCALE,
-    MAX_SCALE,
-  );
+  const phoneLandscape = useMediaQuery(PHONE_LANDSCAPE);
+  const scale = cardScale(viewport, CARD, phoneLandscape);
   const half = { width: (CARD.width * scale) / 2, height: (CARD.height * scale) / 2 };
   const finePointer = useMediaQuery(FINE_POINTER);
 
@@ -196,6 +176,24 @@ export function DraggableCard({
   const cancelIntro = useCallback(() => {
     intro.current.live = false;
   }, []);
+
+  /**
+   * Lo que en un escritorio hace el ratón, en un móvil lo hace el giroscopio:
+   * la tarjeta se asoma hacia donde se incline el aparato. Con ratón no se
+   * escucha —la tarjeta ya sigue al puntero y los dos asomos se sumarían—, y
+   * con `prefers-reduced-motion` tampoco, igual que el asomo del puntero.
+   */
+  const deviceTilt = useDeviceTilt(motionEnabled && !finePointer && !reducedMotion);
+
+  /**
+   * Agitar el móvil da media vuelta a la tarjeta, como el botón de voltear o
+   * los dos toques. Sigue valiendo con `prefers-reduced-motion`: es una acción
+   * que se pide, no una animación que se pone sola.
+   */
+  useShake(motionEnabled, () => {
+    spin.current.turn += Math.PI;
+    cancelIntro();
+  });
 
   useEffect(() => {
     if (flipCount === previousFlips.current) return;
@@ -374,10 +372,14 @@ export function DraggableCard({
     if (introElapsed > INTRO_SWAY_END) intro.current.live = false;
     const welcome = idle && intro.current.live ? introSway(introElapsed) : null;
 
-    // Con ratón, la tarjeta se asoma hacia donde esté el puntero sin moverse
-    // del sitio: basta con pasar por encima para verle el volumen.
-    const tilt =
-      idle && finePointer ? pointerTilt(pointer.current.x, pointer.current.y) : null;
+    // La tarjeta se asoma sin moverse del sitio, para que se le vea el
+    // volumen: hacia donde esté el puntero con ratón, y hacia donde se incline
+    // el aparato con el giroscopio.
+    const tilt = !idle
+      ? null
+      : finePointer
+        ? pointerTilt(pointer.current.x, pointer.current.y)
+        : deviceTilt.current;
 
     const targets = {
       x: drag.current.targetX + (welcome ? welcome.x * CARD.width * scale * SWAY_REACH : 0),

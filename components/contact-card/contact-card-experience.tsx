@@ -6,6 +6,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { CONTACT } from "@/lib/contact";
 import { dictionary } from "@/lib/dictionary";
 import { applyLanguage, type Language, nextLanguage, rememberLanguage } from "@/lib/i18n";
+import { FINE_POINTER, useMediaQuery } from "@/lib/use-media-query";
+import { useMotionAccess } from "@/lib/use-motion-access";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { useTheme } from "@/lib/use-theme";
 import { useWebGLStatus } from "@/lib/use-webgl-status";
@@ -13,7 +15,13 @@ import { CardFallback } from "./card-fallback";
 import { CardScene } from "./card-scene";
 import { ContactPanel } from "./contact-panel";
 import { ContactSheet } from "./contact-sheet";
-import { DetailsIcon, FlipIcon, RecenterIcon, SceneControl } from "./scene-control";
+import {
+  DetailsIcon,
+  FlipIcon,
+  MotionIcon,
+  RecenterIcon,
+  SceneControl,
+} from "./scene-control";
 import { SceneErrorBoundary } from "./scene-error-boundary";
 import { ShareControl } from "./share-control";
 
@@ -29,6 +37,15 @@ export function ContactCardExperience({ language: served }: { language: Language
 
   const reducedMotion = useReducedMotion();
   const { theme, toggle } = useTheme();
+  /**
+   * Los sensores del aparato, que en un móvil hacen lo que en un escritorio
+   * hace el ratón. Se piden solo donde hay una pantalla táctil: en un
+   * escritorio los eventos existen pero no los provoca nadie, y la pista
+   * hablaría de agitar un móvil que no está.
+   */
+  const { access: motionAccess, request: requestMotion } = useMotionAccess();
+  const finePointer = useMediaQuery(FINE_POINTER);
+  const motionEnabled = motionAccess === "granted" && !finePointer;
   // La escena solo puede montarse en el navegador: dibuja las caras de la
   // tarjeta en un canvas 2D, que no existe durante el render del servidor.
   const status = useWebGLStatus();
@@ -99,6 +116,7 @@ export function ContactCardExperience({ language: served }: { language: Language
                 onFaceChange={setShowingBack}
                 onGrabChange={setGrabbing}
                 reducedMotion={reducedMotion}
+                motionEnabled={motionEnabled}
                 theme={theme}
                 language={language}
               />
@@ -106,8 +124,11 @@ export function ContactCardExperience({ language: served }: { language: Language
           )}
         </div>
 
-        <header className="pointer-events-none relative z-10 flex items-start justify-between gap-4 p-6">
-          <div>
+        <header className="pointer-events-none relative z-10 flex items-start justify-between gap-4 p-6 phone-landscape:justify-end phone-landscape:p-3">
+          {/* En un móvil apaisado el título se oye pero no se ve: la tarjeta
+              ocupa la pantalla y ya lleva impresos el nombre y la empresa, así
+              que repetirlos aquí encima solo le quitaría sitio. */}
+          <div className="phone-landscape:sr-only">
             <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
               {CONTACT.name}
             </h1>
@@ -134,12 +155,14 @@ export function ContactCardExperience({ language: served }: { language: Language
             mandos lo recogen. Ahora que la tarjeta ocupa la pantalla entera,
             esta franja cae encima de la escena —sobre la propia tarjeta en un
             móvil apaisado—, y sin esto sería una zona muerta de lado a lado. */}
-        <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 lg:items-start">
-          {/* En un móvil los tres mandos son solo el icono y caben de sobra en
-              una línea; el `flex-wrap` es para el rótulo que aparece a partir
-              de `sm`, que crece con el idioma: sin él, un texto más largo que
-              el de hoy se saldría de la pantalla en vez de bajar de línea. */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 phone-landscape:absolute phone-landscape:inset-0 phone-landscape:justify-end phone-landscape:p-3 lg:items-start">
+          {/* En un móvil los mandos son solo el icono y caben de sobra en una
+              línea; el `flex-wrap` es para el rótulo que aparece con pantalla
+              de sobra, que crece con el idioma: sin él, un texto más largo que
+              el de hoy se saldría de la pantalla en vez de bajar de línea.
+              Apaisado no hay alto que gastar en una banda: los mandos se van
+              en columna al borde derecho, flotando sobre la tarjeta. */}
+          <div className="flex flex-wrap items-center justify-center gap-3 phone-landscape:absolute phone-landscape:right-3 phone-landscape:top-1/2 phone-landscape:-translate-y-1/2 phone-landscape:flex-col phone-landscape:flex-nowrap phone-landscape:gap-2">
             {/* Voltear y recolocar solo existen con la escena: la tarjeta
                 plana se gira pulsándola. Van aquí en todos los tamaños y no
                 dentro de la hoja de datos: desde la hoja, el giro que
@@ -156,6 +179,18 @@ export function ContactCardExperience({ language: served }: { language: Language
                   icon={<RecenterIcon />}
                   onClick={reset}
                 />
+
+                {/* Solo donde el navegador exige permiso para leer los
+                    sensores (iOS), y solo hasta que se conceda: donde no hace
+                    falta pedirlo, la tarjeta ya responde al móvil sin que
+                    nadie pulse nada. */}
+                {motionAccess === "prompt" && (
+                  <SceneControl
+                    label={t.controls.useMotion}
+                    icon={<MotionIcon />}
+                    onClick={requestMotion}
+                  />
+                )}
               </>
             )}
 
@@ -179,11 +214,12 @@ export function ContactCardExperience({ language: served }: { language: Language
             <>
               {/* La misma pista, dicha en corto donde no cabe entera: en un
                   móvil, cada línea de texto aquí abajo se la quita a la
-                  tarjeta. */}
-              <p className="text-center text-sm text-ink-muted sm:hidden">
-                {t.scene.hintShort}
+                  tarjeta. Con los sensores en marcha cuenta lo de agitar, que
+                  es lo más rápido y lo único que no se descubre solo. */}
+              <p className="text-center text-sm text-ink-muted roomy:hidden">
+                {motionEnabled ? t.scene.hintMotion : t.scene.hintShort}
               </p>
-              <p className="hidden text-center text-sm text-ink-muted sm:block lg:text-left">
+              <p className="hidden text-center text-sm text-ink-muted roomy:block lg:text-left">
                 {t.scene.hint}
               </p>
 

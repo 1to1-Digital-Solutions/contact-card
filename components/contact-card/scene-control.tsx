@@ -9,14 +9,15 @@ import type { ReactNode } from "react";
  * desde ahí se tragaría el gesto en los huecos entre botones.
  */
 const CONTROL_CLASSES =
-  "pointer-events-auto inline-flex size-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink sm:w-auto sm:px-5";
+  "pointer-events-auto inline-flex size-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink roomy:w-auto roomy:px-5";
 
 /**
- * Mando de la escena. En pantalla estrecha es solo el icono, para que los tres
- * quepan en una línea y la tarjeta se quede con el resto del alto; a partir de
- * `sm` el rótulo aparece al lado. La etiqueta accesible está siempre, y es
- * exactamente el rótulo que se ve al ensanchar: el nombre de un control tiene
- * que contener su texto visible para poder pulsarlo por voz (WCAG 2.5.3).
+ * Mando de la escena. Donde no sobra sitio es solo el icono, para que todos
+ * quepan en una línea —o en una columna, en un móvil apaisado— y la tarjeta se
+ * quede con el resto; con pantalla de sobra (`roomy`) el rótulo aparece al
+ * lado. La etiqueta accesible está siempre, y es exactamente el rótulo que se
+ * ve al ensanchar: el nombre de un control tiene que contener su texto visible
+ * para poder pulsarlo por voz (WCAG 2.5.3).
  */
 export function SceneControl({
   label,
@@ -37,7 +38,7 @@ export function SceneControl({
       className={`${CONTROL_CLASSES} ${className}`}
     >
       {icon}
-      <span className="hidden sm:inline">{label}</span>
+      <span className="hidden roomy:inline">{label}</span>
     </button>
   );
 }
@@ -113,6 +114,28 @@ export function ShareIcon() {
       <path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
       <path d="m8 7 4-4 4 4" />
       <path d="M12 3v12" />
+    </Icon>
+  );
+}
+
+/**
+ * Mover el móvil: el aparato inclinado entre dos ondas. Sirve para las dos
+ * cosas que abre el permiso —agitarlo para dar la vuelta a la tarjeta e
+ * inclinarlo para asomarla— sin tener que elegir una de las dos.
+ */
+export function MotionIcon() {
+  return (
+    <Icon>
+      <rect
+        x="8.5"
+        y="3"
+        width="7"
+        height="18"
+        rx="2"
+        transform="rotate(-12 12 12)"
+      />
+      <path d="M3.6 9.5a7 7 0 0 0 0 5" />
+      <path d="M20.4 9.5a7 7 0 0 1 0 5" />
     </Icon>
   );
 }

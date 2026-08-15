@@ -14,6 +14,7 @@ type Props = {
   onFaceChange: (showingBack: boolean) => void;
   onGrabChange: (grabbing: boolean) => void;
   reducedMotion: boolean;
+  motionEnabled: boolean;
   theme: ThemeName;
   language: Language;
 };
