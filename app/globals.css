@@ -5,6 +5,29 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
+  Móvil apaisado: sobra ancho y falta alto, así que la tarjeta se lleva la
+  pantalla entera y los mandos flotan encima en vez de robarle sitio. La misma
+  consulta está en `lib/use-media-query.ts` —la escena la necesita para darle
+  su tamaño a la tarjeta— y `use-media-query.test.ts` compara las dos.
+*/
+@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 32rem) and (max-width: 63.99rem));
+
+/*
+  Hay sitio para el rótulo del mando al lado de su icono, y para la pista larga:
+  una pantalla ancha que no sea un móvil apaisado. Sustituye a `sm:` en esos dos
+  sitios, que si no enseñarían el texto justo donde no cabe.
+*/
+@custom-variant roomy {
+  @media (min-width: 40rem) and (height > 32rem) {
+    @slot;
+  }
+
+  @media (min-width: 64rem) {
+    @slot;
+  }
+}
+
+/*
   Tokens de marca de 1to1 Digital Solutions. Los valores deben coincidir con
   los de `lib/brand.ts` (three.js no puede leer variables CSS, así que la
   paleta vive en los dos sitios): al cambiar uno hay que cambiar el otro.
