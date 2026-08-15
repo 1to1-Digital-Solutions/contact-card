@@ -48,11 +48,39 @@ arquitectura en `README.md`.
   botón de copiar por dato. La hoja solo lleva datos: voltear y recolocar van
   en la banda de mandos, junto a «Ver los datos», en todos los tamaños, para
   que el giro se vea al dispararlo.
-- La banda de mandos cabe en una línea en un móvil: los tres botones son solo
-  el icono por debajo de `sm` y recuperan el rótulo al lado a partir de ahí
+- La banda de mandos cabe en una línea en un móvil: los botones son solo el
+  icono donde no sobra pantalla y recuperan el rótulo al lado en cuanto la hay
   (`components/contact-card/scene-control.tsx`). La pista de abajo también se
   dice en corto en móvil (`scene.hintShort`), que allí cada línea de texto se
   la quita a la tarjeta.
+- Con el móvil apaisado la tarjeta se pone a tamaño completo —se lleva el 82%
+  del alto en vez del 55%— y los mandos se le quitan de en medio: se van en
+  columna al borde derecho, flotando encima, y el título y la empresa pasan a
+  `sr-only` (siguen ahí para quien escucha la página, pero dejan de robarle
+  sitio). El corte es la consulta `PHONE_LANDSCAPE`, que vive en
+  `lib/use-media-query.ts` y está duplicada como variante `phone-landscape` de
+  Tailwind en `app/globals.css`; se para por debajo de `lg` para no alcanzar a
+  un escritorio con la ventana baja. El reparto del hueco es ahora una función
+  pura, `cardScale` (`lib/card-layout.ts`). Los rótulos de los mandos y la
+  pista larga cuelgan de otra variante, `roomy`, en vez de `sm`: un móvil
+  apaisado es más ancho que `sm` y ahí el texto no cabe.
+- Agitar el móvil da media vuelta a la tarjeta, como el botón de voltear o los
+  dos toques. La detección es pura (`lib/shake.ts`): filtra la gravedad con la
+  amortiguación de `motion.ts` y pide tres tirones de 12 m/s² dentro de 900 ms,
+  con un segundo de reposo después para que agitar dé una vuelta y no una por
+  tirón.
+- La tarjeta también se asoma al inclinar el móvil, que es lo que en un
+  escritorio hace el ratón (`lib/device-tilt.ts`, con el mismo alcance que
+  `pointerTilt` —`TILT_REACH`—). Gira al revés que el aparato, como si
+  estuviera quieta detrás del cristal, y la postura de partida se olvida sola:
+  quien lo mire recostado no se queda con la tarjeta torcida. Los ángulos del
+  sensor se llevan antes a los ejes de la pantalla, que en apaisado no son los
+  del aparato.
+- Los dos sensores se encienden solos donde el navegador los da sin permiso.
+  Donde lo pide (iOS), aparece un quinto mando, «Usar el movimiento», que abre
+  el diálogo del sistema; concedido, desaparece. Con ratón no se escuchan, y la
+  pista corta cuenta lo de agitar solo cuando están en marcha
+  (`scene.hintMotion`).
 - La hoja de datos entra deslizándose desde abajo y sale por el mismo sitio,
   con el fondo fundiéndose. Es CSS (`.contact-sheet` en `app/globals.css`):
   `@starting-style` para el estado del que entra y `allow-discrete` en
@@ -112,8 +140,10 @@ arquitectura en `README.md`.
 - Esa línea de servicios es también el `description` del JSON-LD, tanto de la
   persona como de la empresa (`worksFor`): es la propiedad por la que un motor
   de IA sabe a qué se dedica alguien. Va en el idioma servido, como `jobTitle`.
-- 363 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
-  orientación, asomo hacia el puntero, llegada y balanceo de bienvenida, gestos
+- 400 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
+  orientación, asomo hacia el puntero y hacia el giroscopio, reparto del hueco
+  entre la tarjeta y la pantalla, detección de la sacudida, llegada y balanceo
+  de bienvenida, gestos
   que voltean la tarjeta, URL del sitio, caminos de compartir y el aviso que
   deja cada uno, elección de tema y de idioma), sobre el
   contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
@@ -309,4 +339,29 @@ Nada pendiente.
   `copy.action` baja el rótulo de caso porque los demás son nombres comunes
   («Copiar teléfono»). Se oye bien y no se ve en pantalla, así que se dejó como
   está antes que meter una excepción por dos campos.
+- El umbral de la sacudida (12 m/s², tres tirones) está puesto por arriba a
+  propósito: lo que hay que distinguir no es el móvil quieto, sino el traqueteo
+  de andar deprisa o de un coche, que va a la misma frecuencia que agitar y
+  solo se diferencia por la fuerza. Ese es el caso que lo fija en
+  `shake.test.ts`; bajarlo pone la tarjeta a dar vueltas de camino a ninguna
+  parte.
+- El asomo del giroscopio olvida la postura de partida con una vida media de
+  dos segundos. Sin ese olvido, mirar el móvil recostado dejaría la tarjeta
+  torcida el resto de la visita; con él, sostener una inclinación la devuelve
+  al centro en unos segundos, que es un comportamiento distinto al del ratón
+  (el asomo del puntero se queda donde se dejó el cursor).
+- El `gamma` del sensor vive cerca de su límite (±90°) con el móvil apaisado y
+  ahí puede dar saltos. Se aguantan porque el asomo se mide contra una postura
+  que se recentra sola y va recortado al tope: un salto se traduce en un giro
+  pequeño que se deshace enseguida.
+- Los sensores no se escuchan con ratón (`pointer: fine`) aunque el navegador
+  los ofrezca: en un escritorio los eventos existen pero no los provoca nadie,
+  y la pista hablaría de agitar un móvil que no está.
+- El permiso de iOS solo se puede pedir desde un gesto, y su «no» dura hasta
+  que se recarga la página. Por eso el mando «Usar el movimiento» desaparece
+  tanto si se concede como si se deniega: dejarlo ahí sería un botón que ya no
+  abre ningún diálogo.
+- La hoja de datos en apaisado se queda como está, ocupando el 82% del alto y
+  con scroll: cabe, pero se ven dos datos por pantallazo. Rehacerla como panel
+  lateral en ese modo es una tarea aparte.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
