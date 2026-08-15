@@ -179,6 +179,21 @@
         translate: 0 100%;
       }
     }
+
+    /* Apaisado la hoja cuelga del borde derecho, así que entra y sale por ahí:
+       el mismo deslizamiento, girado al eje X. La consulta es la variante, y no
+       un `@media` escrito a mano, para que no se separe de `PHONE_LANDSCAPE`. */
+    @variant phone-landscape {
+      .contact-sheet {
+        translate: 100% 0;
+      }
+
+      @starting-style {
+        .contact-sheet[open] {
+          translate: 100% 0;
+        }
+      }
+    }
   }
 
   /* Textura de papel para la tarjeta plana: el grano se funde con el color de

@@ -81,6 +81,13 @@ arquitectura en `README.md`.
   el diálogo del sistema; concedido, desaparece. Con ratón no se escuchan, y la
   pista corta cuenta lo de agitar solo cuando están en marcha
   (`scene.hintMotion`).
+- Con el móvil apaisado la hoja de datos deja de colgar de abajo y se va al
+  borde derecho, de arriba abajo y con el ancho de `min(40rem, 76vw)`, con los
+  datos en dos columnas. Ahí donde antes se veían dos datos por pantallazo
+  ahora se ven seis, y «Guardar contacto» ya no hay que ir a buscarlo: se queda
+  pegado al fondo de la hoja, como el título y la salida se quedan arriba. Es
+  el mismo `<dialog>` y la misma animación, girada al eje X con la variante
+  `phone-landscape`.
 - La hoja de datos entra deslizándose desde abajo y sale por el mismo sitio,
   con el fondo fundiéndose. Es CSS (`.contact-sheet` en `app/globals.css`):
   `@starting-style` para el estado del que entra y `allow-discrete` en
@@ -369,7 +376,19 @@ Nada pendiente.
   entera. Con los cinco mandos —los cuatro de siempre más el del permiso de
   iOS— mide 252 px, y centrada en un móvil de 320 px de alto se subía encima
   de los conmutadores de idioma y tema, que están en esa misma columna.
-- La hoja de datos en apaisado se queda como está, ocupando el 82% del alto y
-  con scroll: cabe, pero se ven dos datos por pantallazo. Rehacerla como panel
-  lateral en ese modo es una tarea aparte.
+- El ancho de la hoja apaisada (`min(40rem, 76vw)`) está medido para que el
+  email quepa en una línea en las dos columnas: con el tope en 34rem se partía
+  en un móvil de 844 px. En uno de 667 (un iPhone SE apaisado) no hay ancho que
+  valga y se parte igual, a mitad de palabra —el email no tiene por dónde
+  partirse—, mientras que la dirección de LinkedIn sí cae por su guion.
+- El valor del panel deja de ser una caja flexible en las dos columnas y pasa a
+  ser una rejilla de una sola pista (`grid-cols-[minmax(0,1fr)]`). Una caja
+  flexible no encoge por dentro de su palabra más larga, y ahí el email empujaba
+  a su botón de copiar fuera de la columna. `break-words` no lo arregla: no
+  cuenta para el ancho mínimo, y `wrap-anywhere`, que sí cuenta, parte la
+  dirección de LinkedIn a mitad de palabra.
+- El título y el botón de guardar se quedan pegados arriba y abajo de la hoja
+  apaisada con un desplazamiento negativo (`-top-4`/`-bottom-4`) y relleno
+  propio: sin eso se pegan al borde del contenido y no al de la hoja, y los
+  datos asoman por la franja del relleno al pasar por detrás.
 - El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.

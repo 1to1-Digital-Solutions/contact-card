@@ -79,12 +79,21 @@ export function ContactSheet({
       aria-label={title}
       onClose={onClose}
       onClick={closeIfOutside}
-      // `contact-sheet` es la entrada y la salida deslizándose desde abajo:
-      // vive en `app/globals.css` porque necesita `@starting-style`.
-      className="contact-sheet fixed inset-x-0 bottom-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 lg:hidden"
+      // `contact-sheet` es la entrada y la salida deslizándose: vive en
+      // `app/globals.css` porque necesita `@starting-style`, y allí entra desde
+      // abajo o desde la derecha según de qué borde cuelgue la hoja.
+      //
+      // Apaisado no hay alto que repartir —la hoja de abajo dejaba ver dos
+      // datos por pantallazo— y sí ancho de sobra: se va al borde derecho, de
+      // arriba abajo, y los datos se reparten en dos columnas (`ContactPanel`).
+      className="contact-sheet fixed bottom-0 left-0 right-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 phone-landscape:left-auto phone-landscape:top-0 phone-landscape:h-full phone-landscape:max-h-none phone-landscape:w-[min(40rem,76vw)] phone-landscape:rounded-l-3xl phone-landscape:rounded-tr-none phone-landscape:border-l phone-landscape:border-t-0 phone-landscape:p-4 lg:hidden"
     >
-      <div className="mx-auto flex max-w-md flex-col gap-6">
-        <div className="flex items-start justify-between gap-4">
+      <div className="mx-auto flex max-w-md flex-col gap-6 phone-landscape:max-w-none phone-landscape:gap-3">
+        {/* Con la hoja de arriba abajo, el título y la salida se quedan a la
+            vista aunque haya que bajar por los datos. El desplazamiento
+            negativo y el relleno propio son para tapar el borde de la hoja:
+            ahí es donde los datos asomarían al pasar por detrás. */}
+        <div className="flex items-start justify-between gap-4 phone-landscape:sticky phone-landscape:-top-4 phone-landscape:z-10 phone-landscape:-mt-4 phone-landscape:bg-backdrop phone-landscape:pt-4">
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
           <button
             type="button"

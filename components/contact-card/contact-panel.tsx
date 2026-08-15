@@ -10,8 +10,15 @@ import { buildVCard, vCardFilename } from "@/lib/vcard";
  * Alto de objetivo táctil incluido: el valor va emparejado con su botón. Los
  * que no caben en una línea —la dirección de un perfil— parten por sus guiones
  * antes que a mitad de palabra, y solo si no hay más remedio.
+ *
+ * En las dos columnas del apaisado el valor deja de ser una caja flexible: una
+ * lo es tanto por fuera como por dentro, y por dentro no baja de su palabra más
+ * larga, así que el email empujaba a su botón de copiar fuera de la columna. La
+ * rejilla de una sola pista que puede encogerse (`minmax(0,1fr)`) parte el
+ * texto en vez de desbordarlo, y centra igual que `items-center`.
  */
-const VALUE_CLASSES = "inline-flex min-h-11 items-center break-words text-lg text-ink";
+const VALUE_CLASSES =
+  "inline-flex min-h-11 items-center break-words text-lg text-ink phone-landscape:grid phone-landscape:min-w-0 phone-landscape:grid-cols-[minmax(0,1fr)] phone-landscape:content-center phone-landscape:text-base";
 
 /** Un dato del panel: rótulo, valor que se ve y se copia, y a dónde lleva. */
 type PanelField = {
@@ -74,14 +81,16 @@ export function ContactPanel({ language }: { language: Language }) {
   const contact = contactIn(language);
 
   return (
-    <div className="flex flex-col gap-6">
-      <dl className="flex flex-col gap-1">
+    <div className="flex flex-col gap-6 phone-landscape:gap-3">
+      {/* Apaisado los datos van en dos columnas: es donde sobra ancho y falta
+          alto, y en una sola columna solo se veían dos de golpe. */}
+      <dl className="flex flex-col gap-1 phone-landscape:grid phone-landscape:grid-cols-2 phone-landscape:gap-x-5">
         {fieldsOf(contact, t).map((field) => (
-          <div key={field.label} className="border-t border-ink/10 py-2">
+          <div key={field.label} className="border-t border-ink/10 py-2 phone-landscape:py-1">
             <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
               {field.label}
             </dt>
-            <dd className="mt-1 flex items-center justify-between gap-3">
+            <dd className="mt-1 flex items-center justify-between gap-3 phone-landscape:mt-0">
               {field.href ? (
                 <a
                   className={`${VALUE_CLASSES} underline decoration-ink/25 underline-offset-4 transition-colors hover:decoration-accent-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink`}
@@ -100,13 +109,19 @@ export function ContactPanel({ language }: { language: Language }) {
         ))}
       </dl>
 
-      <button
-        type="button"
-        onClick={() => downloadVCard(contact)}
-        className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-on-accent transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink motion-reduce:transition-none motion-reduce:hover:scale-100"
-      >
-        {t.panel.save}
-      </button>
+      {/* La acción principal no se gana bajando: apaisado se queda pegada al
+          borde de abajo de la hoja, relleno incluido, mientras los datos pasan
+          por detrás. Sin bajarla hasta el borde asomarían por debajo del
+          botón; el relleno propio le devuelve el aire que se come. */}
+      <div className="flex flex-col phone-landscape:sticky phone-landscape:-bottom-4 phone-landscape:-mb-4 phone-landscape:bg-backdrop phone-landscape:pb-4 phone-landscape:pt-2">
+        <button
+          type="button"
+          onClick={() => downloadVCard(contact)}
+          className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-on-accent transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink motion-reduce:transition-none motion-reduce:hover:scale-100"
+        >
+          {t.panel.save}
+        </button>
+      </div>
     </div>
   );
 }
