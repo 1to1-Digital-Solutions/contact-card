@@ -27,7 +27,7 @@ arquitectura en `README.md`.
 
 ## Hecho hasta ahora
 
-- Base de la suite de Organízate instalada (`.claude/rules/`, `.claude/agents/`, `CLAUDE.md`).
+- Base de la suite de Organízate instalada (`.claude/rules/`, `CLAUDE.md`).
 - Proyecto creado de cero y primera versión de la tarjeta funcionando:
   arrastrar, girar, voltear, recolocar, descarga de vCard, respaldo 2D sin
   WebGL, metadatos, `robots.txt`, sitemap y JSON-LD.

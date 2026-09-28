@@ -29,6 +29,5 @@ indica qué toca hacer ahora.
 - La página funciona sin WebGL: siempre hay una versión plana con los mismos datos.
 - Commits manuales: no commitear sin que se pida.
 
-> Base instalada con la suite de Organízate. Las reglas comunes viven en `.claude/rules/` y los
-> agentes reutilizables en `.claude/agents/`. La provenance de lo instalado está en
-> `.organizate/install-state.json`.
+> Base instalada con la suite de Organízate. Las reglas comunes viven en `.claude/rules/`. La provenance de lo
+> instalado está en `.organizate/install-state.json`.
