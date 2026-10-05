@@ -43,7 +43,7 @@ tenía ese fichero: intégrala a mano en el existente y borra la variante `.suit
 
 ## Verificación al tocar cualquier pieza GEO
 
-- `curl localhost:3000/robots.txt` y `curl localhost:3000/sitemap.xml` responden bien.
+- `curl localhost:$PORT/robots.txt` y `curl localhost:$PORT/sitemap.xml` responden bien.
 - JSON-LD válido en https://validator.schema.org (o Rich Results Test para FAQ/Article).
 - Cada página nueva: ¿está en el sitemap? ¿pasa la checklist de contenido?
 - `build` y `lint` del proyecto en verde.
