@@ -1,404 +1,48 @@
-# Estado de la sesión — contact-card (handoff)
+# Session state — contact-card (hand-off)
 
-> **Cómo continuar tras reiniciar:** di a Claude «revisa `ESTADO.md` y continúa con el siguiente
-> paso». Este fichero es la memoria entre sesiones: mantenlo corto, veraz y al día.
+> **How to resume after a restart:** tell Claude "read `ESTADO.md` and continue with the next
+> step". This file is the memory between sessions: keep it short, truthful and current.
 
 ---
 
-## ⏭️ SIGUIENTE PASO (lo primero al volver)
+## ⏭️ NEXT STEP (first thing on return)
 
-- Nada pendiente decidido: la tarjeta está completa. Lo siguiente lo marca la
-  próxima tarea.
+- Nothing pending: the card is complete and ready to be published. The next task sets what
+  comes next.
 
-## Qué es contact-card
+## What contact-card is
 
-Una página con la tarjeta de contacto profesional de César Peón Lamparero en
-3D: se agarra, se mueve, se gira y se le da la vuelta. Detalle de stack y de
-arquitectura en `README.md`.
+A page with the professional contact card of César Peón Lamparero in 3D: grab it, move it,
+spin it and flip it over. Stack, layout and design decisions are in `README.md`; the
+reasoning behind each piece lives next to the code, in its comments and tests.
 
-## Decisiones firmes
+## Firm decisions
 
 - Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4.
-- three.js con React Three Fiber y drei. Vitest para los tests.
-- Sin física de cuerda: la tarjeta es libre, con muelles amortiguados propios.
-- Los datos de contacto salen todos de `lib/contact.ts`.
-- Sin fuentes ni HDRI remotos: nada que descargar en tiempo de ejecución.
-- Commits manuales: no commitear sin que se pida.
+- three.js through React Three Fiber and drei. Vitest for unit tests, Playwright for e2e.
+- No lanyard physics: the card is free, on damped springs of our own (`lib/motion.ts`).
+- All contact details come from `lib/contact.ts`; all interface copy from `lib/dictionary.ts`.
+- No remote fonts or HDRI: nothing to download at runtime.
+- Manual commits: never commit unless asked to.
 
-## Hecho hasta ahora
+## How to run it
 
-- Base de la suite de Organízate instalada (`.claude/rules/`, `CLAUDE.md`).
-- Proyecto creado de cero y primera versión de la tarjeta funcionando:
-  arrastrar, girar, voltear, recolocar, descarga de vCard, respaldo 2D sin
-  WebGL, metadatos, `robots.txt`, sitemap y JSON-LD.
-- Colores oficiales de marca aplicados (verde `#1f957a` y neutros antracita)
-  en `lib/brand.ts`, en los tokens de `app/globals.css` y en el favicon.
-- Logotipo real en el reverso (3D y versión plana) y el isotipo en el favicon,
-  con los ficheros oficiales copiados del repo `landing`.
-- Dos temas, oscuro (el de partida) y claro, con un botón en la cabecera. El
-  tema vive en la clase de `<html>`, lo fija un script en línea antes de
-  pintar (`lib/theme.ts`) y se recuerda en el navegador; de él dependen la
-  página, las dos caras de la tarjeta —del mismo color— y el `theme-color`.
-- Papel mate y granulado en lugar de brillante: el ruido hace de mapa de
-  relieve del material en 3D y de textura (`.paper-grain`) en la versión plana.
-- El reverso lleva el logotipo en verde de marca (`logo-brand.svg`) y el
-  anverso, de marca de agua, el positivo o el negativo según el tema.
-- En pantalla estrecha la tarjeta ocupa toda la pantalla, sin scroll, y los
-  datos salen en una hoja (`<dialog>`) desde el botón «Ver los datos», con un
-  botón de copiar por dato. La hoja solo lleva datos: voltear y recolocar van
-  en la banda de mandos, junto a «Ver los datos», en todos los tamaños, para
-  que el giro se vea al dispararlo.
-- La banda de mandos cabe en una línea en un móvil: los botones son solo el
-  icono donde no sobra pantalla y recuperan el rótulo al lado en cuanto la hay
-  (`components/contact-card/scene-control.tsx`). La pista de abajo también se
-  dice en corto en móvil (`scene.hintShort`), que allí cada línea de texto se
-  la quita a la tarjeta.
-- Con el móvil apaisado la tarjeta se pone a tamaño completo —se lleva el 82%
-  del alto en vez del 55%— y los mandos se le quitan de en medio: se van en
-  columna al borde derecho, flotando encima, y el título y la empresa pasan a
-  `sr-only` (siguen ahí para quien escucha la página, pero dejan de robarle
-  sitio). El corte es la consulta `PHONE_LANDSCAPE`, que vive en
-  `lib/use-media-query.ts` y está duplicada como variante `phone-landscape` de
-  Tailwind en `app/globals.css`; se para por debajo de `lg` para no alcanzar a
-  un escritorio con la ventana baja. El reparto del hueco es ahora una función
-  pura, `cardScale` (`lib/card-layout.ts`). Los rótulos de los mandos y la
-  pista larga cuelgan de otra variante, `roomy`, en vez de `sm`: un móvil
-  apaisado es más ancho que `sm` y ahí el texto no cabe.
-- Agitar el móvil da media vuelta a la tarjeta, como el botón de voltear o los
-  dos toques. La detección es pura (`lib/shake.ts`): filtra la gravedad con la
-  amortiguación de `motion.ts` y pide tres tirones de 12 m/s² dentro de 900 ms,
-  con un segundo de reposo después para que agitar dé una vuelta y no una por
-  tirón.
-- La tarjeta también se asoma al inclinar el móvil, que es lo que en un
-  escritorio hace el ratón (`lib/device-tilt.ts`, con el mismo alcance que
-  `pointerTilt` —`TILT_REACH`—). Gira al revés que el aparato, como si
-  estuviera quieta detrás del cristal, y la postura de partida se olvida sola:
-  quien lo mire recostado no se queda con la tarjeta torcida. Los ángulos del
-  sensor se llevan antes a los ejes de la pantalla, que en apaisado no son los
-  del aparato.
-- Los dos sensores se encienden solos donde el navegador los da sin permiso.
-  Donde lo pide (iOS), aparece un quinto mando, «Usar el movimiento», que abre
-  el diálogo del sistema; concedido, desaparece. Con ratón no se escuchan, y la
-  pista corta cuenta lo de agitar solo cuando están en marcha
-  (`scene.hintMotion`).
-- Con el móvil apaisado la hoja de datos deja de colgar de abajo y se va al
-  borde derecho, de arriba abajo y con el ancho de `min(40rem, 76vw)`, con los
-  datos en dos columnas. Ahí donde antes se veían dos datos por pantallazo
-  ahora se ven seis, y «Guardar contacto» ya no hay que ir a buscarlo: se queda
-  pegado al fondo de la hoja, como el título y la salida se quedan arriba. Es
-  el mismo `<dialog>` y la misma animación, girada al eje X con la variante
-  `phone-landscape`.
-- La hoja de datos entra deslizándose desde abajo y sale por el mismo sitio,
-  con el fondo fundiéndose. Es CSS (`.contact-sheet` en `app/globals.css`):
-  `@starting-style` para el estado del que entra y `allow-discrete` en
-  `display` y `overlay` para que el `<dialog>` se quede en pantalla mientras se
-  va. Quien pide menos movimiento solo ve el fundido.
-- La tarjeta se presenta sola al abrir la página: cae desde fuera de la
-  pantalla por arriba y, ya en el centro, se balancea una vez de lado a lado
-  para enseñar que se puede coger. Las dos cosas viven en `lib/card-intro.ts`
-  (`entryOffsetY` y `introSway`, funciones puras del tiempo); el balanceo se
-  corta con el primer gesto —arrastrar, girar o cualquiera de los dos mandos—
-  y no vuelve.
-- Con ratón, la tarjeta se asoma hacia el puntero sin moverse del sitio
-  (`pointerTilt`, en `lib/card-orientation.ts`): el lado por el que pasa el
-  cursor se hunde, como si lo empujara. Solo donde el puntero es fino
-  (`lib/use-media-query.ts`): en una pantalla táctil el puntero se queda
-  donde se tocó por última vez y la tarjeta se quedaría torcida.
-- La tarjeta se voltea sin tocar los botones: dos toques rápidos sobre ella o
-  sacarla de la pantalla arrastrándola (entonces se suelta sola y vuelve al
-  centro por la otra cara). Las dos reglas viven en `lib/card-gestures.ts`.
-- Previsualización al compartir el enlace: `app/opengraph-image.tsx` dibuja el
-  anverso de la tarjeta con `ImageResponse` (1200×630, tema oscuro) a partir de
-  `lib/contact.ts` y `lib/brand.ts`, y `app/twitter-image.tsx` reexporta la
-  misma imagen. No hay ningún PNG en el repo.
-- Cargo profesional («Desarrollador full-stack») en `lib/contact.ts`, entre el
-  nombre y la empresa en las dos caras del anverso (3D, versión plana y la
-  imagen de compartir), en el panel de datos, en `TITLE` de la vCard y en
-  `jobTitle` del JSON-LD.
-- Español e inglés, según el navegador. El idioma se negocia en el servidor
-  con `Accept-Language` (`lib/i18n.ts`, sin librería) y llega resuelto en el
-  primer HTML: `<html lang>`, `og:locale`, título, descripción, JSON-LD, la
-  cara de la tarjeta (3D y plana) y la vCard. Los textos de interfaz viven en
-  `lib/dictionary.ts`; el cargo, el lema y los servicios, que son datos, en
-  `TRANSLATED` de `lib/contact.ts`. Un botón en la cabecera cambia de idioma y
-  deja la elección en una cookie (`contact-card-language`, un año,
-  `SameSite=Lax`, sin datos personales) que `requestLanguage` lee antes de la
-  cabecera: al volver, la tarjeta abre en el idioma que se eligió.
-- LinkedIn y GitHub en el panel de datos, detrás de la web y con su botón de
-  copiar. Las direcciones viven en `PROFILES` (`lib/contact.ts`), fuera de
-  `CONTACT` porque no son datos de la ficha: no van a la vCard ni a las caras de
-  la tarjeta. Los enlaces llevan `rel="noreferrer"` y un nombre accesible
-  traducido que incluye la dirección que se ve. Las mismas URL son el `sameAs`
-  del JSON-LD, que es como se dice que la persona de la ficha es la de esos
-  perfiles.
-- Con ratón, la tarjeta ya no persigue el puntero en crudo: entre el navegador
-  y la escena hay una amortiguación de primer orden (`smoothTowards`, en
-  `lib/motion.ts`) con vida media de 40 ms. Filtra el puntero, no la tarjeta,
-  así que de un solo sitio salen suavizados el arrastre, el giro y el asomo, y
-  el balanceo —que se calcula de la velocidad del gesto— deja de dar respingos.
-  Con el dedo y con `prefers-reduced-motion` el puntero pasa sin filtrar. Al
-  soltar tras girar, el giro se cobra el trozo del gesto que el filtro aún no
-  había repartido: así la tarjeta encaja donde la dejó el ratón, no antes.
-- El lema de la empresa («Tú creas tu negocio, nosotros nos encargamos de tu
-  tecnología.») en el anverso, por debajo del nombre, el cargo y la empresa, en
-  tinta apagada y en jerarquía secundaria: en 3D, en la versión plana y en la
-  imagen de compartir. En el panel de datos, detrás del cargo, la línea de
-  servicios («Desarrollo de software personalizado»).
-- Esa línea de servicios es también el `description` del JSON-LD, tanto de la
-  persona como de la empresa (`worksFor`): es la propiedad por la que un motor
-  de IA sabe a qué se dedica alguien. Va en el idioma servido, como `jobTitle`.
-- 402 tests sobre la lógica pura (vCard, muelles, amortiguación del puntero,
-  orientación, asomo hacia el puntero y hacia el giroscopio, reparto del hueco
-  entre la tarjeta y la pantalla, detección de la sacudida, llegada y balanceo
-  de bienvenida, gestos
-  que voltean la tarjeta, URL del sitio, caminos de compartir y el aviso que
-  deja cada uno, elección de tema y de idioma), sobre el
-  contraste de la paleta en los dos temas, sobre que `lib/brand.ts` no se
-  desincronice de los tokens de `app/globals.css` ni del favicon
-  `app/icon.svg` (este también en el encaje
-  del isotipo), sobre que los dibujos de marca sigan donde `LOGO` dice, con su
-  lienzo y con la tinta que se lee sobre su cara, y sobre los píxeles de la
-  imagen de Open Graph (que solo pinta colores de la paleta) y sus metadatos.
-  De la traducción se comprueban cinco cosas: la elección de idioma con
-  cabeceras reales (varios pesos, comodín, `q=0`, ausente o rota), que esa
-  elección se lea de la cabecera que manda el navegador y no de otra, que la
-  preferencia recordada gane a la cabecera y que una cookie con cualquier otro
-  valor caiga en la negociación normal (con los atributos que se escriben y sin
-  romperse donde las cookies están prohibidas), que los dos diccionarios tengan
-  las mismas claves sin nada vacío ni copiado del español, y —recorriendo el
-  árbol de sintaxis de `app/` y `components/`— que no quede ningún texto escrito
-  a mano en el JSX ni en un `aria-label`, `alt`, `title` o `lang`. Del mando de
-  la escena se comprueba, pintándolo con `renderToStaticMarkup`, que el rótulo
-  sigue estando como etiqueta accesible cuando en el móvil solo se ve el icono.
-  Del panel, con el mismo método, que cada perfil se enlaza a su dirección
-  —y que esa dirección es el texto del enlace, no solo algo que aparezca en el
-  marcado—, con `rel="noreferrer"` y con su nombre accesible en los dos idiomas;
-  y de `PROFILES`, que la dirección que se enseña es la del enlace y que la URL
-  está escrita ya codificada. De la tarjeta plana, que dice lo mismo que el
-  anverso 3D —nombre, cargo, empresa y lema en los dos idiomas— y que no se
-  trae la línea de servicios, que es del panel. La vCard, por su parte,
-  comprueba que no se lleva ningún perfil, ni el lema ni los servicios.
-- Un cuarto mando, «Compartir», al final de la banda: abre el diálogo del
-  sistema (`navigator.share`) con el título de la tarjeta en el idioma que se
-  esté viendo y con `SITE_URL`. Donde no hay diálogo copia el enlace y lo
-  confirma como los botones de copiar. La elección de camino es una función
-  pura (`lib/share.ts`) y el aviso pasajero, un hook compartido con esos
-  botones (`lib/use-feedback.ts`). Qué aviso deja cada final está en una tabla
-  del mismo fichero, indexada por `ShareOutcome`: un camino nuevo no compila
-  sin que alguien diga qué se le cuenta a quien pulsó.
-- Verificado en navegador real (Playwright + captura) además de
-  typecheck, lint, build y tests.
+```bash
+npm install
+npm run dev        # http://localhost:3000
+npm test           # unit tests (Vitest)
+npm run test:e2e   # end-to-end (Playwright; builds the site and starts it on port 3220)
+```
 
-## Pendiente / próximos pasos
+The gates before anything is done: `npm run lint`, `npm run typecheck`, `npm test`,
+`npm run build`, `npm run test:e2e`.
 
-Nada pendiente.
+## Caveats worth knowing
 
-## Caveats y notas
-
-- El lema y la línea de servicios viven en `TRANSLATED` (`lib/contact.ts`),
-  junto al cargo, y no en el diccionario: son datos de la ficha y de la marca
-  —lo que la tarjeta dice de quién es y de qué hace—, no rótulos de la
-  interfaz. Sus rótulos («Servicios») sí están en el diccionario. `TRANSLATED`
-  sustituye al antiguo `JOB_TITLE`: el tipo obliga a que cada texto esté en los
-  dos idiomas y `Contact` a que `contactIn` no se deje ninguno, así que un dato
-  nuevo no compila hasta estar completo, y los tests los recorren todos en vez
-  de nombrarlos uno a uno.
-- Ni el lema ni los servicios van a la vCard: la agenda guarda formas de
-  contactar, y acabarían de relleno en el único campo libre que hay.
-- El `description` del JSON-LD lleva los servicios y no el lema: schema.org lo
-  define como qué es la cosa, y lo leen máquinas. El lema es una promesa
-  comercial y su sitio en el estándar sería `slogan`, que hoy no se declara.
-- La amortiguación del puntero no se aplica con el dedo (`pointer: coarse`) ni
-  con `prefers-reduced-motion`. Con el dedo la tarjeta se toca, y cualquier
-  retardo se lee como que se despega de él; el muestreo táctil, además, ya
-  llega suave. Los 40 ms de vida media son un compromiso: por debajo no se
-  nota y por encima la tarjeta empieza a despegarse del cursor.
-- El filtro se planta en el objetivo por debajo de `rest` en vez de acercarse
-  eternamente, y al empezar un gesto se planta en el puntero: sin lo primero la
-  tarjeta seguiría moviéndose con el ratón ya quieto, y sin lo segundo, pulsar
-  tras mover el ratón deprisa la movería sola terminando el viaje a medias.
-- En la imagen de compartir el lema lleva menos respiro por encima que en la
-  cara de la tarjeta (1,6% del ancho frente a 3%): esa tarjeta es mucho más
-  apaisada y entre los dos bloques quedan unos pocos píxeles, así que el margen
-  de la cara separaría el lema de la identidad y lo pegaría a los datos.
-
-- El doble toque se reconoce con los eventos de puntero y no con `dblclick`:
-  ese evento es del ratón y en un móvil no llega. Su ventana es de 450 ms,
-  la que dan por buena las plataformas; con menos (se probó con 320 ms) un
-  dedo normal se queda fuera y el gesto parece que no existe.
-- «Sacar la tarjeta de la pantalla» no exige sacarla entera: basta con que
-  quede menos de un cuarto dentro. Con el dedo no se puede empujar más allá
-  del borde, así que el criterio estricto sería inalcanzable en un móvil. Del
-  cuarto sale el trato, y no depende del tamaño de la pantalla: la tarjeta se
-  va si se la agarra por la mitad exterior de su lado, y no si se la agarra
-  por el centro (ahí siempre queda media tarjeta dentro). Lo fijan dos tests
-  en `lib/card-gestures.test.ts`: subir el umbral deja el gesto sin alcance.
-- Un solo `pointerup` sobre la tarjeta entra varias veces en el manejador,
-  una por cada malla que atraviesa el rayo. Por eso el toque se consume al
-  leerlo: si no, el volteo se aplicaría más de una vez. Quien decide es
-  `readTap`, que también admite el soltar sin marca de las entregas
-  siguientes; el componente solo le pasa lo que ha medido.
-- Un toque se mide siempre contra el mismo dedo (`pointerId`). Con dos
-  apoyados sobre la tarjeta, el segundo pisa la marca del primero y, sin esa
-  comprobación, levantar uno se leería como un toque del otro. El doble
-  toque, en cambio, no compara dedos: en una pantalla táctil cada toque
-  estrena `pointerId`.
-- La paleta de marca está duplicada a propósito en `lib/brand.ts` (para
-  three.js) y en `app/globals.css` (para Tailwind). Si se cambia una, hay que
-  cambiar la otra: `lib/brand.test.ts` compara las dos listas y falla si dejan
-  de coincidir, y comprueba que cada par de texto y fondo llega a WCAG AA en
-  los dos temas. Los únicos colores escritos a mano fuera de ahí son los del
-  favicon `app/icon.svg`, que es un SVG estático; el mismo test los ata a la
-  paleta.
-- La imagen de compartir es una sola y la página tiene dos temas: va del de
-  partida, que hoy es el oscuro. No lo lleva escrito: lo lee de
-  `DEFAULT_THEME`, así que si la página abriera en claro la imagen se mudaría
-  con ella. Su tipografía no es la pila del sistema (una imagen no la tiene):
-  usa la que trae el generador de Next, empaquetada, sin descargas.
-- El `theme-color` de la pestaña no se declara por `prefers-color-scheme`: el
-  tema lo elige el botón, no el sistema. Los metadatos salen con el color del
-  tema de partida y lo corrigen el script en línea (al cargar) y `applyTheme`
-  (al pulsar el botón).
-- El texto secundario (`inkMuted`) no se mide contra `backdrop` a secas: la
-  veladura y el halo mueven el fondo justo donde se lee «Cargando la
-  tarjeta…». Ese es el caso que fija el token, y el test lee las opacidades
-  del propio CSS para rehacer la cuenta.
-- El acento vivo (`#1f957a`) no llega a AA como texto sobre ninguna de las dos
-  caras: para texto está `accentInk`, que cambia con el tema (primary-200
-  sobre oscuro, primary-500 sobre claro).
-- La escena no usa tone mapping para que los colores salgan fieles; por eso
-  las intensidades de luz parecen altas (la reflexión difusa divide por π).
-  Están medidas para dejar el anverso justo por debajo del punto de quemado:
-  si se tocan, hay que volver a medirlo (captura de la escena y porcentaje de
-  píxeles a 255 en una zona lisa de la tarjeta).
-- La tarjeta y el fondo son casi del mismo tono en los dos temas, y el canto
-  va a un paso del color de la cara (si se separa más, las esquinas
-  redondeadas vuelven a verse encendidas, que era la queja). Lo que separa la
-  tarjeta del fondo es el halo de `.card-halo` —claro sobre oscuro, sombra
-  sobre claro— más las luces de la escena.
-- `npm audit` reporta 3 vulnerabilidades altas heredadas de `next`
-  (postcss y sharp internos). No hay arreglo sin bajar Next a la v9.
-- El idioma es lo único que saca a `/` del prerenderizado: leer una cabecera
-  la vuelve dinámica (`ƒ` en el build, junto a `/_not-found`, que cuelga del
-  mismo layout). No hay forma de negociar en un fichero estático y el texto no
-  se puede corregir con un script como el color del tema. El resto de rutas
-  —imagen de compartir, `robots.txt`, sitemap, favicon— siguen estáticas.
-- La cookie del idioma solo se escribe al pulsar el botón, nunca con el idioma
-  negociado: si se guardara ese, la cabecera del navegador dejaría de contar
-  para siempre aunque quien visita la página cambiara el idioma del sistema.
-- La imagen de compartir va en español (el de recurso), como va del tema de
-  partida, y su `alt` con ella: describe lo que pone la imagen, así que en la
-  página en inglés se emite un `og:image:alt` en español a propósito.
-- La animación de la hoja no lleva red de seguridad en JavaScript a propósito:
-  un navegador sin `@starting-style` o sin `allow-discrete` se limita a
-  enseñarla y esconderla de golpe, que es lo que hacía antes. Cambiarlo
-  obligaría a retrasar el `close()` a mano y a atarlo al fin de la transición.
-- La pista corta del móvil tiene un tope de longitud en `dictionary.test.ts`:
-  con `text-sm` y los márgenes de la banda, a partir de ahí vuelve a ocupar dos
-  líneas y deja de cumplir su función. Si hace falta decir más, no es cosa de
-  alargarla sino de mover el texto a otro sitio.
-- La llegada no tiene muelle propio: la tarjeta empieza fuera de la pantalla y
-  la trae el mismo muelle con el que vuelve al centro al soltarla, que llega
-  con un rebote corto. Si se toca ese muelle, se toca también la entrada.
-- El balanceo de bienvenida va envuelto en una campana que entra y sale por
-  cero. Sin ella habría que cortarlo justo en un paso por el centro para que
-  el desplazamiento no diera un tirón, y la inclinación —que va un cuarto de
-  oscilación por delante— nunca está a cero en ese punto. Lo fija el test
-  «entra y sale sin tirón» de `lib/card-intro.test.ts`.
-- El recorrido de ese balanceo se mide en anchos de tarjeta y no en unidades
-  de mundo: en un móvil de pie la tarjeta ocupa menos de la mitad que en un
-  escritorio, y un recorrido fijo se saldría de la pantalla allí o no se
-  notaría aquí.
-- El asomo hacia el puntero se suma al giro que pide el usuario, así que se
-  queda en un gesto pequeño (0,22 rad de giro y 0,14 de cabeceo): si creciera,
-  bastaría pasar el ratón para acabar viendo el canto de la tarjeta.
-- Con `prefers-reduced-motion` no hay ni caída, ni balanceo, ni asomo hacia el
-  puntero: la tarjeta aparece colocada y solo se mueve cuando se la mueve.
-- El asomo se queda como esté cuando el puntero sale del lienzo (la banda
-  lateral de `lg`, la barra del navegador): la escena solo se entera del ratón
-  por los eventos que le llegan. Se dejó así a propósito, que es lo que hace
-  cualquier paralaje; enderezarla pediría escuchar el `pointerleave` del canvas.
-- Cancelar el diálogo del sistema no copia el enlace a la espalda: quien se
-  arrepiente quiere quedarse como estaba, no acabar con el enlace en el
-  portapapeles. La cancelación llega como un `AbortError` y se distingue por
-  ahí de un fallo de verdad, que sí cae en copiar.
-- Lo que se comparte es `SITE_URL` y no `location.href`: al enlace de la barra
-  le sobran los parámetros de campaña y el `#` con los que se haya llegado.
-  Como efecto lateral, en una vista previa de despliegue se comparte la
-  dirección de producción salvo que `NEXT_PUBLIC_SITE_URL` diga otra cosa.
-- El icono de recolocar son cuatro flechas hacia dentro. Antes era un encuadre
-  con un punto en medio y, a 20 px y sin rótulo —que es como se ve en un
-  móvil—, se leía como el visor de una cámara: parecía que iba a hacer una
-  foto. Cualquier icono nuevo hay que mirarlo a ese tamaño, no en grande.
-- Los perfiles se quedan en el panel a propósito: no van a la vCard (la agenda
-  guarda formas de contactar, no perfiles) ni a las caras de la tarjeta, que
-  están deliberadamente limpias. No es un olvido, y `vcard.test.ts` lo deja
-  fijado: como los perfiles salen de la misma fuente que el resto de datos,
-  colarlos de `URL:` es el descuido natural.
-- La ruta del perfil de LinkedIn lleva los acentos percent-encoded
-  (`c%C3%A9sar-pe%C3%B3n`). Escribirla con las tildes literales cambia la URL
-  canónica, así que se copia tal cual; el texto que se ve, en cambio, va con
-  ellas y es lo que se copia al portapapeles.
-- El valor del panel parte con `break-words` y no con `break-all`: la dirección
-  de LinkedIn no cabe en una línea en ningún tamaño, y partirla por sus guiones
-  se lee; a mitad de palabra («…césar-peón-lampa / rero»), no.
-- El botón de copiar de un perfil se anuncia «Copiar linkedin», en minúscula:
-  `copy.action` baja el rótulo de caso porque los demás son nombres comunes
-  («Copiar teléfono»). Se oye bien y no se ve en pantalla, así que se dejó como
-  está antes que meter una excepción por dos campos.
-- El umbral de la sacudida (12 m/s², tres tirones) está puesto por arriba a
-  propósito: lo que hay que distinguir no es el móvil quieto, sino el traqueteo
-  de andar deprisa o de un coche, que va a la misma frecuencia que agitar y
-  solo se diferencia por la fuerza. Ese es el caso que lo fija en
-  `shake.test.ts`; bajarlo pone la tarjeta a dar vueltas de camino a ninguna
-  parte.
-- El asomo del giroscopio olvida la postura de partida con una vida media de
-  dos segundos. Sin ese olvido, mirar el móvil recostado dejaría la tarjeta
-  torcida el resto de la visita; con él, sostener una inclinación la devuelve
-  al centro en unos segundos, que es un comportamiento distinto al del ratón
-  (el asomo del puntero se queda donde se dejó el cursor).
-- El `gamma` del sensor vive cerca de su límite (±90°) con el móvil apaisado y
-  ahí puede dar saltos. Se aguantan porque el asomo se mide contra una postura
-  que se recentra sola y va recortado al tope: un salto se traduce en un giro
-  pequeño que se deshace enseguida.
-- Los sensores no se escuchan con ratón (`pointer: fine`) aunque el navegador
-  los ofrezca: en un escritorio los eventos existen pero no los provoca nadie,
-  y la pista hablaría de agitar un móvil que no está. Por lo mismo, el mando
-  «Usar el movimiento» tampoco sale con ratón: un iPad con teclado pide
-  permiso y a la vez dice `pointer: fine`, así que el botón abriría el diálogo
-  del sistema para conceder algo que después no se usa.
-- El permiso de iOS solo se puede pedir desde un gesto, y su «no» dura hasta
-  que se recarga la página. Por eso el mando «Usar el movimiento» desaparece
-  tanto si se concede como si se deniega: dejarlo ahí sería un botón que ya no
-  abre ningún diálogo.
-- La columna de mandos del apaisado se centra en lo que queda por debajo de la
-  cabecera (`top-14`: su relleno más el alto de un botón) y no en la pantalla
-  entera. Con los cinco mandos —los cuatro de siempre más el del permiso de
-  iOS— mide 252 px, y centrada en un móvil de 320 px de alto se subía encima
-  de los conmutadores de idioma y tema, que están en esa misma columna.
-- El ancho de la hoja apaisada (`min(40rem, 76vw)`) está medido para que el
-  email quepa en una línea en las dos columnas: con el tope en 34rem se partía
-  en un móvil de 844 px. En uno de 667 (un iPhone SE apaisado) no hay ancho que
-  valga y se parte igual, a mitad de palabra —el email no tiene por dónde
-  partirse—, mientras que la dirección de LinkedIn sí cae por su guion.
-- El valor del panel deja de ser una caja flexible en las dos columnas y pasa a
-  ser una rejilla de una sola pista (`grid-cols-[minmax(0,1fr)]`). Una caja
-  flexible no encoge por dentro de su palabra más larga, y ahí el email empujaba
-  a su botón de copiar fuera de la columna. `break-words` no lo arregla: no
-  cuenta para el ancho mínimo, y `wrap-anywhere`, que sí cuenta, parte la
-  dirección de LinkedIn a mitad de palabra.
-- El título y el botón de guardar se quedan pegados arriba y abajo de la hoja
-  apaisada con un desplazamiento negativo (`-top-4`/`-bottom-4`) y relleno
-  propio: sin eso se pegan al borde del contenido y no al de la hoja, y los
-  datos asoman por la franja del relleno al pasar por detrás.
-- Esas dos franjas obligan a que la hoja apaisada lleve relleno de
-  desplazamiento (`scroll-pt-15`/`scroll-pb-17`, que son sus altos: 44 px de
-  botón más el relleno de cada una). Al ir con el tabulador, el navegador solo
-  desplaza hasta que el dato entra en la hoja, y el último ya estaba dentro:
-  se quedaba enfocado detrás del botón de guardar, sin verse. Si cambia el alto
-  de una franja, cambia su número.
-- La hoja apaisada mide `h-dvh` y no `h-full`: el 100% de un elemento fijo es
-  el alto de la pantalla con las barras del navegador desplegadas, así que con
-  ellas recogidas quedaría una franja de fondo por debajo. Es la misma unidad
-  con la que se miden la página (`h-dvh`) y la hoja de abajo (`82dvh`).
-- El puerto 3000 es de Organízate: usa `PORT` para levantar el servidor.
+- The brand palette is duplicated on purpose in `lib/brand.ts` (for three.js) and in
+  `app/globals.css` (for Tailwind). `lib/brand.test.ts` compares both and checks contrast;
+  change one, change the other.
+- The Content Security Policy carries a per-request nonce set in `proxy.ts`; the layout reads
+  it back for the inline theme script. Adding another inline script means passing it the nonce.
+- Deployed on Vercel at https://card.1to1digital.solutions. `NEXT_PUBLIC_SITE_URL` is set
+  there; locally it is optional (`.env.example`).
