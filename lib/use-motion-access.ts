@@ -3,16 +3,16 @@
 import { useCallback, useState, useSyncExternalStore } from "react";
 
 /**
- * Si se pueden usar los sensores de movimiento del móvil.
+ * Whether the phone's motion sensors can be used.
  *
- * - `unavailable`: no hay sensores, o se ha dicho que no.
- * - `prompt`: los hay, pero el navegador pide permiso y solo lo concede desde
- *   un gesto: hace falta un botón que lo pida (es el caso de iOS).
- * - `granted`: se pueden escuchar.
+ * - `unavailable`: there are no sensors, or permission was refused.
+ * - `prompt`: there are, but the browser asks for permission and only grants
+ *   it from a gesture: a button that asks for it is needed (the iOS case).
+ * - `granted`: they can be listened to.
  */
 export type MotionAccess = "unavailable" | "prompt" | "granted";
 
-/** El permiso que pide iOS, que no está en los tipos del DOM. */
+/** The permission iOS asks for, which is not in the DOM types. */
 type Gated = { requestPermission?: () => Promise<"granted" | "denied" | "default"> };
 
 const gates = (): Gated[] =>
@@ -26,26 +26,26 @@ const gates = (): Gated[] =>
 const needsPermission = (): boolean =>
   gates().some((gate) => typeof gate.requestPermission === "function");
 
-/** Qué ofrece este navegador. No cambia mientras la página esté abierta. */
+/** What this browser offers. It does not change while the page is open. */
 function environment(): MotionAccess {
   if (gates().length === 0) return "unavailable";
   return needsPermission() ? "prompt" : "granted";
 }
 
-/** No hay a qué suscribirse: lo que hay es lo que había al abrir la página. */
+/** There is nothing to subscribe to: what there is, is what there was on opening the page. */
 const subscribe = () => () => {};
 
-/** En el servidor no hay sensores: así el primer render coincide con el suyo. */
+/** On the server there are no sensors: that way the first render matches its own. */
 const onServer = (): MotionAccess => "unavailable";
 
 /**
- * Estado del permiso y la forma de pedirlo. La petición tiene que salir del
- * `onClick` de un botón: iOS descarta la que llega sin gesto detrás, y encima
- * se queda con el «no» hasta que se recargue la página.
+ * Permission state and the way to request it. The request has to come from a
+ * button's `onClick`: iOS discards one arriving without a gesture behind it,
+ * and on top of that it keeps the "no" until the page is reloaded.
  */
 export function useMotionAccess(): { access: MotionAccess; request: () => void } {
   const available = useSyncExternalStore(subscribe, environment, onServer);
-  // La respuesta al diálogo del sistema, mientras no la haya manda el entorno.
+  // The answer to the system dialog; while there is none, the environment rules.
   const [answer, setAnswer] = useState<MotionAccess | null>(null);
 
   const request = useCallback(() => {
@@ -56,14 +56,15 @@ export function useMotionAccess(): { access: MotionAccess; request: () => void }
           try {
             return await gate.requestPermission();
           } catch (error) {
-            // El registro es para diagnosticar, no para leer: va sin traducir.
-            console.warn("No se ha podido pedir el permiso de movimiento:", error);
+            // The log is for diagnosing, not for the visitor to read: it
+            // stays out of the dictionary.
+            console.warn("Could not request motion permission:", error);
             return "denied";
           }
         }),
       );
-      // Un «no» a cualquiera de los dos deja el botón sin nada que ofrecer:
-      // volver a pedirlo no abre otro diálogo, así que se retira.
+      // A "no" to either of the two leaves the button with nothing to offer:
+      // asking again does not open another dialog, so it is withdrawn.
       setAnswer(answers.every((given) => given === "granted") ? "granted" : "unavailable");
     })();
   }, []);

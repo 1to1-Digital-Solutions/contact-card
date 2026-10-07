@@ -1,6 +1,6 @@
 /**
- * Twitter/X necesita su propia imagen declarada: sin ella no emite
- * `twitter:image`. Es la misma que la de Open Graph, reexportada para que el
- * diseño viva en un solo sitio.
+ * Twitter/X needs its own image declared: without it, it does not emit
+ * `twitter:image`. It is the same as the Open Graph one, re-exported so the
+ * design lives in a single place.
  */
 export { default, alt, contentType, size } from "./opengraph-image";

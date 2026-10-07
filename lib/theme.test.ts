@@ -10,13 +10,13 @@ import {
   THEME_STORAGE_KEY,
 } from "./theme";
 
-describe("elección de tema", () => {
-  it("respeta los dos temas que existen", () => {
+describe("theme choice", () => {
+  it("respects the two themes that exist", () => {
     expect(parseTheme("light")).toBe("light");
     expect(parseTheme("dark")).toBe("dark");
   });
 
-  it("cae en el tema de partida si no hay nada guardado o está estropeado", () => {
+  it("falls back to the starting theme if nothing is stored or it is corrupt", () => {
     expect(parseTheme(null)).toBe(DEFAULT_THEME);
     expect(parseTheme(undefined)).toBe(DEFAULT_THEME);
     expect(parseTheme("")).toBe(DEFAULT_THEME);
@@ -25,9 +25,9 @@ describe("elección de tema", () => {
 });
 
 /**
- * Documento de mentira: lo justo que tocan el script y `applyTheme`. Arranca
- * como el HTML que emite `app/layout.tsx`, con el tema de partida puesto y el
- * `<meta>` de su color.
+ * Fake document: just what the script and `applyTheme` touch. It starts out
+ * like the HTML `app/layout.tsx` emits, with the starting theme set and the
+ * `<meta>` of its colour.
  */
 function fakeDocument({ withMeta = true } = {}) {
   const classes = new Set<string>([DEFAULT_THEME]);
@@ -45,8 +45,8 @@ function fakeDocument({ withMeta = true } = {}) {
   return { classes, meta, document };
 }
 
-/** El script en línea, con almacenamiento de mentira: `null` es «no hay nada
- *  guardado» y un objeto, «el almacenamiento está bloqueado». */
+/** The inline script, with fake storage: `null` is "nothing stored" and an
+ *  object, "storage is blocked". */
 function runThemeScript(
   stored: string | null | { broken: true },
   { withMeta = true } = {},
@@ -54,7 +54,7 @@ function runThemeScript(
   const { classes, meta, document } = fakeDocument({ withMeta });
   const localStorage = {
     getItem(key: string) {
-      if (stored && typeof stored === "object") throw new Error("bloqueado");
+      if (stored && typeof stored === "object") throw new Error("blocked");
       return key === THEME_STORAGE_KEY ? stored : null;
     },
   };
@@ -63,72 +63,73 @@ function runThemeScript(
   return { classes, meta };
 }
 
-/** Solo las clases, que es lo que mira la mayoría de las comprobaciones. */
+/** Just the classes, which is what most of the checks look at. */
 const classesAfter = (stored: string | null | { broken: true }) => [
   ...runThemeScript(stored).classes,
 ];
 
 /**
- * El script en línea es lo que evita ver la página un instante con el tema
- * que no es, y corre antes que nada: si deja mal la clase de `<html>`, no hay
- * segunda oportunidad.
+ * The inline script is what prevents seeing the page for an instant with the
+ * wrong theme, and it runs before anything else: if it leaves the `<html>`
+ * class wrong, there is no second chance.
  */
-describe("script que fija el tema antes de pintar", () => {
-  it("pone el tema que se recordó", () => {
+describe("script that sets the theme before paint", () => {
+  it("sets the theme that was remembered", () => {
     expect(classesAfter("light")).toEqual(["light"]);
     expect(classesAfter("dark")).toEqual(["dark"]);
   });
 
-  it("deja el de partida si no hay nada guardado", () => {
+  it("leaves the starting one if nothing is stored", () => {
     expect(classesAfter(null)).toEqual([DEFAULT_THEME]);
   });
 
-  it("deja el de partida si el almacenamiento está bloqueado", () => {
+  it("leaves the starting one if storage is blocked", () => {
     expect(classesAfter({ broken: true })).toEqual([DEFAULT_THEME]);
   });
 
-  it("nunca deja los dos temas puestos a la vez", () => {
+  it("never leaves both themes set at once", () => {
     for (const stored of ["light", "dark", null] as const) {
       expect(classesAfter(stored)).toHaveLength(1);
     }
   });
 
   /**
-   * El marco del navegador (la barra de direcciones en el móvil) sale con el
-   * color del tema de partida porque los metadatos de Next son estáticos: si
-   * el script no lo corrigiera, al volver con el tema claro recordado la barra
-   * se vería oscura sobre una página clara.
+   * The browser chrome (the address bar on a phone) comes out with the colour
+   * of the starting theme because Next's metadata is static: if the script
+   * did not fix it, coming back with the light theme remembered would show a
+   * dark bar over a light page.
    */
-  it("deja el `theme-color` del tema que acaba de poner", () => {
+  it("leaves the `theme-color` of the theme it has just set", () => {
     expect(runThemeScript("light").meta.content).toBe(THEMES.light.backdrop);
     expect(runThemeScript("dark").meta.content).toBe(THEMES.dark.backdrop);
     expect(runThemeScript(null).meta.content).toBe(THEMES[DEFAULT_THEME].backdrop);
   });
 
-  it("no revienta si el `<meta>` todavía no está en el documento", () => {
+  it("does not blow up if the `<meta>` is not in the document yet", () => {
     expect(() => runThemeScript("light", { withMeta: false })).not.toThrow();
   });
 });
 
 /**
- * La otra mitad del tema: la que corre al pulsar el botón. `applyTheme` hace
- * sobre el documento lo mismo que el script en línea, pero escrito aparte
- * (uno es una cadena para el HTML y la otra, código del cliente), así que aquí
- * se les pide el mismo resultado para que no se separen.
+ * The other half of the theme: the one that runs when the button is pressed.
+ * `applyTheme` does to the document the same as the inline script, but
+ * written separately (one is a string for the HTML and the other, client
+ * code), so here they are asked for the same result so they do not drift
+ * apart.
  */
-describe("cambio de tema al pulsar el botón", () => {
+describe("theme change on button press", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  /** Deja el documento de mentira como el activo y devuelve lo que se le mira. */
+  /** Makes the fake document the active one and returns what gets inspected. */
   function withDocument({ withMeta = true } = {}) {
     const dom = fakeDocument({ withMeta });
     vi.stubGlobal("document", dom.document);
     return dom;
   }
 
-  it("pone el tema pedido y nunca deja los dos a la vez", () => {
+  it("sets the requested theme and never leaves both at once", () => {
     const dom = withDocument();
     for (const theme of ["light", "dark", "light"] as const) {
       applyTheme(theme);
@@ -136,7 +137,7 @@ describe("cambio de tema al pulsar el botón", () => {
     }
   });
 
-  it("mueve el `theme-color` con el tema, no solo la clase", () => {
+  it("moves the `theme-color` along with the theme, not just the class", () => {
     const dom = withDocument();
     applyTheme("light");
     expect(dom.meta.content).toBe(THEMES.light.backdrop);
@@ -144,12 +145,12 @@ describe("cambio de tema al pulsar el botón", () => {
     expect(dom.meta.content).toBe(THEMES.dark.backdrop);
   });
 
-  it("no revienta si el `<meta>` no está en el documento", () => {
+  it("does not blow up if the `<meta>` is not in the document", () => {
     withDocument({ withMeta: false });
     expect(() => applyTheme("light")).not.toThrow();
   });
 
-  it("lee de `<html>` el tema que acaba de dejar puesto", () => {
+  it("reads from `<html>` the theme it has just set", () => {
     withDocument();
     applyTheme("light");
     expect(readTheme()).toBe("light");
@@ -158,13 +159,13 @@ describe("cambio de tema al pulsar el botón", () => {
   });
 
   /**
-   * Si en `<html>` no hay ninguna de las dos clases del tema —el script falló,
-   * o lo que hay es una clase de otra cosa—, la interfaz debe seguir enseñando
-   * el tema con el que se pintó la página. Ninguno de los dos temas puede ser
-   * el que se dé por supuesto al no encontrar el otro.
+   * If `<html>` has neither of the two theme classes —the script failed, or
+   * what is there is a class for something else—, the interface must keep
+   * showing the theme the page was painted with. Neither theme can be the one
+   * assumed when the other is not found.
    */
   it.each([[], ["antialiased"]])(
-    "cae en el tema de partida si `<html>` no trae ninguna de las dos clases (%s)",
+    "falls back to the starting theme if `<html>` has neither of the two classes (%s)",
     (...classes) => {
       const dom = withDocument();
       dom.classes.clear();
@@ -174,7 +175,7 @@ describe("cambio de tema al pulsar el botón", () => {
   );
 
   it.each(["light", "dark"] as const)(
-    "lee la clase `%s` puesta a mano, sin pasar por `applyTheme`",
+    "reads the `%s` class set by hand, without going through `applyTheme`",
     (theme) => {
       const dom = withDocument();
       dom.classes.clear();
@@ -183,7 +184,7 @@ describe("cambio de tema al pulsar el botón", () => {
     },
   );
 
-  it("deja el documento igual que el script en línea", () => {
+  it("leaves the document the same as the inline script", () => {
     for (const theme of ["light", "dark"] as const) {
       const script = runThemeScript(theme);
       const dom = withDocument();

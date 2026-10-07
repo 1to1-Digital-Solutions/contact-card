@@ -1,15 +1,15 @@
 /**
- * Gestos que dan la vuelta a la tarjeta sin pasar por los botones: dos
- * toques rápidos sobre ella y sacarla de la pantalla arrastrándola.
+ * Gestures that flip the card without going through the buttons: two quick
+ * taps on it, and dragging it off the screen.
  *
- * Son funciones puras sobre coordenadas de pantalla, marcas de tiempo y
- * medidas de mundo para poder probarlas sin montar la escena 3D. El
- * componente solo decide cuándo preguntar.
+ * They are pure functions over screen coordinates, timestamps and world
+ * measurements so they can be tested without mounting the 3D scene. The
+ * component only decides when to ask.
  */
 
 /**
- * Un toque: qué dedo lo dio, dónde cayó —en píxeles de pantalla— y cuándo,
- * en milisegundos.
+ * A tap: which finger made it, where it landed (in screen pixels) and when,
+ * in milliseconds.
  */
 export type PointerMark = {
   pointerId: number;
@@ -19,30 +19,30 @@ export type PointerMark = {
 };
 
 /**
- * Un toque cuenta como tal si es corto y queda quieto: por debajo de estos
- * umbrales cabe el temblor del dedo, por encima el usuario está arrastrando
- * la tarjeta y no pidiendo nada.
+ * A tap counts as one if it is short and stays put: below these thresholds
+ * there is room for a trembling finger; above them the user is dragging the
+ * card, not asking for anything.
  */
 const TAP = { maxDuration: 350, maxDistance: 16 };
 
 /**
- * Dos toques valen por uno doble si van seguidos y caen casi en el mismo
- * sitio. La ventana es la que dan por buena las plataformas para el doble
- * toque (medio segundo largo): con menos, un dedo normal se queda fuera. La
- * distancia es mayor que la de un solo toque porque el dedo se levanta y
- * vuelve, y no aterriza dos veces en el mismo píxel.
+ * Two taps count as a double tap if they come one after the other and land
+ * almost in the same place. The window is the one platforms accept for a
+ * double tap (a long half second): with less, an ordinary finger is left
+ * out. The distance is larger than for a single tap because the finger
+ * lifts and comes back, and it does not land twice on the same pixel.
  */
 const DOUBLE_TAP = { maxGap: 450, maxDistance: 44 };
 
 /**
- * Parte del lado de la tarjeta que debe seguir dentro de la vista para
- * considerarla en pantalla. Se pide un cuarto y no la nada porque con el
- * dedo no se puede empujar la tarjeta más allá del borde: lo que asoma a
- * partir de ahí ya se lee como que la tarjeta se ha ido.
+ * Share of a card side that must remain inside the view for the card to
+ * count as on screen. A quarter is required rather than nothing because a
+ * finger cannot push the card past the edge: what peeks out beyond that
+ * point already reads as the card having gone.
  */
 const MIN_VISIBLE_SHARE = 0.25;
 
-/** Tarjeta en coordenadas de mundo: su centro y sus medios lados. */
+/** The card in world coordinates: its centre and its half sides. */
 export type CardBox = {
   x: number;
   y: number;
@@ -50,7 +50,7 @@ export type CardBox = {
   halfHeight: number;
 };
 
-/** Mitad del ancho y del alto visibles, en las mismas unidades de mundo. */
+/** Half of the visible width and height, in the same world units. */
 export type ViewBox = {
   halfWidth: number;
   halfHeight: number;
@@ -61,9 +61,10 @@ function distance(a: PointerMark, b: PointerMark): number {
 }
 
 /**
- * Se exige el mismo dedo en los dos extremos: con dos dedos apoyados sobre
- * la tarjeta, el segundo pisa la marca del primero, y sin esta comprobación
- * el `pointerup` de uno se mediría contra el `pointerdown` del otro.
+ * The same finger is required at both ends: with two fingers resting on the
+ * card, the second overwrites the mark of the first, and without this check
+ * the `pointerup` of one would be measured against the `pointerdown` of the
+ * other.
  */
 export function isTap(down: PointerMark, up: PointerMark): boolean {
   return (
@@ -74,8 +75,8 @@ export function isTap(down: PointerMark, up: PointerMark): boolean {
 }
 
 /**
- * Aquí no se compara el dedo: en una pantalla táctil cada toque estrena
- * `pointerId`, así que exigirlo dejaría el doble toque solo para el ratón.
+ * The finger is not compared here: on a touch screen every tap gets a fresh
+ * `pointerId`, so requiring it would leave the double tap to the mouse only.
  */
 export function isDoubleTap(previous: PointerMark | null, tap: PointerMark): boolean {
   if (!previous) return false;
@@ -85,23 +86,23 @@ export function isDoubleTap(previous: PointerMark | null, tap: PointerMark): boo
   );
 }
 
-/** Qué hacer al terminar un toque, y con qué toque se queda la memoria. */
+/** What to do when a tap ends, and which tap the memory keeps. */
 export type TapReading = {
-  /** ¿Toca dar media vuelta a la tarjeta? */
+  /** Is it time to give the card a half turn? */
   flip: boolean;
-  /** Último toque completado, o `null` si la cuenta vuelve a empezar. */
+  /** Last completed tap, or `null` if the count starts over. */
   lastTap: PointerMark | null;
 };
 
 /**
- * Lee el gesto que acaba de terminar sobre la tarjeta.
+ * Reads the gesture that has just ended on the card.
  *
- * `down` es opcional porque el mismo `pointerup` entra varias veces en el
- * manejador —una por cada malla que atraviesa el rayo— y el componente
- * consume la marca al leerla: las entregas siguientes llegan sin ella y no
- * deben contar. Lo que no llega a toque (un arrastre) deja la memoria como
- * estaba, y el segundo de un par la vacía para que un tercer toque empiece
- * cuenta nueva en vez de dar media vuelta más.
+ * `down` is optional because the same `pointerup` enters the handler several
+ * times (once per mesh the ray passes through) and the component consumes
+ * the mark when it reads it: the following deliveries arrive without it and
+ * must not count. Whatever falls short of a tap (a drag) leaves the memory
+ * as it was, and the second tap of a pair clears it so that a third tap
+ * starts a new count instead of adding another half turn.
  */
 export function readTap(
   down: PointerMark | null,
@@ -114,9 +115,10 @@ export function readTap(
 }
 
 /**
- * Parte de un lado que cae dentro de la vista, de 0 (fuera) a 1 (entero).
- * Se mide contra el solapamiento máximo posible —el menor de los dos
- * lados— para que un lado más largo que la pantalla no cuente como fuera.
+ * Share of a side that falls inside the view, from 0 (outside) to 1 (whole).
+ * It is measured against the largest possible overlap (the shorter of the
+ * two sides) so that a side longer than the screen does not count as
+ * outside.
  */
 function visibleShare(center: number, half: number, viewHalf: number): number {
   const span = Math.min(2 * half, 2 * viewHalf);
@@ -127,9 +129,9 @@ function visibleShare(center: number, half: number, viewHalf: number): number {
 }
 
 /**
- * ¿La tarjeta se ha salido de la vista? Basta con que se vaya por un eje.
- * Se mide con el rectángulo sin girar: mientras gira ocupa menos, así que
- * el criterio peca de prudente y nunca dispara antes de tiempo.
+ * Has the card left the view? Leaving along one axis is enough. It is
+ * measured with the unrotated rectangle: while it spins it takes up less,
+ * so the criterion errs on the cautious side and never fires too early.
  */
 export function hasLeftView(card: CardBox, view: ViewBox): boolean {
   return (

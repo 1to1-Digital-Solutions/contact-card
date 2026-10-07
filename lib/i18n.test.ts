@@ -11,93 +11,95 @@ import {
 } from "./i18n";
 
 /**
- * La cabecera `Accept-Language` es lo único que decide en qué idioma llega la
- * tarjeta, y llega una sola vez: no hay segunda oportunidad en el cliente. La
- * escriben navegadores muy distintos —con regiones, con pesos, con comodines
- * y a veces mal—, así que aquí se prueba con lo que mandan de verdad.
+ * The `Accept-Language` header is the only thing that decides which language
+ * the card arrives in, and it arrives only once: there is no second chance on
+ * the client. Very different browsers write it —with regions, with weights,
+ * with wildcards and sometimes badly—, so here it is tested with what they
+ * really send.
  */
 describe("pickLanguage", () => {
-  it("sirve el idioma de recurso cuando no hay cabecera", () => {
+  it("serves the fallback language when there is no header", () => {
     expect(pickLanguage(null)).toBe(DEFAULT_LANGUAGE);
     expect(pickLanguage(undefined)).toBe(DEFAULT_LANGUAGE);
     expect(pickLanguage("")).toBe(DEFAULT_LANGUAGE);
   });
 
-  it("sirve el idioma de recurso cuando no se pide ninguno de los nuestros", () => {
+  it("serves the fallback language when none of ours is requested", () => {
     expect(pickLanguage("de-DE,de;q=0.9,it;q=0.8")).toBe("es");
   });
 
-  it("entiende una cabecera simple, con o sin región", () => {
+  it("understands a simple header, with or without region", () => {
     expect(pickLanguage("en")).toBe("en");
     expect(pickLanguage("en-GB")).toBe("en");
     expect(pickLanguage("es-419")).toBe("es");
   });
 
-  it("no distingue mayúsculas ni se atraganta con los espacios", () => {
+  it("ignores case and does not choke on whitespace", () => {
     expect(pickLanguage("EN-US, es;q=0.5")).toBe("en");
     expect(pickLanguage("  en  ")).toBe("en");
   });
 
-  it("elige el idioma servido con más peso, no el primero de la lista", () => {
+  it("picks the served language with the highest weight, not the first in the list", () => {
     expect(pickLanguage("en;q=0.4,es;q=0.9")).toBe("es");
     expect(pickLanguage("es;q=0.3,en;q=0.8")).toBe("en");
   });
 
-  it("salta los idiomas que no servimos aunque pesen más", () => {
+  it("skips the languages we do not serve even when they weigh more", () => {
     expect(pickLanguage("fr-FR,fr;q=0.9,en;q=0.8,es;q=0.7")).toBe("en");
   });
 
-  it("a igual peso respeta el orden en el que los puso el navegador", () => {
+  it("on equal weight respects the order the browser put them in", () => {
     expect(pickLanguage("en,es")).toBe("en");
     expect(pickLanguage("es,en")).toBe("es");
     expect(pickLanguage("en;q=0.8,es;q=0.8")).toBe("en");
   });
 
-  it("descarta el idioma que el navegador rechaza con `q=0`", () => {
+  it("discards the language the browser rejects with `q=0`", () => {
     expect(pickLanguage("en;q=0")).toBe(DEFAULT_LANGUAGE);
     expect(pickLanguage("es;q=0,en;q=0.5")).toBe("en");
   });
 
-  it("resuelve el comodín con el idioma de recurso", () => {
+  it("resolves the wildcard to the fallback language", () => {
     expect(pickLanguage("*")).toBe(DEFAULT_LANGUAGE);
     expect(pickLanguage("en;q=0.2,*;q=0.9")).toBe(DEFAULT_LANGUAGE);
   });
 
-  it("descarta las entradas con un peso que no es un peso", () => {
+  it("discards entries whose weight is not a weight", () => {
     expect(pickLanguage("en;q=alto")).toBe(DEFAULT_LANGUAGE);
     expect(pickLanguage("en;q=2")).toBe(DEFAULT_LANGUAGE);
     expect(pickLanguage("en;q=-1,es;q=0.1")).toBe("es");
   });
 
-  it("aguanta una cabecera rota sin dejar la página sin idioma", () => {
+  it("survives a broken header without leaving the page languageless", () => {
     expect(pickLanguage(",,;;,")).toBe(DEFAULT_LANGUAGE);
     expect(pickLanguage("=?!")).toBe(DEFAULT_LANGUAGE);
-    // Basura por delante, pero la petición legítima sigue ahí.
+    // Garbage up front, but the legitimate request is still there.
     expect(pickLanguage(";;;,en;q=0.9")).toBe("en");
   });
 });
 
 /**
- * La otra fuente de idioma: la preferencia que dejó el conmutador. A
- * diferencia de la cabecera, aquí no vale caer en el idioma de recurso cuando
- * el valor no sirve —eso taparía la negociación con el navegador—, así que lo
- * que se comprueba es que distinga «no hay nada» de «pidió español».
+ * The other source of language: the preference the switcher left behind.
+ * Unlike the header, falling back to the fallback language when the value is
+ * unusable is not acceptable here —it would mask the negotiation with the
+ * browser—, so what gets checked is that it tells "there is nothing" from
+ * "asked for Spanish".
  */
 describe("parseLanguage", () => {
-  it("reconoce los idiomas que servimos", () => {
+  it("recognises the languages we serve", () => {
     expect(parseLanguage("es")).toBe("es");
     expect(parseLanguage("en")).toBe("en");
   });
 
-  it("devuelve `null` cuando no hay preferencia guardada", () => {
+  it("returns `null` when there is no stored preference", () => {
     expect(parseLanguage(null)).toBeNull();
     expect(parseLanguage(undefined)).toBeNull();
     expect(parseLanguage("")).toBeNull();
   });
 
-  it("devuelve `null` con cualquier otro valor, sin caer en el de recurso", () => {
-    // Ni un idioma que no servimos, ni uno nuestro con región o en mayúsculas:
-    // esto no es una cabecera que negociar, es un valor que escribimos nosotros.
+  it("returns `null` for any other value, without falling back to the default", () => {
+    // Neither a language we do not serve, nor one of ours with a region or in
+    // upper case: this is not a header to negotiate, it is a value we wrote.
     for (const value of ["de", "es-ES", "EN", " es", "null", "<script>"]) {
       expect(parseLanguage(value)).toBeNull();
     }
@@ -109,7 +111,7 @@ describe("rememberLanguage", () => {
     vi.unstubAllGlobals();
   });
 
-  /** Documento de mentira: solo la cookie, que es lo único que se escribe. */
+  /** Fake document: just the cookie, which is the only thing that gets written. */
   function withDocument({ protocol = "https:" } = {}) {
     const document = { cookie: "" };
     vi.stubGlobal("document", document);
@@ -117,16 +119,16 @@ describe("rememberLanguage", () => {
     return document;
   }
 
-  /** Los atributos de la cookie, sin el par `nombre=valor` de delante. */
+  /** The cookie attributes, without the leading `name=value` pair. */
   function attributes(cookie: string) {
     return cookie.split(";").slice(1).map((part) => part.trim());
   }
 
   /**
-   * El nombre y el valor tienen que ser exactamente los que espera el
-   * servidor: si se separan, la elección se escribe y no la lee nadie.
+   * The name and the value have to be exactly what the server expects: if they
+   * drift apart, the choice gets written and nobody reads it.
    */
-  it.each(LANGUAGES)("guarda el idioma elegido (%s) donde lo lee el servidor", (language) => {
+  it.each(LANGUAGES)("stores the chosen language (%s) where the server reads it", (language) => {
     const document = withDocument();
     rememberLanguage(language);
 
@@ -134,7 +136,7 @@ describe("rememberLanguage", () => {
     expect(parseLanguage(document.cookie.split(";")[0].split("=")[1])).toBe(language);
   });
 
-  it("la guarda para todo el sitio y durante un año", () => {
+  it("stores it for the whole site and for a year", () => {
     const document = withDocument();
     rememberLanguage("en");
 
@@ -142,8 +144,8 @@ describe("rememberLanguage", () => {
     expect(attributes(document.cookie)).toContain(`Max-Age=${60 * 60 * 24 * 365}`);
   });
 
-  /** No se manda a terceros: la preferencia no tiene por qué viajar fuera. */
-  it("la limita al propio sitio", () => {
+  /** It is not sent to third parties: the preference has no reason to travel outside. */
+  it("restricts it to the site itself", () => {
     const document = withDocument();
     rememberLanguage("en");
 
@@ -151,14 +153,14 @@ describe("rememberLanguage", () => {
   });
 
   /**
-   * `Secure` en producción, pero no en desarrollo: sobre `http` el navegador
-   * descarta la cookie sin decir nada y la preferencia se perdería justo donde
-   * se prueba.
+   * `Secure` in production, but not in development: over `http` the browser
+   * silently drops the cookie and the preference would be lost exactly where
+   * it is tested.
    */
   it.each([
     ["https:", true],
     ["http:", false],
-  ])("solo la marca `Secure` sobre HTTPS (%s)", (protocol, marked) => {
+  ])("only marks it `Secure` over HTTPS (%s)", (protocol, marked) => {
     const document = withDocument({ protocol });
     rememberLanguage("en");
 
@@ -166,12 +168,12 @@ describe("rememberLanguage", () => {
   });
 
   /**
-   * Donde las cookies están prohibidas —un `iframe` en cajón de arena—,
-   * escribirlas lanza. Eso no puede llevarse por delante el clic: el idioma ya
-   * ha cambiado en la página y lo único que se pierde es recordarlo, igual que
-   * con el tema cuando el almacenamiento está bloqueado.
+   * Where cookies are forbidden —a sandboxed `iframe`—, writing them throws.
+   * That cannot take the click down with it: the language has already changed
+   * on the page and the only thing lost is remembering it, just like the theme
+   * when storage is blocked.
    */
-  it("no revienta si el navegador prohíbe escribir cookies", () => {
+  it("does not blow up if the browser forbids writing cookies", () => {
     vi.stubGlobal("location", { protocol: "https:" });
     vi.stubGlobal("document", {
       set cookie(_value: string) {
@@ -188,7 +190,7 @@ describe("rememberLanguage", () => {
 });
 
 describe("nextLanguage", () => {
-  it("pasa por todos los idiomas y vuelve al principio", () => {
+  it("goes through every language and wraps back to the start", () => {
     let language: Language = LANGUAGES[0];
     const visited: Language[] = [language];
     for (let step = 1; step < LANGUAGES.length; step++) {

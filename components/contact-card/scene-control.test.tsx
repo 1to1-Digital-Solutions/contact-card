@@ -13,45 +13,46 @@ import {
 } from "./scene-control";
 
 /**
- * En un móvil el mando enseña solo el icono, así que el rótulo deja de estar a
- * la vista y el botón se queda sin nombre si nadie lo pone aparte. Eso no se
- * ve mirando la pantalla —el botón sigue ahí, con su dibujo— y solo se nota
- * con un lector de pantalla o al pulsarlo por voz.
+ * On a phone the control shows only the icon, so the label is no longer in
+ * view and the button is left without a name if nobody provides one
+ * separately. That does not show by looking at the screen —the button is
+ * still there, with its drawing— and is only noticed with a screen reader or
+ * when activating it by voice.
  */
 
 const ICONS = [
-  ["voltear", <FlipIcon key="flip" />],
-  ["recolocar", <RecenterIcon key="recenter" />],
-  ["ver los datos", <DetailsIcon key="details" />],
-  ["compartir", <ShareIcon key="share" />],
-  // El del permiso de los sensores, que solo sale en un móvil: ahí es donde
-  // el rótulo no se ve nunca y el nombre accesible es todo lo que hay.
-  ["usar el movimiento", <MotionIcon key="motion" />],
-  // Los dos avisos del mando de compartir: el rótulo no cambia con ellos, así
-  // que el botón sigue teniendo nombre mientras se enseña el resultado.
-  ["compartir, hecho", <DoneIcon key="done" />],
-  ["compartir, fallido", <FailedIcon key="failed" />],
+  ["flip", <FlipIcon key="flip" />],
+  ["recenter", <RecenterIcon key="recenter" />],
+  ["show the data", <DetailsIcon key="details" />],
+  ["share", <ShareIcon key="share" />],
+  // The sensors permission one, which only shows on a phone: that is where
+  // the label is never seen and the accessible name is all there is.
+  ["use motion", <MotionIcon key="motion" />],
+  // The two feedback states of the share control: the label does not change
+  // with them, so the button still has a name while the outcome is shown.
+  ["share, done", <DoneIcon key="done" />],
+  ["share, failed", <FailedIcon key="failed" />],
 ] as const;
 
 const render = (label: string, icon: ReactNode) =>
   renderToStaticMarkup(<SceneControl label={label} icon={icon} onClick={() => {}} />);
 
-describe("mando de la escena", () => {
-  it.each(ICONS)("anuncia el rótulo del mando de %s", (label, icon) => {
+describe("scene control", () => {
+  it.each(ICONS)("announces the label of the %s control", (label, icon) => {
     expect(render(label, icon)).toContain(`aria-label="${label}"`);
   });
 
-  it("deja el rótulo escrito para cuando la pantalla lo enseñe", () => {
-    // El nombre accesible tiene que contener el texto visible para poder
-    // pulsar el botón por voz (WCAG 2.5.3): aquí son la misma cadena.
-    const markup = render("Recolocar", <RecenterIcon />);
-    expect(markup).toContain(">Recolocar</span>");
-    expect(markup).toContain('aria-label="Recolocar"');
+  it("keeps the label written out for when the screen shows it", () => {
+    // The accessible name has to contain the visible text so the button can
+    // be activated by voice (WCAG 2.5.3): here they are the same string.
+    const markup = render("Recenter", <RecenterIcon />);
+    expect(markup).toContain(">Recenter</span>");
+    expect(markup).toContain('aria-label="Recenter"');
   });
 
-  it.each(ICONS)("no le da voz al icono de %s", (label, icon) => {
+  it.each(ICONS)("gives the %s icon no voice", (label, icon) => {
     const markup = render(label, icon);
-    // El icono repite lo que ya dice la etiqueta: anunciarlo sobra.
+    // The icon repeats what the label already says: announcing it is redundant.
     expect(markup).toContain('<svg aria-hidden="true"');
     expect(markup.match(/aria-hidden="true"/g)).toHaveLength(1);
   });

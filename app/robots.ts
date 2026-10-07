@@ -2,16 +2,16 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
 /**
- * Es una tarjeta de contacto pública: interesa que la encuentren tanto los
- * buscadores como los motores de IA que citan fuentes. Los bots de
- * entrenamiento se dejan permitidos de forma explícita; si algún día no
- * debe cederse el contenido para entrenar, se cambian a `disallow`.
+ * It is a public contact card: it is in our interest that both search
+ * engines and the AI engines that cite sources find it. Training bots are
+ * explicitly left allowed; if one day the content must not be handed over
+ * for training, they are switched to `disallow`.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: "*", allow: "/" }],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    // `Host` es un nombre de dominio, sin esquema: con él se ignora la directiva.
+    // `Host` is a domain name, without scheme: with one, the directive is ignored.
     host: new URL(SITE_URL).host,
   };
 }

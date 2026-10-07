@@ -1,17 +1,17 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * `pending` mientras el HTML del servidor aún no se ha hidratado; después,
- * si el navegador puede pintar en 3D o no.
+ * `pending` while the server HTML has not hydrated yet; afterwards, whether
+ * the browser can paint in 3D or not.
  */
 export type WebGLStatus = "pending" | "ready" | "unsupported";
 
 let cached: WebGLStatus | null = null;
 
 /**
- * Si el navegador no puede con WebGL —deshabilitado, driver bloqueado,
- * navegador antiguo— no es un error que reportar: la página enseña la
- * versión plana de la tarjeta, con exactamente los mismos datos.
+ * If the browser cannot handle WebGL —disabled, blocked driver, old browser—
+ * it is not an error to report: the page shows the flat version of the card,
+ * with exactly the same data.
  */
 function detect(): WebGLStatus {
   try {
@@ -32,7 +32,7 @@ function getServerSnapshot(): WebGLStatus {
   return "pending";
 }
 
-/** La capacidad no cambia durante la vida de la página: no hay a qué suscribirse. */
+/** The capability does not change during the page's lifetime: there is nothing to subscribe to. */
 const subscribe = () => () => {};
 
 export function useWebGLStatus(): WebGLStatus {

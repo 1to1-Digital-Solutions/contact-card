@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { STILL, stepShake } from "./shake";
 
-/** Una lectura del acelerómetro, si el navegador la ha entregado entera. */
+/** One accelerometer reading, if the browser delivered it whole. */
 function accelerationOf(
   reading: DeviceMotionEventAcceleration | null,
 ): { x: number; y: number; z: number } | null {
@@ -14,12 +14,12 @@ function accelerationOf(
 }
 
 /**
- * Avisa cuando se agita el móvil.
+ * Notifies when the phone is shaken.
  *
- * Se prefiere la aceleración sin la gravedad, que es la que mide el gesto de
- * verdad; donde no la hay se usa la otra, y el detector le quita la gravedad
- * por su cuenta. El aviso va en un ref para no volver a suscribirse al sensor
- * cada vez que quien escucha cambie de manejador.
+ * The acceleration without gravity is preferred, which is the one that really
+ * measures the gesture; where it is not available the other one is used, and
+ * the detector removes gravity on its own. The callback goes in a ref so as
+ * not to resubscribe to the sensor every time the listener changes handler.
  */
 export function useShake(enabled: boolean, onShake: () => void): void {
   const shaken = useRef(onShake);

@@ -12,14 +12,15 @@ import {
 import { SITE_URL } from "./site";
 
 /**
- * Tres caminos y ninguno se puede probar en un navegador de verdad: el diálogo
- * del sistema no se abre sin un gesto humano y no se puede cancelar desde un
- * test. Por eso `shareCard` recibe lo que usa en vez de ir a buscarlo.
+ * Three paths and none of them can be tested in a real browser: the system
+ * dialog does not open without a human gesture and cannot be cancelled from a
+ * test. That is why `shareCard` receives what it uses instead of going to
+ * fetch it.
  */
 
-const TARGET: ShareTarget = { title: "Tarjeta", url: "https://ejemplo.test" };
+const TARGET: ShareTarget = { title: "Card", url: "https://example.test" };
 
-/** Las herramientas del navegador, todas espiadas y con el diálogo puesto. */
+/** The browser tools, all spied on and with the dialog present. */
 function toolsWith(overrides: Partial<ShareTools> = {}) {
   return {
     share: vi.fn(async () => {}),
@@ -29,11 +30,11 @@ function toolsWith(overrides: Partial<ShareTools> = {}) {
   } satisfies ShareTools;
 }
 
-/** Cancelar el diálogo llega así desde el navegador. */
+/** Cancelling the dialog arrives like this from the browser. */
 const dismissal = () => new DOMException("Share canceled", "AbortError");
 
 describe("shareCard", () => {
-  it("usa el diálogo del sistema cuando el navegador lo trae", async () => {
+  it("uses the system dialog when the browser has it", async () => {
     const tools = toolsWith();
 
     await expect(shareCard(TARGET, tools)).resolves.toBe("shared");
@@ -42,7 +43,7 @@ describe("shareCard", () => {
     expect(tools.warn).not.toHaveBeenCalled();
   });
 
-  it("copia el enlace cuando no hay diálogo del sistema", async () => {
+  it("copies the link when there is no system dialog", async () => {
     const tools = toolsWith({ share: undefined });
 
     await expect(shareCard(TARGET, tools)).resolves.toBe("copied");
@@ -50,18 +51,18 @@ describe("shareCard", () => {
     expect(tools.warn).not.toHaveBeenCalled();
   });
 
-  it("no cuenta como fallo cerrar el diálogo sin compartir", async () => {
+  it("does not count closing the dialog without sharing as a failure", async () => {
     const tools = toolsWith({ share: vi.fn(async () => Promise.reject(dismissal())) });
 
     await expect(shareCard(TARGET, tools)).resolves.toBe("dismissed");
-    // Ni aviso de error ni copia a la espalda: quien cancela quiere quedarse
-    // como estaba, no acabar con el enlace en el portapapeles.
+    // Neither an error notice nor a copy behind their back: whoever cancels
+    // wants to stay as they were, not end up with the link on the clipboard.
     expect(tools.warn).not.toHaveBeenCalled();
     expect(tools.copy).not.toHaveBeenCalled();
   });
 
-  it("cae en copiar el enlace si el diálogo del sistema revienta", async () => {
-    const broken = new TypeError("share no disponible aquí");
+  it("falls back to copying the link if the system dialog blows up", async () => {
+    const broken = new TypeError("share not available here");
     const tools = toolsWith({ share: vi.fn(async () => Promise.reject(broken)) });
 
     await expect(shareCard(TARGET, tools)).resolves.toBe("copied");
@@ -69,8 +70,8 @@ describe("shareCard", () => {
     expect(tools.warn).toHaveBeenCalledWith(broken);
   });
 
-  it("avisa cuando tampoco se puede copiar", async () => {
-    const denied = new Error("portapapeles bloqueado");
+  it("warns when copying fails too", async () => {
+    const denied = new Error("clipboard blocked");
     const tools = toolsWith({ share: undefined, copy: vi.fn(async () => Promise.reject(denied)) });
 
     await expect(shareCard(TARGET, tools)).resolves.toBe("failed");
@@ -79,25 +80,25 @@ describe("shareCard", () => {
 });
 
 describe("shareFeedback", () => {
-  it("confirma la copia como cualquier otro dato copiado", () => {
+  it("confirms the copy like any other copied field", () => {
     expect(shareFeedback("copied")).toBe("done");
   });
 
-  it("solo enseña el fallo cuando no quedaba nada que intentar", () => {
+  it("only shows the failure when there was nothing left to try", () => {
     expect(shareFeedback("failed")).toBe("failed");
   });
 
-  it("se calla cuando lo recogió el diálogo del sistema", () => {
-    // El diálogo ya es la confirmación: un aviso encima sobra.
+  it("stays quiet when the system dialog took it", () => {
+    // The dialog already is the confirmation: a notice on top is redundant.
     expect(shareFeedback("shared")).toBeNull();
   });
 
-  it("se calla también cuando el diálogo se cerró sin compartir", () => {
+  it("stays quiet too when the dialog was closed without sharing", () => {
     expect(shareFeedback("dismissed")).toBeNull();
   });
 
-  /** Lo que de verdad hace el botón: los dos trozos, uno detrás del otro. */
-  it("no enseña ningún aviso a quien cancela el diálogo del sistema", async () => {
+  /** What the button really does: the two pieces, one after the other. */
+  it("shows no notice to whoever cancels the system dialog", async () => {
     const tools = toolsWith({ share: vi.fn(async () => Promise.reject(dismissal())) });
 
     expect(shareFeedback(await shareCard(TARGET, tools))).toBeNull();
@@ -105,19 +106,19 @@ describe("shareFeedback", () => {
 });
 
 describe("shareTarget", () => {
-  it.each(LANGUAGES)("manda la dirección canónica del sitio en %s", (language) => {
-    // No `location.href`: al enlace de la barra le sobran los parámetros de
-    // campaña y el `#` con los que se haya llegado hasta aquí.
+  it.each(LANGUAGES)("sends the site's canonical address in %s", (language) => {
+    // Not `location.href`: the address bar link carries the campaign
+    // parameters and the `#` it was reached with, and none of that belongs.
     expect(shareTarget(language).url).toBe(SITE_URL);
   });
 
-  it.each(LANGUAGES)("titula la tarjeta con el texto de %s", (language) => {
+  it.each(LANGUAGES)("titles the card with the text in %s", (language) => {
     expect(shareTarget(language).title).toBe(
       dictionary(language).meta.title(CONTACT.name),
     );
   });
 
-  it("dice el título en el idioma que se está viendo", () => {
+  it("says the title in the language being viewed", () => {
     const titles = LANGUAGES.map((language) => shareTarget(language).title);
     expect(new Set(titles).size).toBe(LANGUAGES.length);
     for (const title of titles) expect(title).toContain(CONTACT.name);

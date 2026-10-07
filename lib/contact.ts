@@ -1,46 +1,47 @@
 /**
- * Fuente única de verdad de los datos de contacto.
- * Todo lo que se pinta (tarjeta 3D, panel HTML, vCard, JSON-LD) sale de aquí.
+ * Single source of truth for the contact details.
+ * Everything that gets drawn (3D card, HTML panel, vCard, JSON-LD) comes from here.
  */
 
 import type { Language } from "./i18n";
 
-/** Los datos que se escriben igual en cualquier idioma, que son casi todos. */
+/** The details that are written the same in every language, which is almost all of them. */
 export type ContactData = {
-  /** Nombre completo, tal y como se muestra. */
+  /** Full name, exactly as displayed. */
   name: string;
-  /** Nombre de pila (para la vCard estructurada). */
+  /** Given name (for the structured vCard). */
   givenName: string;
-  /** Apellidos (para la vCard estructurada). */
+  /** Family name (for the structured vCard). */
   familyName: string;
   company: string;
   email: string;
-  /** Teléfono en formato legible, con separadores. */
+  /** Phone in readable form, with separators. */
   phone: string;
-  /** Mismo teléfono en E.164, para `tel:` y para la vCard. */
+  /** Same phone in E.164, for `tel:` and for the vCard. */
   phoneE164: string;
-  /** Dominio sin protocolo, tal y como se muestra. */
+  /** Domain without protocol, exactly as displayed. */
   website: string;
-  /** URL absoluta del sitio. */
+  /** Absolute URL of the site. */
   websiteUrl: string;
 };
 
 /**
- * Lo que la ficha dice distinto en cada idioma. Son datos, no interfaz: hablan
- * de quién es y de qué hace, y salen impresos en la tarjeta como el nombre o el
- * email. Cambian si cambia el negocio, no si cambia la pantalla, así que viven
- * aquí y no en `lib/dictionary.ts`, donde están los rótulos que los acompañan.
+ * What the profile says differently in each language. It is data, not
+ * interface: it speaks of who this is and what they do, and it is printed on
+ * the card like the name or the email. It changes when the business changes,
+ * not when the screen does, so it lives here and not in `lib/dictionary.ts`,
+ * where the labels that accompany it are.
  */
 export type ContactText = {
-  /** Cargo profesional: `TITLE` en la vCard, `jobTitle` en schema.org. */
+  /** Job title: `TITLE` in the vCard, `jobTitle` in schema.org. */
   jobTitle: string;
-  /** Lema de la empresa: lo que promete, en la propia tarjeta. */
+  /** Company tagline: what it promises, on the card itself. */
   tagline: string;
-  /** A qué se dedica, dicho en claro. Va en el panel de datos, no en la tarjeta. */
+  /** What the business does, in plain words. Goes in the details panel, not on the card. */
   services: string;
 };
 
-/** Los datos ya resueltos en un idioma: así los consume todo lo que pinta. */
+/** The details already resolved in one language: this is what everything that draws consumes. */
 export type Contact = ContactData & ContactText;
 
 export const CONTACT: ContactData = {
@@ -55,23 +56,23 @@ export const CONTACT: ContactData = {
   websiteUrl: "https://1to1digital.solutions",
 };
 
-/** Un perfil profesional público, de los que se enlazan en el panel de datos. */
+/** A public professional profile, of the kind linked from the details panel. */
 export type Profile = {
-  /** Nombre de la red: es un nombre propio y se escribe igual en los dos idiomas. */
+  /** Name of the network: it is a proper noun and is written the same in both languages. */
   name: string;
-  /** Dirección legible, sin protocolo: es lo que se enseña y lo que se copia. */
+  /** Readable address, without protocol: it is what is shown and what gets copied. */
   address: string;
-  /** URL absoluta a la que lleva el enlace, en su forma canónica. */
+  /** Absolute URL the link leads to, in its canonical form. */
   url: string;
 };
 
 /**
- * Los perfiles no van dentro de `CONTACT` porque no son datos de la ficha: no
- * se guardan en la agenda ni se pintan en la tarjeta, solo se enlazan en el
- * panel y se declaran en `sameAs` del JSON-LD.
+ * The profiles do not go inside `CONTACT` because they are not profile data:
+ * they are not saved to the address book nor drawn on the card, only linked
+ * from the panel and declared in the JSON-LD `sameAs`.
  *
- * Los acentos de la ruta de LinkedIn van percent-encoded: así es como está
- * escrita la dirección del perfil, y `contact.test.ts` fija esa forma.
+ * The accents in the LinkedIn path are percent-encoded: that is how the
+ * profile's address is written, and `contact.test.ts` pins that form.
  */
 export const PROFILES: readonly Profile[] = [
   {
@@ -87,13 +88,13 @@ export const PROFILES: readonly Profile[] = [
 ];
 
 /**
- * Los textos de la ficha, idioma a idioma: son lo único que cambia con él,
- * porque el nombre, la empresa, el teléfono, el email y la web se escriben
- * igual en los dos.
+ * The profile texts, language by language: they are the only thing that
+ * changes with it, because the name, the company, the phone, the email and
+ * the website are written the same in both.
  *
- * El tipo obliga a que cada uno esté en todos los idiomas, y `Contact` a que
- * `contactIn` no se deje ninguno sin resolver: añadir un texto nuevo no compila
- * hasta que está escrito en los dos sitios.
+ * The type forces each one to exist in every language, and `Contact` forces
+ * `contactIn` not to leave any unresolved: adding a new text does not compile
+ * until it is written in both places.
  */
 export const TRANSLATED: Record<keyof ContactText, Record<Language, string>> = {
   jobTitle: {
@@ -110,7 +111,7 @@ export const TRANSLATED: Record<keyof ContactText, Record<Language, string>> = {
   },
 };
 
-/** Los datos de contacto en un idioma. */
+/** The contact details in one language. */
 export function contactIn(language: Language): Contact {
   return {
     ...CONTACT,

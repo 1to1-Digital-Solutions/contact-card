@@ -5,20 +5,20 @@ import { LANGUAGES } from "@/lib/i18n";
 import { CardFallback } from "./card-fallback";
 
 /**
- * La tarjeta plana es la que ve quien no tiene WebGL, y es la única de las dos
- * caras que se puede leer sin abrir un navegador: la de 3D se dibuja en un
- * canvas. Lo que se comprueba aquí es que dice lo mismo que aquella, para que
- * no se quede atrás cuando el anverso cambie.
+ * The flat card is what someone without WebGL sees, and it is the only one of
+ * the two faces that can be read without opening a browser: the 3D one is
+ * drawn on a canvas. What is checked here is that it says the same as that
+ * one, so it does not fall behind when the front changes.
  */
-describe("tarjeta plana", () => {
+describe("flat card", () => {
   const markup = (language: (typeof LANGUAGES)[number]) =>
     renderToStaticMarkup(<CardFallback note="" language={language} />);
 
-  it.each(LANGUAGES)("lleva el lema en el anverso en %s", (language) => {
+  it.each(LANGUAGES)("carries the tagline on the front in %s", (language) => {
     expect(markup(language)).toContain(contactIn(language).tagline);
   });
 
-  it.each(LANGUAGES)("sigue presentando a quien firma la tarjeta en %s", (language) => {
+  it.each(LANGUAGES)("still introduces whoever signs the card in %s", (language) => {
     const html = markup(language);
     const contact = contactIn(language);
     expect(html).toContain(contact.name);
@@ -26,8 +26,8 @@ describe("tarjeta plana", () => {
     expect(html).toContain(contact.company);
   });
 
-  /** A qué se dedica es del panel: en la tarjeta está el lema y nada más. */
-  it("no repite en la tarjeta la línea de servicios del panel", () => {
+  /** What they do belongs to the panel: the card has the tagline and nothing else. */
+  it("does not repeat the panel's services line on the card", () => {
     expect(markup("es")).not.toContain(contactIn("es").services);
   });
 });

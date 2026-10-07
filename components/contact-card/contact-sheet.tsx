@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 
-/** El ancho a partir del cual manda el panel fijo: el `lg:` de las clases. */
+/** The width from which the fixed panel takes over: the `lg:` of the classes. */
 const WIDE = "(min-width: 64rem)";
 
 /**
- * Hoja de datos para pantallas estrechas, donde la tarjeta se queda con toda
- * la pantalla. Es un `<dialog>` de verdad y no un panel a mano: de él salen
- * gratis el cierre con Escape, el foco atrapado mientras está abierta y la
- * vuelta del foco al botón que la abrió.
+ * Data sheet for narrow screens, where the card keeps the whole screen. It
+ * is a real `<dialog>` and not a hand-made panel: from it come for free the
+ * close on Escape, the focus trapped while it is open and the return of
+ * focus to the button that opened it.
  */
 export function ContactSheet({
   open,
@@ -34,10 +34,11 @@ export function ContactSheet({
   }, [open]);
 
   /**
-   * Al ensanchar la pantalla —girar una tableta, redimensionar la ventana— la
-   * hoja desaparece por CSS (`lg:hidden`), pero seguiría abierta y modal: el
-   * resto de la página quedaría inerte sin nada visible que cerrar. Se cierra
-   * sola en cuanto manda el panel fijo, que ya enseña los mismos datos.
+   * When the screen widens —rotating a tablet, resizing the window— the sheet
+   * disappears via CSS (`lg:hidden`), but it would still be open and modal:
+   * the rest of the page would be inert with nothing visible to close. It
+   * closes by itself as soon as the fixed panel takes over, which already
+   * shows the same data.
    */
   useEffect(() => {
     if (!open) return;
@@ -54,9 +55,10 @@ export function ContactSheet({
   }, [open, onClose]);
 
   /**
-   * El clic sobre el fondo llega al propio `<dialog>`, pero también el que cae
-   * en su relleno: sin comprobar dónde ha caído, tocar el borde de la hoja la
-   * cerraría (y en una hoja anclada abajo ese borde es justo donde va el dedo).
+   * A click on the backdrop reaches the `<dialog>` itself, but so does one
+   * that lands on its padding: without checking where it landed, touching
+   * the edge of the sheet would close it (and on a sheet anchored at the
+   * bottom that edge is exactly where the finger goes).
    */
   const closeIfOutside = useCallback(
     (event: React.MouseEvent<HTMLDialogElement>) => {
@@ -79,27 +81,29 @@ export function ContactSheet({
       aria-label={title}
       onClose={onClose}
       onClick={closeIfOutside}
-      // `contact-sheet` es la entrada y la salida deslizándose: vive en
-      // `app/globals.css` porque necesita `@starting-style`, y allí entra desde
-      // abajo o desde la derecha según de qué borde cuelgue la hoja.
+      // `contact-sheet` is the slide in and out: it lives in `app/globals.css`
+      // because it needs `@starting-style`, and there it enters from the
+      // bottom or from the right depending on which edge the sheet hangs from.
       //
-      // Apaisado no hay alto que repartir —la hoja de abajo dejaba ver dos
-      // datos por pantallazo— y sí ancho de sobra: se va al borde derecho, de
-      // arriba abajo, y los datos se reparten en dos columnas (`ContactPanel`).
+      // In landscape there is no height to share out —the bottom sheet showed
+      // two fields per screenful— but width to spare: it moves to the right
+      // edge, top to bottom, and the data is laid out in two columns
+      // (`ContactPanel`).
       //
-      // El relleno de desplazamiento es lo que reserva el sitio de las dos
-      // franjas pegadas: al ir con el tabulador, el navegador solo desplaza
-      // hasta que el dato entra en la hoja, y sin esto el último se quedaba
-      // debajo del botón de guardar, enfocado y sin verse. Son sus altos:
-      // arriba, el botón de salir (44px) más su relleno (16); abajo, el del
-      // guardar (44) más el suyo (8 arriba y 16 abajo).
+      // The scroll padding is what reserves room for the two sticky strips:
+      // when tabbing, the browser only scrolls until the field enters the
+      // sheet, and without this the last one was left under the save button,
+      // focused and out of sight. They are their heights: at the top, the
+      // close button (44px) plus its padding (16); at the bottom, the save
+      // button (44) plus its own (8 above and 16 below).
       className="contact-sheet fixed bottom-0 left-0 right-0 top-auto m-0 max-h-[82dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-t border-ink/10 bg-backdrop p-6 text-ink shadow-2xl backdrop:bg-black/50 phone-landscape:left-auto phone-landscape:top-0 phone-landscape:h-dvh phone-landscape:max-h-none phone-landscape:w-[min(40rem,76vw)] phone-landscape:scroll-pt-15 phone-landscape:scroll-pb-17 phone-landscape:rounded-l-3xl phone-landscape:rounded-tr-none phone-landscape:border-l phone-landscape:border-t-0 phone-landscape:p-4 lg:hidden"
     >
       <div className="mx-auto flex max-w-md flex-col gap-6 phone-landscape:max-w-none phone-landscape:gap-3">
-        {/* Con la hoja de arriba abajo, el título y la salida se quedan a la
-            vista aunque haya que bajar por los datos. El desplazamiento
-            negativo y el relleno propio son para tapar el borde de la hoja:
-            ahí es donde los datos asomarían al pasar por detrás. */}
+        {/* With the sheet running top to bottom, the title and the close
+            button stay in view even when scrolling through the data. The
+            negative offset and the own padding are there to cover the edge
+            of the sheet: that is where the data would show through when
+            passing behind. */}
         <div className="flex items-start justify-between gap-4 phone-landscape:sticky phone-landscape:-top-4 phone-landscape:z-10 phone-landscape:-mt-4 phone-landscape:bg-backdrop phone-landscape:pt-4">
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
           <button

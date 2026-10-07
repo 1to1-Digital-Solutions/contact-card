@@ -1,28 +1,29 @@
 /**
- * Qué tamaño tiene la tarjeta en el hueco que hay.
+ * How big the card is in the space available.
  *
- * Es una función pura de dos medidas —el hueco visible y la tarjeta, las dos
- * en unidades de mundo— para poder comprobar sin montar la escena que la
- * tarjeta cabe en cada pantalla y que aprovecha la que tiene. La escena solo
- * decide en cuál de los tres huecos está.
+ * It is a pure function of two measurements (the visible space and the
+ * card, both in world units) so that, without mounting the scene, we can
+ * check that the card fits on every screen and makes the most of the one it
+ * has. The scene only decides which of the three spaces it is in.
  */
 
 import { clamp } from "./motion";
 
-/** Ancho y alto, en unidades de mundo. */
+/** Width and height, in world units. */
 export type Size = {
   width: number;
   height: number;
 };
 
 /**
- * Parte del ancho y del alto visibles que ocupa la tarjeta en reposo.
+ * Share of the visible width and height the card takes up at rest.
  *
- * En un hueco más alto que ancho —un móvil de pie— el ancho es el recurso
- * escaso y sobra alto: ahí la tarjeta se estira casi de borde a borde para no
- * perder protagonismo. En un móvil apaisado pasa lo contrario y además no cabe
- * nada más en pantalla: la tarjeta se lleva casi todo el alto y los mandos se
- * le ponen encima, flotando, en vez de robarle sitio.
+ * In a space taller than it is wide (a phone held upright) width is the
+ * scarce resource and there is height to spare: there the card stretches
+ * almost edge to edge so it does not lose prominence. On a phone held
+ * sideways the opposite happens, and nothing else fits on screen either:
+ * the card takes almost the full height and the controls sit on top of it,
+ * floating, instead of stealing its room.
  */
 const SHARE = {
   landscape: { width: 0.62, height: 0.55 },
@@ -31,18 +32,18 @@ const SHARE = {
 } as const;
 
 /**
- * Topes de la escala. El mínimo evita que la tarjeta se quede en un sello en
- * una ventana diminuta; el máximo es una red de seguridad para un hueco casi
- * cuadrado, donde el reparto por ancho se dispara. En las pantallas de siempre
- * manda `SHARE`.
+ * Bounds on the scale. The minimum keeps the card from shrinking to a stamp
+ * in a tiny window; the maximum is a safety net for an almost square space,
+ * where the width-based share shoots up. On everyday screens `SHARE` is in
+ * charge.
  */
 const SCALE = { min: 0.25, max: 1.3 } as const;
 
 /**
- * Cuánto hay que escalar la tarjeta para que ocupe su parte del hueco.
+ * How much to scale the card so it takes up its share of the space.
  *
- * @param phoneLandscape Móvil apaisado (la consulta `PHONE_LANDSCAPE`): la
- *   pantalla es toda para la tarjeta.
+ * @param phoneLandscape Phone held sideways (the `PHONE_LANDSCAPE` query):
+ *   the whole screen belongs to the card.
  */
 export function cardScale(view: Size, card: Size, phoneLandscape: boolean): number {
   const share = phoneLandscape

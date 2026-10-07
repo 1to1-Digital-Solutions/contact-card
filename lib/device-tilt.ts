@@ -1,47 +1,50 @@
 /**
- * El asomo de la tarjeta cuando se mueve el móvil, que es lo que en un
- * escritorio hace el ratón (`pointerTilt`, en `card-orientation.ts`).
+ * The card's peek when the phone moves, which is what the mouse does on a
+ * desktop (`pointerTilt`, in `card-orientation.ts`).
  *
- * La tarjeta se comporta como si estuviera quieta en el mundo y quien se
- * moviera fuese la ventana: al inclinar el móvil, ella gira lo mismo en
- * sentido contrario y por eso parece un objeto de verdad detrás del cristal.
+ * The card behaves as if it were still in the world and it were the window
+ * that moved: when the phone tilts, the card turns by the same amount in the
+ * opposite direction, which is why it looks like a real object behind the
+ * glass.
  *
- * Todo son funciones puras sobre los ángulos que entrega `deviceorientation`,
- * en grados, para poder probar el asomo sin sensor y sin escena.
+ * Everything is a pure function over the angles `deviceorientation`
+ * delivers, in degrees, so the peek can be tested without a sensor and
+ * without a scene.
  */
 
 import { TILT_REACH, type PointerTilt } from "./card-orientation";
 import { clamp, smoothTowards, type SmoothConfig } from "./motion";
 
-/** Los dos ángulos del sensor que mueven la tarjeta, en grados. */
+/** The two sensor angles that move the card, in degrees. */
 export type DeviceAngles = {
-  /** Cabeceo: levantar o bajar el borde de arriba. */
+  /** Pitch: raising or lowering the top edge. */
   beta: number;
-  /** Alabeo: inclinar hacia la derecha o hacia la izquierda. */
+  /** Roll: tilting to the right or to the left. */
   gamma: number;
 };
 
 /**
- * Grados de desvío que llevan al asomo máximo. Es un gesto de muñeca: con más
- * recorrido, la tarjeta apenas se movería mirando el móvil como se mira
- * normalmente, y con menos se iría al tope al primer temblor.
+ * Degrees of deviation that reach the maximum peek. It is a wrist gesture:
+ * with more travel, the card would barely move while looking at the phone
+ * the way one normally does, and with less it would hit the cap at the first
+ * tremor.
  */
 const SPAN = 22;
 
 /**
- * Con qué rapidez se olvida la postura de partida. Sostener el móvil inclinado
- * es lo normal —en el sofá, en la cama—, y sin este olvido la tarjeta se
- * quedaría torcida para siempre por la postura de quien mira. Es lento a
- * propósito: en el tiempo de un vistazo, el asomo sigue ahí.
+ * How quickly the starting pose is forgotten. Holding the phone tilted is
+ * the norm (on the sofa, in bed), and without this forgetting the card would
+ * stay crooked forever because of the viewer's posture. It is slow on
+ * purpose: for the length of a glance, the peek is still there.
  */
 const REFERENCE: SmoothConfig = { halfLife: 2, rest: 0 };
 
 /**
- * Los ángulos del sensor son del aparato y no de lo que se ve: al girar el
- * móvil, la pantalla se recoloca y sus ejes dejan de coincidir con los de
- * aquel. Esto los lleva a los ejes de la pantalla, que son en los que se mueve
- * la tarjeta, girándolos por el mismo ángulo que el navegador (`screenAngle`,
- * de `screen.orientation`).
+ * The sensor angles belong to the device, not to what is seen: when the
+ * phone rotates, the screen repositions itself and its axes no longer match
+ * the device's. This brings them to the screen's axes, which are the ones
+ * the card moves in, by rotating them through the same angle as the browser
+ * (`screenAngle`, from `screen.orientation`).
  */
 export function screenAngles(angles: DeviceAngles, screenAngle: number): DeviceAngles {
   const turn = (screenAngle * Math.PI) / 180;
@@ -53,32 +56,33 @@ export function screenAngles(angles: DeviceAngles, screenAngle: number): DeviceA
   };
 }
 
-/** La postura de la que se mide el asomo, y cuándo se tomó. */
+/** The pose the peek is measured from, and when it was taken. */
 export type TiltState = {
   reference: DeviceAngles;
-  /** Instante de la última lectura, en milisegundos. */
+  /** Instant of the last reading, in milliseconds. */
   time: number;
 } | null;
 
 /**
- * Salto entre lecturas, en segundos, tras el que la postura de partida ya no
- * vale: la pestaña estuvo dormida y el móvil está donde esté.
+ * Gap between readings, in seconds, beyond which the starting pose is no
+ * longer valid: the tab was asleep and the phone is wherever it is.
  */
 const MAX_GAP = 1;
 
 /**
- * Diferencia entre dos ángulos por el camino corto, en grados. El cabeceo da
- * la vuelta entera y salta de 180 a -180 al pasar el móvil por la vertical:
- * restar sin más convertiría ese salto en un vuelco de la tarjeta.
+ * Difference between two angles along the short way round, in degrees. The
+ * pitch goes a full circle and jumps from 180 to -180 when the phone passes
+ * through vertical: subtracting naively would turn that jump into the card
+ * flipping over.
  */
 function angleGap(angle: number, reference: number): number {
   return ((angle - reference + 540) % 360) - 180;
 }
 
 /**
- * Una lectura del sensor: cuánto se asoma la tarjeta y de qué postura se está
- * midiendo. La primera lectura no mueve nada —fija la postura de partida—, así
- * que da igual cómo se sostenga el móvil al abrir la página.
+ * One sensor reading: how far the card peeks and which pose it is being
+ * measured from. The first reading moves nothing (it fixes the starting
+ * pose), so it does not matter how the phone is held when the page opens.
  */
 export function stepDeviceTilt(
   state: TiltState,
@@ -92,9 +96,9 @@ export function stepDeviceTilt(
     };
   }
 
-  // El desvío se mide contra la postura de partida y a la vez la va arrastrando
-  // hacia la de ahora: lo que se sostiene deja de contar, y lo que se acaba de
-  // mover cuenta entero.
+  // The deviation is measured against the starting pose while at the same
+  // time dragging that pose towards the current one: what is held stops
+  // counting, and what has just moved counts in full.
   const offset = {
     beta: smoothTowards(angleGap(reading.angles.beta, state.reference.beta), 0, REFERENCE, dt),
     gamma: smoothTowards(angleGap(reading.angles.gamma, state.reference.gamma), 0, REFERENCE, dt),
@@ -108,8 +112,8 @@ export function stepDeviceTilt(
       },
       time: reading.time,
     },
-    // Al revés que el móvil: si se inclina hacia la derecha, la tarjeta gira
-    // hacia la izquierda y se queda mirando a donde miraba.
+    // The opposite of the phone: if it tilts to the right, the card turns to
+    // the left and keeps facing where it was facing.
     tilt: {
       turn: -clamp(offset.gamma / SPAN, -1, 1) * TILT_REACH.turn,
       pitch: -clamp(offset.beta / SPAN, -1, 1) * TILT_REACH.pitch,

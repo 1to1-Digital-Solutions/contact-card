@@ -12,14 +12,14 @@ import {
   createGrainTexture,
 } from "./card-textures";
 
-/** Bisel del canto: da un brillo fino en las aristas, como una tarjeta impresa. */
+/** Edge bevel: gives a fine highlight along the edges, like a printed card. */
 const BEVEL = 0.004;
-/** Separación de las caras respecto al cuerpo, para que no peleen en el z-buffer. */
+/** Offset of the faces from the body, so they do not fight in the z-buffer. */
 const FACE_OFFSET = CARD.thickness / 2 + 0.0015;
 /**
- * Papel mate, no plástico: casi toda la luz se dispersa y el relieve del
- * grano rompe lo poco que queda de reflejo. El relieve va muy bajo a
- * propósito —es la rugosidad del papel, no un repujado—.
+ * Matte paper, not plastic: almost all the light scatters and the grain's
+ * relief breaks what little reflection remains. The relief is kept very low
+ * on purpose —it is the paper's roughness, not an embossing—.
  */
 const PAPER = { roughness: 0.94, metalness: 0, bumpScale: 0.018 } as const;
 
@@ -40,15 +40,15 @@ function roundedRectShape(width: number, height: number, radius: number) {
 }
 
 /**
- * Cuerpo de la tarjeta: un contorno redondeado extruido (el bisel se
- * expande hacia fuera, así que el contorno se dibuja encogido para que las
- * medidas finales sean las de `CARD`) con una cara texturizada a cada lado.
+ * Card body: a rounded outline, extruded (the bevel expands outwards, so the
+ * outline is drawn shrunk so that the final dimensions are those of `CARD`),
+ * with a textured face on each side.
  *
- * El cuerpo va del color del canto del tema, un escalón del de las caras: es
- * lo que asoma por las esquinas redondeadas, donde la textura ya es
- * transparente. Con un color ajeno a la cara —como era el canto claro de
- * cuando el anverso y el reverso no coincidían— las esquinas del reverso se
- * veían encendidas.
+ * The body takes the theme's edge color, one step away from the faces': it
+ * is what shows through at the rounded corners, where the texture is already
+ * transparent. With a color foreign to the face —as the light edge was back
+ * when the front and the back did not match— the corners of the back looked
+ * lit up.
  */
 export function CardMesh({
   theme,
@@ -78,8 +78,9 @@ export function CardMesh({
   }, []);
 
   const grain = useMemo(() => createGrainTexture(), []);
-  // El anverso lleva el cargo y los rótulos de los datos: se rehace al cambiar
-  // de idioma. El reverso solo lleva el logotipo y la web, que no se traducen.
+  // The front carries the job title and the data labels: it is rebuilt when
+  // the language changes. The back only carries the logo and the website,
+  // which are not translated.
   const front = useMemo(
     () =>
       createFrontTexture(
@@ -94,8 +95,8 @@ export function CardMesh({
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => grain.dispose(), [grain]);
-  // Las caras se rehacen al cambiar de tema o de idioma: hay que soltar las
-  // anteriores.
+  // The faces are rebuilt when the theme or the language changes: the
+  // previous ones have to be released.
   useEffect(() => () => front.dispose(), [front]);
   useEffect(() => () => back.dispose(), [back]);
 

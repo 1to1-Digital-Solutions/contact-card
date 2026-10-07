@@ -1,48 +1,48 @@
 /**
- * La llegada de la tarjeta: cae desde fuera de la pantalla y, ya en el
- * centro, se balancea una vez para enseñar que se la puede mover.
+ * The card's arrival: it falls in from off screen and, once in the centre,
+ * sways once to show that it can be moved.
  *
- * Son funciones puras del tiempo transcurrido —la animación vive en el bucle
- * de render, que ya lleva la cuenta— para poder probarlas sin montar la
- * escena 3D. Quién las llama decide cuándo dejan de contar: al primer gesto,
- * el vaivén se corta.
+ * They are pure functions of the elapsed time (the animation lives in the
+ * render loop, which already keeps count) so they can be tested without
+ * mounting the 3D scene. The caller decides when they stop counting: at the
+ * first gesture, the sway is cut short.
  */
 
-/** Aire entre el borde de la vista y la tarjeta al empezar, en unidades de mundo. */
+/** Air between the edge of the view and the card at the start, in world units. */
 const ENTRY_GAP = 0.5;
 
 /**
- * Altura de la que cae la tarjeta. Queda entera por encima del borde: la
- * caída tiene que verse venir de fuera, no aparecer a medias en el canto
- * superior de la pantalla.
+ * Height the card falls from. It sits entirely above the edge: the fall has
+ * to be seen coming from outside, not appear half-way through at the top
+ * edge of the screen.
  */
 export function entryOffsetY(viewHalfHeight: number, cardHalfHeight: number): number {
   return viewHalfHeight + cardHalfHeight + ENTRY_GAP;
 }
 
-/** Postura del vaivén de bienvenida en un instante. */
+/** Pose of the welcome sway at a given instant. */
 export type IntroSway = {
   /**
-   * Desplazamiento lateral, de -1 a 1. Es una fracción del recorrido y no una
-   * medida: quien la usa la escala al tamaño que tenga la tarjeta en pantalla,
-   * que en un móvil es menos de la mitad que en un escritorio.
+   * Lateral displacement, from -1 to 1. It is a fraction of the travel, not
+   * a measurement: the consumer scales it to whatever size the card has on
+   * screen, which on a phone is less than half of what it is on a desktop.
    */
   x: number;
-  /** Inclinación, en radianes: la tarjeta se retrasa hacia donde viene. */
+  /** Tilt, in radians: the card lags towards where it is coming from. */
   roll: number;
 };
 
 const SWAY = {
-  /** Lo que tarda en arrancar: la tarjeta tiene que haber aterrizado antes. */
+  /** How long it takes to start: the card has to have landed first. */
   delay: 0.85,
-  /** Idas y vueltas completas. */
+  /** Complete round trips. */
   cycles: 2,
   duration: 2.6,
-  /** Tope de la inclinación: un balanceo de acompañamiento, no un vuelco. */
+  /** Cap on the tilt: an accompanying sway, not a tip-over. */
   maxRoll: 0.14,
 } as const;
 
-/** Segundos desde que aparece la tarjeta hasta que el vaivén termina. */
+/** Seconds from when the card appears until the sway ends. */
 export const INTRO_SWAY_END = SWAY.delay + SWAY.duration;
 
 const STILL: IntroSway = { x: 0, roll: 0 };
@@ -52,9 +52,10 @@ export function introSway(elapsed: number): IntroSway {
   if (t <= 0 || t >= SWAY.duration) return STILL;
 
   const phase = 2 * Math.PI * SWAY.cycles * (t / SWAY.duration);
-  // Campana que entra y sale por cero. Sin ella el vaivén tendría que acabar
-  // justo en un paso por el centro para no dar un tirón al soltarlo, y la
-  // inclinación —que va un cuarto de oscilación por delante— nunca lo hace.
+  // A bell that enters and leaves through zero. Without it the sway would
+  // have to end exactly on a pass through the centre to avoid a jolt when
+  // released, and the tilt (which runs a quarter of an oscillation ahead)
+  // never does.
   const envelope = Math.sin((Math.PI * t) / SWAY.duration) ** 2;
 
   return {

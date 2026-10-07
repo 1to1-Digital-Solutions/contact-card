@@ -3,21 +3,22 @@
 import type { ReactNode } from "react";
 
 /**
- * Botón sobrio de la escena: se lee sobre cualquiera de los dos temas. El
- * `pointer-events-auto` va en el botón y no en la fila que los agrupa: esa
- * fila ocupa todo el ancho en cuanto los mandos se reparten en dos líneas, y
- * desde ahí se tragaría el gesto en los huecos entre botones.
+ * Sober scene button: it reads over either of the two themes. The
+ * `pointer-events-auto` goes on the button and not on the row that groups
+ * them: that row takes the full width as soon as the controls wrap onto two
+ * lines, and from there it would swallow the gesture in the gaps between
+ * buttons.
  */
 const CONTROL_CLASSES =
   "pointer-events-auto inline-flex size-11 items-center justify-center gap-2 rounded-full border border-ink/15 bg-ink/5 text-sm font-medium text-ink backdrop-blur transition-colors hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink roomy:w-auto roomy:px-5";
 
 /**
- * Mando de la escena. Donde no sobra sitio es solo el icono, para que todos
- * quepan en una línea —o en una columna, en un móvil apaisado— y la tarjeta se
- * quede con el resto; con pantalla de sobra (`roomy`) el rótulo aparece al
- * lado. La etiqueta accesible está siempre, y es exactamente el rótulo que se
- * ve al ensanchar: el nombre de un control tiene que contener su texto visible
- * para poder pulsarlo por voz (WCAG 2.5.3).
+ * Scene control. Where there is no room to spare it is icon-only, so they
+ * all fit on one line —or in one column, on a phone in landscape— and the
+ * card keeps the rest; with screen to spare (`roomy`) the label appears next
+ * to it. The accessible label is always there, and it is exactly the label
+ * seen when widening: a control's name has to contain its visible text to be
+ * activatable by voice (WCAG 2.5.3).
  */
 export function SceneControl({
   label,
@@ -43,7 +44,7 @@ export function SceneControl({
   );
 }
 
-/** Trazo común de los iconos: el mismo grosor y remate que los de la cabecera. */
+/** Common stroke for the icons: the same weight and caps as the header's. */
 function Icon({ children }: { children: ReactNode }) {
   return (
     <svg
@@ -62,10 +63,10 @@ function Icon({ children }: { children: ReactNode }) {
 }
 
 /**
- * Voltear: la tarjeta apaisada y la flecha que le da la vuelta. Dibujar en su
- * lugar las dos mitades de una hoja abatiéndose sobre su eje deja un icono de
- * corchetes que, a 20 px y sin rótulo al lado, se lee como un encuadre y no
- * como una vuelta: queda reducido a unas esquinas sueltas.
+ * Flip: the landscape card and the arrow that turns it over. Drawing instead
+ * the two halves of a sheet folding over its axis leaves a bracket-like icon
+ * that, at 20 px and with no label beside it, reads as a frame and not as a
+ * turn: it is reduced to a few loose corners.
  */
 export function FlipIcon() {
   return (
@@ -78,9 +79,9 @@ export function FlipIcon() {
 }
 
 /**
- * Recolocar: cuatro flechas que traen la tarjeta al centro. Un encuadre con
- * un punto en medio dice lo mismo sobre el papel, pero es el visor de una
- * cámara: puesto en un botón, parece que va a hacer una foto.
+ * Recenter: four arrows bringing the card to the center. A frame with a dot
+ * in the middle says the same on paper, but it is a camera's viewfinder: put
+ * on a button, it looks like it is going to take a photo.
  */
 export function RecenterIcon() {
   return (
@@ -93,7 +94,7 @@ export function RecenterIcon() {
   );
 }
 
-/** Los datos de contacto: la «i» de información. */
+/** The contact data: the "i" for information. */
 export function DetailsIcon() {
   return (
     <Icon>
@@ -104,9 +105,9 @@ export function DetailsIcon() {
 }
 
 /**
- * Compartir: la flecha que sale de la bandeja. Es el dibujo con el que abren
- * el diálogo del sistema tanto el móvil como el escritorio, así que anuncia lo
- * que va a pasar al pulsarlo mejor que cualquier otro.
+ * Share: the arrow leaving the tray. It is the drawing with which both phone
+ * and desktop open the system dialog, so it announces what is going to
+ * happen on pressing it better than any other.
  */
 export function ShareIcon() {
   return (
@@ -119,9 +120,9 @@ export function ShareIcon() {
 }
 
 /**
- * Mover el móvil: el aparato inclinado entre dos ondas. Sirve para las dos
- * cosas que abre el permiso —agitarlo para dar la vuelta a la tarjeta e
- * inclinarlo para asomarla— sin tener que elegir una de las dos.
+ * Move the phone: the device tilted between two waves. It serves for both
+ * things the permission unlocks —shaking it to flip the card and tilting it
+ * to lean it— without having to choose one of the two.
  */
 export function MotionIcon() {
   return (
@@ -140,7 +141,7 @@ export function MotionIcon() {
   );
 }
 
-/** Hecho y no hecho, con el mismo trazo: los avisos de los botones de copiar. */
+/** Done and not done, with the same stroke: the feedback of the copy buttons. */
 export function DoneIcon() {
   return (
     <Icon>

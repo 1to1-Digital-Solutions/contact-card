@@ -2,7 +2,7 @@ import { useMediaQuery } from "./use-media-query";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
-/** `true` si el sistema pide reducir el movimiento. */
+/** `true` if the system asks for reduced motion. */
 export function useReducedMotion(): boolean {
   return useMediaQuery(QUERY);
 }

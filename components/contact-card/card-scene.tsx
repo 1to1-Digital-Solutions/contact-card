@@ -20,31 +20,32 @@ type Props = {
 };
 
 /**
- * La tarjeta flota sobre un degradado, no sobre un suelo ni una pared: no
- * hay superficie donde proyectar una sombra que resulte creíble, así que
- * el volumen lo dan el bisel, las luces y el grano del papel. La separación
- * del fondo la aporta el halo que pinta el CSS detrás.
+ * The card floats over a gradient, not over a floor or a wall: there is no
+ * surface on which to cast a shadow that would look believable, so the
+ * volume comes from the bevel, the lights and the paper grain. Separation
+ * from the background comes from the halo the CSS paints behind it.
  */
 export function CardScene(props: Props) {
   return (
     <Canvas
-      // El fondo lo pone el CSS de la página: así el degradado sigue ahí
-      // mientras la escena carga y no hay salto de color al aparecer.
-      // Sin tone mapping los colores de la tarjeta salen tal cual se
-      // definen en la marca; a cambio, las luces tienen que sumar cerca de
-      // 1 en la cara frontal para no quemarla.
+      // The background is set by the page's CSS: that way the gradient is
+      // already there while the scene loads and there is no color jump when
+      // it appears. Without tone mapping the card's colors come out exactly
+      // as the brand defines them; in exchange, the lights have to add up to
+      // about 1 on the front face so as not to burn it out.
       gl={{ antialias: true, alpha: true, toneMapping: NoToneMapping }}
       dpr={[1, 2]}
       camera={{ position: [0, 0, 5.2], fov: 32 }}
     >
       {/*
-        Las intensidades parecen altas porque la reflexión difusa de three
-        divide por π; entre las tres luces y el mapa de entorno, la cara
-        frontal recibe algo menos de 1. Está medido con el peor caso, que es
-        el papel blanco del tema claro: por encima se satura y se pierden el
-        grano y la marca de agua, por debajo se agrisa. Si se tocan, hay que
-        volver a medirlo (una captura de la escena y el porcentaje de píxeles
-        a 255 en una zona lisa de la tarjeta).
+        The intensities look high because three's diffuse reflection divides
+        by π; between the three lights and the environment map, the front
+        face receives a little under 1. It was measured against the worst
+        case, which is the white paper of the light theme: above that it
+        saturates and the grain and the watermark are lost, below it goes
+        gray. If they are touched, it has to be measured again (a capture of
+        the scene and the percentage of pixels at 255 in a flat area of the
+        card).
       */}
       <ambientLight intensity={0.82} />
       <directionalLight position={[1.6, 2.6, 7]} intensity={0.92} />
@@ -53,10 +54,10 @@ export function CardScene(props: Props) {
       <DraggableCard {...props} />
 
       {/*
-        Reflejos procedimentales: `Environment` con hijos genera el mapa de
-        entorno en el propio navegador, sin descargar ningún HDRI. Con el
-        papel mate casi no se reflejan: lo que aportan es el color del
-        ambiente sobre el canto.
+        Procedural reflections: `Environment` with children generates the
+        environment map in the browser itself, without downloading any HDRI.
+        With the matte paper they are barely reflected: what they contribute
+        is the color of the surroundings on the edge.
       */}
       <Environment resolution={256}>
         <Lightformer
@@ -66,9 +67,10 @@ export function CardScene(props: Props) {
           color="#ffffff"
         />
         {/*
-          Blanco cenital y relleno frío: son luz de estudio, no colores de
-          marca, y por eso no salen de `BRAND`. El único que sí es de marca es
-          el acento, que tiñe el reflejo del canto derecho.
+          Overhead white and cold fill: they are studio light, not brand
+          colors, which is why they do not come from `BRAND`. The only one
+          that is brand is the accent, which tints the reflection on the
+          right edge.
         */}
         <Lightformer
           intensity={0.5}

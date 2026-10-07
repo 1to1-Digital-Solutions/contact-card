@@ -2,18 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** En qué acabó lo que hizo el botón: es lo que se ve y lo que se anuncia. */
+/** How what the button did ended: it is what gets shown and what gets announced. */
 export type Feedback = "idle" | "done" | "failed";
 
-/** Cuánto se queda el aviso antes de que el botón vuelva a su estado normal. */
+/** How long the notice stays before the button returns to its normal state. */
 const FEEDBACK_MS = 2000;
 
 /**
- * Aviso pasajero de un botón que confirma lo que ha hecho, porque un botón que
- * no confirma nada deja a quien lo pulsa sin saber si ha funcionado.
+ * Passing notice of a button that confirms what it did, because a button that
+ * confirms nothing leaves the presser not knowing whether it worked.
  *
- * El temporizador se cancela al desmontar y también en cada aviso nuevo: si no,
- * el de la pulsación anterior borraría el aviso que acaba de salir.
+ * The timer is cancelled on unmount and also on every new notice: otherwise
+ * the one from the previous press would wipe the notice that just came out.
  */
 export function useFeedback(): [Feedback, (result: Exclude<Feedback, "idle">) => void] {
   const [feedback, setFeedback] = useState<Feedback>("idle");

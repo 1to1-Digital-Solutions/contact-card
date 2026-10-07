@@ -1,14 +1,14 @@
 import type { Language } from "./i18n";
 
 /**
- * Todos los textos de la interfaz, en un sitio y por idioma. Los datos de
- * contacto no viven aquí: salen de `lib/contact.ts`, que es su fuente de
- * verdad y solo traduce el cargo.
+ * Every interface text, in one place and per language. The contact details
+ * do not live here: they come from `lib/contact.ts`, which is their source of
+ * truth and only translates the job title.
  *
- * Las cadenas con hueco son funciones en lugar de plantillas con marcadores:
- * así el compilador obliga a pasar lo que falta y no hay que inventarse un
- * sustituidor. Los mensajes de `console` no están aquí a propósito: son para
- * diagnosticar, no para leer.
+ * Strings with a slot are functions instead of templates with placeholders:
+ * that way the compiler forces the caller to pass what is missing and there
+ * is no need to invent a substitution helper. The `console` messages are not
+ * here on purpose: they are for diagnosing, not for reading.
  */
 export type Dictionary = {
   meta: {
@@ -16,13 +16,14 @@ export type Dictionary = {
     description: (name: string, company: string) => string;
   };
   language: {
-    /** Lo que enseña el conmutador: el idioma al que lleva, abreviado. */
+    /** What the switch shows: the language it leads to, abbreviated. */
     code: string;
     /**
-     * Etiqueta accesible del conmutador, escrita en el idioma de destino para
-     * que la entienda quien no lee el de la página. Tiene que contener `code`:
-     * el nombre accesible de un control debe incluir su texto visible para
-     * poder pulsarlo por voz (WCAG 2.5.3), y `dictionary.test.ts` lo comprueba.
+     * Accessible label of the switch, written in the target language so that
+     * someone who cannot read the page's language understands it. It must
+     * contain `code`: a control's accessible name must include its visible
+     * text so it can be activated by voice (WCAG 2.5.3), and
+     * `dictionary.test.ts` checks it.
      */
     switchTo: string;
   };
@@ -35,20 +36,20 @@ export type Dictionary = {
     loading: string;
     hint: string;
     /**
-     * La misma pista para una pantalla estrecha, donde el texto largo se come
-     * dos o tres líneas que le hacen falta a la tarjeta. `dictionary.test.ts`
-     * fija su tope de longitud: si crece, deja de caber en una línea.
+     * The same hint for a narrow screen, where the long text eats two or
+     * three lines the card needs. `dictionary.test.ts` pins its length limit:
+     * if it grows, it no longer fits on one line.
      */
     hintShort: string;
     /**
-     * La pista corta cuando el móvil mueve la tarjeta: con sensores, agitarlo
-     * es la forma más rápida de darle la vuelta, y no se descubre sola. Mismo
-     * tope de longitud que `hintShort`.
+     * The short hint when the phone moves the card: with sensors, shaking it
+     * is the fastest way to flip it, and nobody discovers that on their own.
+     * Same length limit as `hintShort`.
      */
     hintMotion: string;
-    /** El navegador no puede con 3D: se enseña la tarjeta plana. */
+    /** The browser cannot do 3D: the flat card is shown. */
     noWebgl: string;
-    /** La escena 3D reventó al montarse: la misma tarjeta plana. */
+    /** The 3D scene blew up while mounting: the same flat card. */
     failed: string;
     showingFront: string;
     showingBack: string;
@@ -60,18 +61,18 @@ export type Dictionary = {
     showData: string;
     share: string;
     /**
-     * Da permiso a la página para leer los sensores del móvil. Solo aparece
-     * donde el navegador lo exige, y solo lo concede si se pulsa.
+     * Grants the page permission to read the phone's sensors. It only appears
+     * where the browser demands it, and only grants it when pressed.
      */
     useMotion: string;
-    /** Etiquetas de la tarjeta plana, que se voltea pulsándola. */
+    /** Labels of the flat card, which is flipped by pressing it. */
     flipToFront: string;
     flipToBack: string;
   };
-  /** Rótulos de los datos: valen para el panel y para la cara de la tarjeta. */
+  /** Labels of the details: they serve both the panel and the card face. */
   fields: {
     jobTitle: string;
-    /** Encabeza la línea de a qué se dedica, que solo sale en el panel. */
+    /** Heads the line about what the business does, which only appears in the panel. */
     services: string;
     email: string;
     phone: string;
@@ -82,10 +83,10 @@ export type Dictionary = {
     close: string;
     save: string;
     /**
-     * Nombre accesible del enlace a un perfil: el nombre de la red no se
-     * traduce, pero decir de qué es el enlace, sí. Lleva también la dirección
-     * que se ve porque el nombre accesible de un enlace debe contener su texto
-     * visible (WCAG 2.5.3), y `dictionary.test.ts` lo comprueba.
+     * Accessible name of the link to a profile: the network's name is not
+     * translated, but saying what the link is for is. It also carries the
+     * visible address because a link's accessible name must contain its
+     * visible text (WCAG 2.5.3), and `dictionary.test.ts` checks it.
      */
     profile: (network: string, address: string) => string;
   };
@@ -94,9 +95,9 @@ export type Dictionary = {
     done: (field: string) => string;
     failed: (field: string) => string;
     /**
-     * Cómo se llama el enlace de la tarjeta en esos avisos. Compartir sin
-     * diálogo del sistema acaba copiándolo, y entonces se confirma igual que
-     * cualquier otro dato: con `done` y con este rótulo.
+     * What the card's link is called in those notices. Sharing without the
+     * system dialog ends up copying it, and then it is confirmed like any
+     * other detail: with `done` and with this label.
      */
     link: string;
   };
@@ -155,9 +156,10 @@ const es: Dictionary = {
   },
   copy: {
     action: (field) => `Copiar ${field.toLowerCase()}`,
-    // El rótulo va detrás y no delante del participio: los hay masculinos
-    // («Cargo», «Teléfono») y femeninos («Web»), así que pegarle «copiado»
-    // concuerda mal en la mitad de los casos. Con dos puntos vale para todos.
+    // The label goes after the participle, not before it: Spanish field
+    // names come in masculine («Cargo», «Teléfono») and feminine («Web»), so
+    // tacking «copiado» onto them agrees badly half of the time. With a colon
+    // it works for all of them.
     done: (field) => `Copiado al portapapeles: ${field}`,
     failed: (field) => `No se ha podido copiar: ${field}`,
     link: "Enlace de la tarjeta",
@@ -225,7 +227,7 @@ const en: Dictionary = {
 
 export const DICTIONARIES: Record<Language, Dictionary> = { es, en };
 
-/** Los textos de la interfaz en un idioma. */
+/** The interface texts in one language. */
 export function dictionary(language: Language): Dictionary {
   return DICTIONARIES[language];
 }

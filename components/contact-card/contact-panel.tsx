@@ -7,36 +7,36 @@ import type { Language } from "@/lib/i18n";
 import { buildVCard, vCardFilename } from "@/lib/vcard";
 
 /**
- * Alto de objetivo táctil incluido: el valor va emparejado con su botón. Los
- * que no caben en una línea —la dirección de un perfil— parten por sus guiones
- * antes que a mitad de palabra, y solo si no hay más remedio.
+ * Touch target height included: the value is paired with its button. Those
+ * that do not fit on one line —a profile's address— break at their hyphens
+ * before breaking mid-word, and only if there is no other way.
  *
- * En las dos columnas del apaisado el valor deja de ser una caja flexible: una
- * lo es tanto por fuera como por dentro, y por dentro no baja de su palabra más
- * larga, así que el email empujaba a su botón de copiar fuera de la columna. La
- * rejilla de una sola pista que puede encogerse (`minmax(0,1fr)`) parte el
- * texto en vez de desbordarlo, y centra igual que `items-center`.
+ * In the two columns of the landscape layout the value stops being a flex
+ * box: a flex box is one both outside and inside, and inside it will not go
+ * narrower than its longest word, so the email pushed its copy button out of
+ * the column. The single-track grid that can shrink (`minmax(0,1fr)`) breaks
+ * the text instead of overflowing it, and centers just like `items-center`.
  */
 const VALUE_CLASSES =
   "inline-flex min-h-11 items-center break-words text-lg text-ink phone-landscape:grid phone-landscape:min-w-0 phone-landscape:grid-cols-[minmax(0,1fr)] phone-landscape:content-center phone-landscape:text-base";
 
-/** Un dato del panel: rótulo, valor que se ve y se copia, y a dónde lleva. */
+/** One panel field: label, the value that is shown and copied, and where it leads. */
 type PanelField = {
   label: string;
   value: string;
   href?: string;
-  /** Los perfiles salen del sitio: no les cuentes de dónde viene quien pulsa. */
+  /** Profiles leave the site: do not tell them where whoever clicks comes from. */
   rel?: string;
-  /** Nombre accesible cuando el texto visible es solo una dirección. */
+  /** Accessible name when the visible text is only an address. */
   linkLabel?: string;
 };
 
 /**
- * El cargo y los servicios no llevan `href`: son datos de la ficha, no algo que
- * se pueda abrir. Van los primeros porque dicen quién es y a qué se dedica, que
- * es lo que se mira antes de decidir si hace falta escribirle. Los perfiles van
- * al final, detrás de las formas de contactar, y salen de `PROFILES` para que
- * las direcciones estén escritas en un solo sitio.
+ * The job title and the services have no `href`: they are profile data, not
+ * something that can be opened. They go first because they say who this is
+ * and what they do, which is what one looks at before deciding whether to
+ * write. The profiles go at the end, after the ways to get in touch, and
+ * come from `PROFILES` so the addresses are written in a single place.
  */
 function fieldsOf(contact: Contact, t: Dictionary): PanelField[] {
   return [
@@ -66,15 +66,15 @@ function downloadVCard(contact: Contact) {
   document.body.append(link);
   link.click();
   link.remove();
-  // Revocar en el mismo tick que el clic deja a Safari sin fichero que
-  // descargar: se libera en cuanto el navegador ha tomado el blob.
+  // Revoking in the same tick as the click leaves Safari with no file to
+  // download: it is released as soon as the browser has taken the blob.
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 /**
- * Los mismos datos que lleva la tarjeta 3D, en HTML: es lo que leen los
- * lectores de pantalla y los buscadores, lo que se puede pulsar para llamar
- * o escribir desde el móvil, y lo que se copia de uno en uno.
+ * The same data the 3D card carries, in HTML: it is what screen readers and
+ * search engines read, what can be tapped to call or write from a phone, and
+ * what gets copied one item at a time.
  */
 export function ContactPanel({ language }: { language: Language }) {
   const t = dictionary(language);
@@ -82,8 +82,9 @@ export function ContactPanel({ language }: { language: Language }) {
 
   return (
     <div className="flex flex-col gap-6 phone-landscape:gap-3">
-      {/* Apaisado los datos van en dos columnas: es donde sobra ancho y falta
-          alto, y en una sola columna solo se veían dos de golpe. */}
+      {/* In landscape the data goes in two columns: that is where width is
+          spare and height is short, and in a single column only two showed
+          at once. */}
       <dl className="flex flex-col gap-1 phone-landscape:grid phone-landscape:grid-cols-2 phone-landscape:gap-x-5">
         {fieldsOf(contact, t).map((field) => (
           <div key={field.label} className="border-t border-ink/10 py-2 phone-landscape:py-1">
@@ -109,10 +110,11 @@ export function ContactPanel({ language }: { language: Language }) {
         ))}
       </dl>
 
-      {/* La acción principal no se gana bajando: apaisado se queda pegada al
-          borde de abajo de la hoja, relleno incluido, mientras los datos pasan
-          por detrás. Sin bajarla hasta el borde asomarían por debajo del
-          botón; el relleno propio le devuelve el aire que se come. */}
+      {/* The primary action is not earned by scrolling: in landscape it stays
+          stuck to the bottom edge of the sheet, padding included, while the
+          data passes behind it. Without pushing it down to the edge they
+          would show below the button; its own padding gives back the air it
+          eats up. */}
       <div className="flex flex-col phone-landscape:sticky phone-landscape:-bottom-4 phone-landscape:-mb-4 phone-landscape:bg-backdrop phone-landscape:pb-4 phone-landscape:pt-2">
         <button
           type="button"

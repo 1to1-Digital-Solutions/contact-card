@@ -1,56 +1,58 @@
 /**
- * Orientación de la tarjeta alrededor de su eje vertical.
+ * Orientation of the card around its vertical axis.
  *
- * Al soltarla tras girarla, la tarjeta encaja en la media vuelta más
- * cercana: siempre acaba enseñando una cara entera, nunca el canto.
+ * When released after a spin, the card snaps to the nearest half turn: it
+ * always ends up showing a whole face, never the edge.
  */
 
 import { clamp } from "./motion";
 
 const HALF_TURN = Math.PI;
 
-/** Media vuelta más cercana al ángulo dado, en radianes. */
+/** Nearest half turn to the given angle, in radians. */
 export function snapToHalfTurn(angle: number): number {
   return Math.round(angle / HALF_TURN) * HALF_TURN;
 }
 
 /**
- * ¿Este ángulo deja el reverso hacia la cámara?
+ * Does this angle leave the back facing the camera?
  *
- * Se resuelve con el coseno en lugar de con el resto de la división porque
- * `%` conserva el signo del dividendo y los giros hacia la izquierda dan
- * ángulos negativos.
+ * It is resolved with the cosine instead of the division remainder because
+ * `%` keeps the sign of the dividend and spins to the left yield negative
+ * angles.
  */
 export function isShowingBack(angleY: number): boolean {
   return Math.cos(angleY) < 0;
 }
 
 /**
- * Cuánto llega a asomarse la tarjeta, en radianes, en el extremo del gesto.
- * Lo comparten el asomo hacia el puntero y el del giroscopio (`device-tilt.ts`):
- * son el mismo gesto con dos mandos, y con dos alcances distintos se leerían
- * como dos animaciones diferentes al pasar del ratón al móvil.
+ * How far the card peeks, in radians, at the far end of the gesture. It is
+ * shared by the peek towards the pointer and the gyroscope one
+ * (`device-tilt.ts`): they are the same gesture with two controls, and with
+ * two different reaches they would read as two different animations when
+ * moving from the mouse to the phone.
  */
 export const TILT_REACH = { turn: 0.22, pitch: 0.14 } as const;
 
-/** Lo que el puntero le suma a la orientación de la tarjeta, en radianes. */
+/** What the pointer adds to the card's orientation, in radians. */
 export type PointerTilt = {
-  /** Giro alrededor del eje vertical. */
+  /** Turn around the vertical axis. */
   turn: number;
-  /** Cabeceo alrededor del eje horizontal. */
+  /** Pitch around the horizontal axis. */
   pitch: number;
 };
 
 /**
- * Inclinación de la tarjeta según por dónde ande el puntero, con el ratón
- * lejos de ella. Las coordenadas llegan normalizadas de -1 (izquierda, abajo)
- * a 1 (derecha, arriba), como las da la escena, y se recortan porque el
- * puntero puede salirse del lienzo sin soltar la captura.
+ * Tilt of the card according to where the pointer is, with the mouse away
+ * from it. The coordinates arrive normalised from -1 (left, bottom) to 1
+ * (right, top), as the scene provides them, and are clamped because the
+ * pointer can leave the canvas without releasing the capture.
  *
- * El lado por el que pasa el puntero es el que se hunde, igual que si lo
- * empujara: un giro positivo alrededor del eje vertical aleja el borde
- * derecho, y uno positivo alrededor del horizontal acerca el superior. Es la
- * misma correspondencia que ya tiene el gesto de girar arrastrando el fondo.
+ * The side the pointer passes over is the one that sinks, as if it were
+ * pushing it: a positive turn around the vertical axis moves the right edge
+ * away, and a positive one around the horizontal axis brings the top edge
+ * closer. It is the same mapping the spin-by-dragging-the-background gesture
+ * already has.
  */
 export function pointerTilt(pointerX: number, pointerY: number): PointerTilt {
   return {

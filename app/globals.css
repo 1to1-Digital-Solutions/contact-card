@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
-/* La clase `.dark`/`.light` de <html> manda sobre el tema, como en el resto
-   de proyectos de la marca. La pone `lib/theme.ts` antes del primer pintado. */
+/* The `.dark`/`.light` class on <html> rules the theme, as in the rest of
+   the brand's projects. `lib/theme.ts` sets it before the first paint. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Móvil apaisado: sobra ancho y falta alto, así que la tarjeta se lleva la
-  pantalla entera y los mandos flotan encima en vez de robarle sitio. La misma
-  consulta está en `lib/use-media-query.ts` —la escena la necesita para darle
-  su tamaño a la tarjeta— y `use-media-query.test.ts` compara las dos.
+  Phone in landscape: width to spare and height short, so the card takes the
+  whole screen and the controls float on top instead of stealing room from
+  it. The same query is in `lib/use-media-query.ts` —the scene needs it to
+  size the card— and `use-media-query.test.ts` compares the two.
 */
 @custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 32rem) and (max-width: 63.99rem));
 
 /*
-  Hay sitio para el rótulo del mando al lado de su icono, y para la pista larga:
-  una pantalla ancha que no sea un móvil apaisado. Sustituye a `sm:` en esos dos
-  sitios, que si no enseñarían el texto justo donde no cabe.
+  There is room for the control's label next to its icon, and for the long
+  hint: a wide screen that is not a phone in landscape. It replaces `sm:` in
+  those two places, which would otherwise show the text right where it does
+  not fit.
 */
 @custom-variant roomy {
   @media (min-width: 40rem) and (height > 32rem) {
@@ -28,11 +29,11 @@
 }
 
 /*
-  Tokens de marca de 1to1 Digital Solutions. Los valores deben coincidir con
-  los de `lib/brand.ts` (three.js no puede leer variables CSS, así que la
-  paleta vive en los dos sitios): al cambiar uno hay que cambiar el otro.
-  `inline` es lo que hace que las utilidades emitan la variable en vez de su
-  valor, que es lo que permite cambiar de tema sin recompilar nada.
+  1to1 Digital Solutions brand tokens. The values must match those in
+  `lib/brand.ts` (three.js cannot read CSS variables, so the palette lives in
+  both places): when changing one, change the other. `inline` is what makes
+  the utilities emit the variable instead of its value, which is what allows
+  switching themes without recompiling anything.
 */
 @theme inline {
   --color-backdrop: var(--backdrop);
@@ -53,19 +54,19 @@
   --on-accent: #1c1c1f;
 
   /*
-    Grano de papel: ruido fractal en un SVG en línea, sin fichero que
-    descargar. Es lo que da a la tarjeta plana la textura que en 3D dan el
-    relieve y la rugosidad del material.
+    Paper grain: fractal noise in an inline SVG, with no file to download. It
+    is what gives the flat card the texture that in 3D comes from the
+    material's relief and roughness.
   */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
 /*
-  Tema oscuro, el de partida. Las dos veladuras del fondo van en esquinas
-  opuestas para no coincidir a plena intensidad; `--glaze-b` es la que más
-  desvía la luminancia del fondo y, junto con `--halo`, marca el peor caso de
-  contraste del texto que cae sobre la escena (`lib/brand.test.ts` lee estas
-  tres variables y rehace la cuenta).
+  Dark theme, the starting one. The two background glazes go in opposite
+  corners so they do not coincide at full intensity; `--glaze-b` is the one
+  that shifts the background luminance the most and, together with `--halo`,
+  marks the worst case of contrast for the text that lands over the scene
+  (`lib/brand.test.ts` reads these three variables and redoes the math).
 */
 :root,
 .dark {
@@ -80,8 +81,9 @@
 
   --glaze-a: 0.12;
   --glaze-b: 0.14;
-  /* Sobre fondo oscuro la tarjeta se separa con un claro y sobre fondo claro,
-     con una sombra: por eso el halo cambia de tinta con el tema. */
+  /* Over a dark background the card stands out with a light, and over a
+     light background, with a shadow: that is why the halo changes ink with
+     the theme. */
   --halo: 0.09;
   --halo-color: #ffffff;
 }
@@ -103,8 +105,8 @@
 }
 
 @layer components {
-  /* Claro (o sombra) difusa tras la tarjeta: la separa del fondo sin fingir
-     una pared con una sombra proyectada. */
+  /* Diffuse light (or shadow) behind the card: it separates it from the
+     background without faking a wall with a cast shadow. */
   .card-halo {
     background: radial-gradient(
       32rem 24rem at 50% 46%,
@@ -114,13 +116,13 @@
   }
 
   /*
-    La hoja de datos entra y sale en lugar de aparecer de golpe. `display` y
-    `overlay` con `allow-discrete` son lo que deja al <dialog> quedarse en
-    pantalla mientras se va (sin ellos, el navegador lo esconde en el mismo
-    fotograma en que pierde `open`), y `@starting-style` da el estado del que
-    entra: sin él, la hoja se pintaría ya colocada y solo se animaría al
-    cerrarse. Las reglas viven aquí, y no en utilidades, porque nada de esto
-    se puede escribir como una clase de Tailwind.
+    The data sheet slides in and out instead of popping up. `display` and
+    `overlay` with `allow-discrete` are what let the <dialog> stay on screen
+    while it leaves (without them, the browser hides it in the same frame it
+    loses `open`), and `@starting-style` gives the state it enters from:
+    without it, the sheet would be painted already in place and would only
+    animate on closing. The rules live here, and not in utilities, because
+    none of this can be written as a Tailwind class.
   */
   .contact-sheet {
     opacity: 0;
@@ -158,8 +160,8 @@
     }
   }
 
-  /* El deslizamiento solo para quien no ha pedido menos movimiento; a quien lo
-     ha pedido le queda el fundido, que no desplaza nada. */
+  /* The slide only for whoever has not asked for less motion; whoever has
+     keeps the fade, which moves nothing. */
   @media (prefers-reduced-motion: no-preference) {
     .contact-sheet {
       translate: 0 100%;
@@ -180,9 +182,10 @@
       }
     }
 
-    /* Apaisado la hoja cuelga del borde derecho, así que entra y sale por ahí:
-       el mismo deslizamiento, girado al eje X. La consulta es la variante, y no
-       un `@media` escrito a mano, para que no se separe de `PHONE_LANDSCAPE`. */
+    /* In landscape the sheet hangs from the right edge, so it enters and
+       leaves through there: the same slide, turned to the X axis. The query
+       is the variant, and not a hand-written `@media`, so it does not drift
+       from `PHONE_LANDSCAPE`. */
     @variant phone-landscape {
       .contact-sheet {
         translate: 100% 0;
@@ -196,8 +199,8 @@
     }
   }
 
-  /* Textura de papel para la tarjeta plana: el grano se funde con el color de
-     la cara en vez de pintarse encima, para no ensuciar el texto. */
+  /* Paper texture for the flat card: the grain blends with the face's color
+     instead of being painted on top, so as not to dirty the text. */
   .paper-grain::after {
     content: "";
     position: absolute;
@@ -211,10 +214,10 @@
 }
 
 @layer base {
-  /* Dos veladuras del verde de marca sobre el fondo, en esquinas opuestas.
-     La proporción se mantiene baja a propósito: mueven la luminancia del
-     fondo y con ella el contraste del texto que va encima (ver la nota de
-     los tokens del tema). */
+  /* Two glazes of the brand green over the background, in opposite corners.
+     The ratio is kept low on purpose: they shift the background luminance
+     and with it the contrast of the text on top (see the note on the theme
+     tokens). */
   body {
     background:
       radial-gradient(
@@ -231,12 +234,12 @@
     background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-sans);
-    /* El arrastre de la tarjeta no debe arrastrar la página con él. */
+    /* Dragging the card must not drag the page along with it. */
     overscroll-behavior: none;
   }
 
-  /* Grano de ambiente, detrás del contenido: da cuerpo al fondo sin llegar a
-     tocar el texto, que va por encima. */
+  /* Ambient grain, behind the content: it gives body to the background
+     without reaching the text, which sits on top. */
   body::before {
     content: "";
     position: fixed;

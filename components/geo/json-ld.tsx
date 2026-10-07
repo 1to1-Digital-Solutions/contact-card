@@ -2,8 +2,8 @@ import { type Contact, PROFILES } from "@/lib/contact";
 import { SITE_URL } from "@/lib/site";
 
 /**
- * Inserta datos estructurados schema.org. Escapa `<` para que ningún valor
- * pueda cerrar la etiqueta `<script>` y colar marcado en la página.
+ * Inserts schema.org structured data. It escapes `<` so no value can close
+ * the `<script>` tag and sneak markup into the page.
  */
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
@@ -17,9 +17,10 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
 }
 
 /**
- * Ficha de la persona con su empresa, para buscadores y motores de IA. Recibe
- * el contacto ya resuelto en un idioma: el cargo y a qué se dedica van en el
- * que se está sirviendo, que es el mismo que anuncia `<html lang>`.
+ * The person's profile with their company, for search engines and AI
+ * engines. It receives the contact already resolved into a language: the job
+ * title and what they do go in the one being served, which is the same one
+ * `<html lang>` announces.
  */
 export function personSchema(contact: Contact) {
   return {
@@ -29,15 +30,16 @@ export function personSchema(contact: Contact) {
     givenName: contact.givenName,
     familyName: contact.familyName,
     jobTitle: contact.jobTitle,
-    // A qué se dedica, que es lo que se responde cuando preguntan por alguien.
-    // Va la línea de servicios y no el lema: el lema promete, y aquí se declara
-    // lo que se hace. Es además el texto que se lee en el panel de datos.
+    // What they do, which is what gets answered when someone asks about a
+    // person. It is the services line and not the tagline: the tagline
+    // promises, and here what is done is declared. It is also the text read
+    // in the data panel.
     description: contact.services,
     email: `mailto:${contact.email}`,
     telephone: contact.phoneE164,
     url: SITE_URL,
-    // `sameAs` es como se dice «esta persona es también la de estos perfiles»:
-    // es lo que ata la ficha a LinkedIn y a GitHub.
+    // `sameAs` is how to say "this person is also the one in these profiles":
+    // it is what ties the profile to LinkedIn and GitHub.
     sameAs: PROFILES.map((profile) => profile.url),
     worksFor: {
       "@type": "Organization",

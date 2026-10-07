@@ -1,15 +1,15 @@
 /**
- * Agitar el móvil para dar la vuelta a la tarjeta.
+ * Shaking the phone to flip the card over.
  *
- * Es una máquina de estados pura sobre lecturas del acelerómetro —cada una con
- * su marca de tiempo— para poder probar con sacudidas de mentira que un paseo
- * no da vueltas a la tarjeta y que una sacudida de verdad sí. Quien la llama
- * solo escucha el sensor y le pasa lo que llega.
+ * It is a pure state machine over accelerometer readings —each with its
+ * timestamp— so it can be tested with fake shakes that a walk does not flip
+ * the card and a real shake does. The caller only listens to the sensor and
+ * passes along what arrives.
  */
 
 import { smoothTowards, type SmoothConfig } from "./motion";
 
-/** Una lectura del acelerómetro, en m/s², con su instante en milisegundos. */
+/** One accelerometer reading, in m/s², with its instant in milliseconds. */
 export type ShakeSample = {
   x: number;
   y: number;
@@ -18,53 +18,53 @@ export type ShakeSample = {
 };
 
 /**
- * Con qué rapidez se olvida hacia dónde tira la gravedad. Es un filtro de paso
- * alto: lo que cambia despacio —la gravedad, girar el móvil en la mano— se va
- * con la media y solo queda el tirón. Hace falta porque no todos los
- * navegadores entregan la aceleración con la gravedad ya descontada.
+ * How quickly the direction gravity pulls in is forgotten. It is a high-pass
+ * filter: what changes slowly —gravity, turning the phone in the hand— goes
+ * away with the average and only the jolt remains. It is needed because not
+ * every browser delivers the acceleration with gravity already subtracted.
  */
 const GRAVITY: SmoothConfig = { halfLife: 0.35, rest: 0 };
 
 const SHAKE = {
   /**
-   * Tirón que cuenta como golpe, en m/s². Es un valor alto a propósito: por
-   * debajo, andar con el móvil en la mano acabaría volteando la tarjeta.
+   * Jolt that counts as a hit, in m/s². It is a high value on purpose: below
+   * it, walking with the phone in hand would end up flipping the card.
    */
   jolt: 12,
-  /** Golpes que hacen una sacudida: uno solo es un tropiezo, no una intención. */
+  /** Hits that make a shake: a single one is a stumble, not an intention. */
   jolts: 3,
   /**
-   * Tiempo mínimo entre golpes, en milisegundos. Un mismo tirón dura varias
-   * lecturas del sensor, y sin esto contaría como una sacudida entera.
+   * Minimum time between hits, in milliseconds. A single jolt lasts several
+   * sensor readings, and without this it would count as a whole shake.
    */
   gap: 90,
-  /** Ventana en la que tienen que caber los golpes, en milisegundos. */
+  /** Window the hits have to fit in, in milliseconds. */
   window: 900,
   /**
-   * Reposo tras dar por buena una sacudida. Agitar dura más que la sacudida
-   * que se reconoce, y sin esto la tarjeta daría vueltas mientras dure el
-   * gesto en vez de la media vuelta que se ha pedido.
+   * Rest after accepting a shake. Shaking lasts longer than the shake that
+   * gets recognised, and without this the card would keep flipping for as
+   * long as the gesture lasts instead of the half turn that was asked for.
    */
   cooldown: 1000,
 };
 
 /**
- * Lo que hay que recordar entre lecturas: hacia dónde tira la gravedad, los
- * golpes que llevamos y hasta cuándo dura el reposo.
+ * What has to be remembered between readings: where gravity pulls, the hits
+ * counted so far and until when the rest lasts.
  */
 export type ShakeState = {
   gravity: { x: number; y: number; z: number };
-  /** Instante de la última lectura, o -1 mientras no haya llegado ninguna. */
+  /** Instant of the last reading, or -1 while none has arrived. */
   time: number;
   jolts: number;
-  /** Instante del primer golpe de la racha y del último contado. */
+  /** Instant of the first hit of the streak and of the last one counted. */
   first: number;
   last: number;
-  /** A partir de cuándo se vuelven a contar golpes. */
+  /** From when hits are counted again. */
   ready: number;
 };
 
-/** El móvil quieto y sin nada contado: por aquí se empieza. */
+/** The phone still and nothing counted: this is where it starts. */
 export const STILL: ShakeState = {
   gravity: { x: 0, y: 0, z: 0 },
   time: -1,
@@ -75,22 +75,22 @@ export const STILL: ShakeState = {
 };
 
 /**
- * Salto entre lecturas, en segundos, que ya no vale para filtrar nada: la
- * pestaña estuvo dormida o el sensor se ha reenganchado. Se vuelve a empezar
- * en vez de medir un tirón que no ha existido.
+ * Gap between readings, in seconds, that is no longer good for filtering
+ * anything: the tab was asleep or the sensor has reattached. It starts over
+ * instead of measuring a jolt that never happened.
  */
 const MAX_GAP = 1;
 
-/** Una lectura del sensor: qué queda del estado y si esto ha sido una sacudida. */
+/** One sensor reading: what remains of the state and whether this was a shake. */
 export function stepShake(
   state: ShakeState,
   sample: ShakeSample,
 ): { state: ShakeState; shaken: boolean } {
   const dt = (sample.time - state.time) / 1000;
 
-  // La primera lectura solo sirve para saber dónde está el suelo: medir un
-  // tirón contra una gravedad que todavía vale cero daría una sacudida al
-  // abrir la página.
+  // The first reading only serves to learn where the ground is: measuring a
+  // jolt against a gravity that is still zero would yield a shake on opening
+  // the page.
   if (state.time < 0 || dt <= 0 || dt > MAX_GAP) {
     return {
       state: {
@@ -111,7 +111,7 @@ export function stepShake(
   const jolt = Math.hypot(sample.x - gravity.x, sample.y - gravity.y, sample.z - gravity.z);
 
   const next: ShakeState = { ...state, gravity, time: sample.time };
-  // La racha caduca: unos golpes sueltos y espaciados no son una sacudida.
+  // The streak expires: a few loose, spaced-out hits are not a shake.
   if (sample.time - state.first > SHAKE.window) next.jolts = 0;
 
   const counts =

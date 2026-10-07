@@ -10,7 +10,7 @@ import {
 
 const CONFIG: SpringConfig = { stiffness: 180, damping: 26 };
 
-/** Simula `seconds` segundos a 60 fps y devuelve el estado final. */
+/** Simulates `seconds` seconds at 60 fps and returns the final state. */
 function simulate(
   state: SpringState,
   target: number,
@@ -26,64 +26,64 @@ function simulate(
 }
 
 describe("stepSpring", () => {
-  it("converge al objetivo y se detiene", () => {
+  it("converges to the target and comes to rest", () => {
     const final = simulate({ value: 0, velocity: 0 }, 5, 3);
     expect(final.value).toBeCloseTo(5, 3);
     expect(Math.abs(final.velocity)).toBeLessThan(0.01);
   });
 
-  it("se mueve hacia el objetivo desde el primer paso", () => {
+  it("moves towards the target from the very first step", () => {
     const after = stepSpring({ value: 0, velocity: 0 }, 1, CONFIG, 1 / 60);
     expect(after.value).toBeGreaterThan(0);
     expect(after.value).toBeLessThan(1);
   });
 
-  it("funciona igual con el objetivo por debajo del valor actual", () => {
+  it("works the same with the target below the current value", () => {
     const final = simulate({ value: 10, velocity: 0 }, -2, 3);
     expect(final.value).toBeCloseTo(-2, 3);
   });
 
-  it("no diverge con un delta grande (pestaña en segundo plano)", () => {
-    // Sin subdividir el paso de integración, este delta hace explotar a Euler.
+  it("does not diverge with a large delta (background tab)", () => {
+    // Without subdividing the integration step, this delta blows Euler up.
     const after = stepSpring({ value: 0, velocity: 0 }, 1, CONFIG, 0.5);
     expect(Number.isFinite(after.value)).toBe(true);
     expect(Math.abs(after.value)).toBeLessThan(2);
   });
 
-  it("conserva la energía inicial: una velocidad de entrada sobrepasa el objetivo", () => {
-    const suave: SpringConfig = { stiffness: 120, damping: 6 };
-    const after = stepSpring({ value: 0, velocity: 20 }, 0, suave, 1 / 60);
+  it("keeps the initial energy: an incoming velocity overshoots the target", () => {
+    const soft: SpringConfig = { stiffness: 120, damping: 6 };
+    const after = stepSpring({ value: 0, velocity: 20 }, 0, soft, 1 / 60);
     expect(after.value).toBeGreaterThan(0);
   });
 
-  it("con más amortiguación tarda más en llegar", () => {
-    const blando = simulate({ value: 0, velocity: 0 }, 1, 0.2, {
+  it("takes longer to arrive with more damping", () => {
+    const loose = simulate({ value: 0, velocity: 0 }, 1, 0.2, {
       stiffness: 180,
       damping: 12,
     });
-    const rigido = simulate({ value: 0, velocity: 0 }, 1, 0.2, {
+    const stiff = simulate({ value: 0, velocity: 0 }, 1, 0.2, {
       stiffness: 180,
       damping: 60,
     });
-    expect(blando.value).toBeGreaterThan(rigido.value);
+    expect(loose.value).toBeGreaterThan(stiff.value);
   });
 
-  it("ignora los deltas nulos o negativos", () => {
+  it("ignores zero or negative deltas", () => {
     const state = { value: 3, velocity: 1 };
     expect(stepSpring(state, 0, CONFIG, 0)).toBe(state);
     expect(stepSpring(state, 0, CONFIG, -1)).toBe(state);
   });
 
-  it("la masa frena la respuesta", () => {
-    const ligero = simulate({ value: 0, velocity: 0 }, 1, 0.15, {
+  it("mass slows the response down", () => {
+    const light = simulate({ value: 0, velocity: 0 }, 1, 0.15, {
       ...CONFIG,
       mass: 1,
     });
-    const pesado = simulate({ value: 0, velocity: 0 }, 1, 0.15, {
+    const heavy = simulate({ value: 0, velocity: 0 }, 1, 0.15, {
       ...CONFIG,
       mass: 4,
     });
-    expect(pesado.value).toBeLessThan(ligero.value);
+    expect(heavy.value).toBeLessThan(light.value);
   });
 });
 
@@ -91,7 +91,7 @@ describe("smoothTowards", () => {
   const SMOOTH: SmoothConfig = { halfLife: 0.04, rest: 0.0005 };
   const FRAME = 1 / 60;
 
-  /** Suaviza `seconds` segundos a 60 fps hacia un objetivo que no se mueve. */
+  /** Smooths `seconds` seconds at 60 fps towards a target that does not move. */
   function follow(from: number, target: number, seconds: number, config = SMOOTH) {
     let value = from;
     for (let t = 0; t < seconds; t += FRAME) {
@@ -100,28 +100,30 @@ describe("smoothTowards", () => {
     return value;
   }
 
-  it("recorre la mitad de lo que falta en cada vida media", () => {
+  it("covers half of what is left in each half-life", () => {
     expect(smoothTowards(0, 1, SMOOTH, SMOOTH.halfLife)).toBeCloseTo(0.5, 6);
     expect(smoothTowards(0, 1, SMOOTH, SMOOTH.halfLife * 2)).toBeCloseTo(0.75, 6);
   });
 
   /**
-   * Los recorridos van en coordenadas de puntero, que es donde se usa el
-   * filtro: de -1 a 1, así que 1 es media pantalla y 2 el peor caso posible.
+   * The distances are in pointer coordinates, which is where the filter is
+   * used: from -1 to 1, so 1 is half a screen and 2 the worst possible case.
    */
-  it("se planta en el objetivo en vez de quedarse flotando cerca", () => {
-    // Sin el umbral de reposo esto seguiría acercándose sin llegar nunca, y la
-    // tarjeta seguiría moviéndose —cada vez menos— con el ratón ya quieto.
+  it("snaps to the target instead of hovering near it", () => {
+    // Without the rest threshold this would keep approaching without ever
+    // arriving, and the card would keep moving —less and less— with the mouse
+    // already still.
     expect(follow(0, 1, 0.5)).toBe(1);
   });
 
-  it("no tarda en pararse: medio segundo basta para el recorrido más largo", () => {
+  it("stops promptly: half a second is enough for the longest distance", () => {
     expect(follow(1, -1, 0.5)).toBe(-1);
   });
 
-  it("no depende de la tasa de refresco", () => {
-    // Los mismos 200 ms en 12 pasos (60 fps) y en 6 (30 fps) dejan la señal en
-    // el mismo sitio: quien va a 30 fps ve el mismo gesto, no uno más lento.
+  it("does not depend on the refresh rate", () => {
+    // The same 200 ms in 12 steps (60 fps) and in 6 (30 fps) leave the signal
+    // in the same place: someone at 30 fps sees the same gesture, not a slower
+    // one.
     const over = (steps: number) => {
       let value = 0;
       for (let i = 0; i < steps; i++) value = smoothTowards(value, 1, SMOOTH, 0.2 / steps);
@@ -130,9 +132,10 @@ describe("smoothTowards", () => {
     expect(over(6)).toBeCloseTo(over(12), 6);
   });
 
-  it("reparte el recorrido en el tiempo pero no se come nada", () => {
-    // El giro suma los avances del puntero amortiguado frame a frame: si el
-    // filtro perdiera parte del camino, el mismo gesto giraría menos que antes.
+  it("spreads the distance over time but swallows none of it", () => {
+    // The turn adds up the smoothed pointer's advances frame by frame: if the
+    // filter lost part of the way, the same gesture would turn less than
+    // before.
     let value = 0;
     let travelled = 0;
     for (let i = 0; i < 60; i++) {
@@ -144,15 +147,16 @@ describe("smoothTowards", () => {
   });
 
   /**
-   * El de arriba mide un objetivo quieto. Con el objetivo en marcha el filtro
-   * va por detrás y en todo momento le queda un trozo sin repartir: a la
-   * velocidad de un golpe de muñeca son ~0,17 unidades de puntero, que en el
-   * giro de la tarjeta pasan de 30°. Por eso quien sume los avances frame a
-   * frame —el gesto de girar— tiene que cobrarse ese resto al soltar: lo
-   * repartido más lo que falta es, exactamente, todo lo que se movió.
+   * The one above measures a still target. With a moving target the filter
+   * lags behind and at every moment there is a piece left undelivered: at the
+   * speed of a flick of the wrist that is ~0.17 pointer units, which in the
+   * card's turn is more than 30°. That is why whoever adds up the advances
+   * frame by frame —the turning gesture— has to collect that remainder on
+   * release: what was delivered plus what is left is, exactly, everything that
+   * moved.
    */
-  it("va por detrás de un objetivo en marcha y deja un resto sin repartir", () => {
-    /** Tres unidades de puntero por segundo: un ratón moviéndose deprisa. */
+  it("lags behind a moving target and leaves a remainder undelivered", () => {
+    /** Three pointer units per second: a mouse moving fast. */
     const STEP = 3 * FRAME;
     let value = 0;
     let target = 0;
@@ -167,7 +171,7 @@ describe("smoothTowards", () => {
     expect(delivered + (target - value)).toBeCloseTo(target, 10);
   });
 
-  it("no sobrepasa el objetivo ni rebota, a diferencia del muelle", () => {
+  it("neither overshoots the target nor bounces, unlike the spring", () => {
     let value = 0;
     for (let i = 0; i < 60; i++) {
       const next = smoothTowards(value, 1, SMOOTH, FRAME);
@@ -177,25 +181,25 @@ describe("smoothTowards", () => {
     }
   });
 
-  it("sin vida media deja pasar el objetivo tal cual", () => {
-    // Es lo que reciben el dedo y quien ha pedido menos movimiento: el gesto
-    // sin filtrar, igual que antes de que existiera este suavizado.
+  it("without a half-life lets the target through as is", () => {
+    // This is what the finger and whoever asked for less motion get: the
+    // unfiltered gesture, just as before this smoothing existed.
     const direct: SmoothConfig = { halfLife: 0, rest: 0 };
     expect(smoothTowards(0, 0.37, direct, FRAME)).toBe(0.37);
   });
 
-  it("ignora los deltas nulos o negativos", () => {
+  it("ignores zero or negative deltas", () => {
     expect(smoothTowards(3, 0, SMOOTH, 0)).toBe(3);
     expect(smoothTowards(3, 0, SMOOTH, -1)).toBe(3);
   });
 
-  it("funciona igual acercándose desde arriba", () => {
+  it("works the same approaching from above", () => {
     expect(follow(1, -0.4, 0.5)).toBe(-0.4);
   });
 });
 
 describe("clamp", () => {
-  it("recorta por arriba y por abajo y respeta lo que está dentro", () => {
+  it("clips above and below and respects what is inside", () => {
     expect(clamp(5, 0, 1)).toBe(1);
     expect(clamp(-5, 0, 1)).toBe(0);
     expect(clamp(0.5, 0, 1)).toBe(0.5);

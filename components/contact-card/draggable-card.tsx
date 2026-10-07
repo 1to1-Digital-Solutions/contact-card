@@ -22,56 +22,57 @@ import { FINE_POINTER, PHONE_LANDSCAPE, useMediaQuery } from "@/lib/use-media-qu
 import { useShake } from "@/lib/use-shake";
 import { CardMesh } from "./card-mesh";
 
-/** Mientras se agarra, la tarjeta persigue al puntero de cerca. */
+/** While grabbed, the card follows the pointer closely. */
 const GRAB: SpringConfig = { stiffness: 190, damping: 22 };
-/** Al soltarla vuelve al centro con algo de rebote, como si colgara. */
+/** When released it returns to the center with some bounce, as if hanging. */
 const RELEASE: SpringConfig = { stiffness: 55, damping: 11 };
 const ROTATION: SpringConfig = { stiffness: 80, damping: 15 };
 const TILT: SpringConfig = { stiffness: 110, damping: 16 };
 
-/** Radianes de giro por cada unidad de recorrido del puntero (que va de -1 a 1). */
+/** Radians of turn per unit of pointer travel (which goes from -1 to 1). */
 const SPIN_GAIN = 3.4;
-/** Cuánto se inclina la tarjeta al arrastrarla rápido. */
+/** How much the card tilts when dragged fast. */
 const SWAY_GAIN = 0.05;
 const MAX_SWAY = 0.45;
 const MAX_PITCH = 1.1;
 /**
- * Recorrido del vaivén de bienvenida, en anchos de tarjeta. Se mide sobre la
- * tarjeta y no sobre la pantalla porque la tarjeta ya se escala al hueco:
- * así el gesto se ve igual de grande en un móvil que en un escritorio.
+ * Reach of the welcome sway, in card widths. It is measured against the
+ * card and not against the screen because the card already scales to the
+ * available space: that way the gesture looks just as big on a phone as on
+ * a desktop.
  */
 const SWAY_REACH = 0.12;
 
 /**
- * Amortiguación del puntero antes de que la tarjeta lo persiga. El ratón es
- * preciso y rápido, y entre frame y frame da saltos que el muelle del arrastre
- * repite tal cual: el movimiento se ve a tirones y el balanceo, que se calcula
- * de la velocidad del gesto, da respingos. Filtrando el puntero se arreglan los
- * dos de una vez, y el gesto sigue llegando entero a donde iba.
+ * Smoothing of the pointer before the card chases it. The mouse is precise
+ * and fast, and between one frame and the next it jumps in a way the drag
+ * spring repeats as is: the motion looks jerky and the sway, which is
+ * computed from the gesture's velocity, twitches. Filtering the pointer
+ * fixes both at once, and the gesture still arrives whole where it was going.
  *
- * La vida media es un compromiso: por debajo no se nota y por encima la tarjeta
- * empieza a despegarse del cursor. El reposo va en coordenadas de puntero (de
- * -1 a 1, media pantalla por unidad), así que es de menos de un píxel.
+ * The half-life is a compromise: below it goes unnoticed and above it the
+ * card starts to detach from the cursor. The rest threshold is in pointer
+ * coordinates (from -1 to 1, half a screen per unit), so it is under a pixel.
  */
 const POINTER_SMOOTHING: SmoothConfig = { halfLife: 0.04, rest: 0.0005 };
 /**
- * El puntero sin filtrar, que es lo que quieren el dedo y quien ha pedido menos
- * movimiento: con el dedo la tarjeta se toca, y cualquier retardo se lee como
- * que se despega de él; el muestreo táctil, además, ya llega suave.
+ * The unfiltered pointer, which is what the finger and whoever asked for
+ * less motion want: with the finger the card is touched, and any lag reads
+ * as it detaching from it; touch sampling, besides, already arrives smooth.
  */
 const POINTER_DIRECT: SmoothConfig = { halfLife: 0, rest: 0 };
 
 type Mode = "idle" | "move" | "rotate";
 
 type Props = {
-  /** Cada incremento provoca media vuelta. Lo controla el botón de la interfaz. */
+  /** Each increment triggers half a turn. It is driven by the UI button. */
   flipCount: number;
-  /** Cada incremento devuelve la tarjeta a su posición de reposo. */
+  /** Each increment returns the card to its resting position. */
   resetCount: number;
   onFaceChange: (showingBack: boolean) => void;
   onGrabChange: (grabbing: boolean) => void;
   reducedMotion: boolean;
-  /** Se pueden leer los sensores del móvil: el giroscopio y las sacudidas. */
+  /** The phone's sensors can be read: the gyroscope and the shakes. */
   motionEnabled: boolean;
   theme: ThemeName;
   language: Language;
@@ -80,10 +81,10 @@ type Props = {
 const spring = (value = 0): SpringState => ({ value, velocity: 0 });
 
 /**
- * Punto del plano z = 0 que hay bajo el puntero. Se calcula a mano en vez
- * de con un raycast porque durante el arrastre el puntero puede estar
- * fuera de cualquier objeto (e incluso fuera del canvas, gracias a la
- * captura de puntero) y aun así la tarjeta debe seguirlo.
+ * Point of the z = 0 plane under the pointer. It is computed by hand instead
+ * of with a raycast because during the drag the pointer may be off any
+ * object (and even off the canvas, thanks to pointer capture) and the card
+ * must still follow it.
  */
 function pointerToWorld(
   pointer: THREE.Vector2,
@@ -96,9 +97,9 @@ function pointerToWorld(
 }
 
 /**
- * Qué dedo, dónde y cuándo cayó el puntero. React Three Fiber copia al
- * evento de la escena las propiedades del evento nativo, así que estas
- * cuatro salen de él tal cual y miden en píxeles de pantalla y milisegundos.
+ * Which finger, where and when the pointer went down. React Three Fiber
+ * copies the native event's properties onto the scene event, so these four
+ * come straight from it and are measured in screen pixels and milliseconds.
  */
 const markOf = (event: ThreeEvent<PointerEvent>): PointerMark => ({
   pointerId: event.pointerId,
@@ -117,9 +118,9 @@ export function DraggableCard({
   theme,
   language,
 }: Props) {
-  // La tarjeta se escala al hueco visible en lugar de mover la cámara: así
-  // cabe con aire tanto en un móvil vertical como en una pantalla ancha, y
-  // el arrastre sigue trabajando en coordenadas de mundo sin corrección.
+  // The card scales to the visible space instead of moving the camera: that
+  // way it fits with air both on a portrait phone and on a wide screen, and
+  // the drag keeps working in world coordinates with no correction.
   const viewport = useThree((state) => state.viewport);
   const phoneLandscape = useMediaQuery(PHONE_LANDSCAPE);
   const scale = cardScale(viewport, CARD, phoneLandscape);
@@ -127,15 +128,15 @@ export function DraggableCard({
   const finePointer = useMediaQuery(FINE_POINTER);
 
   const group = useRef<THREE.Group>(null);
-  // La tarjeta llega desde fuera de la pantalla: empieza por encima del borde
-  // y el muelle de reposo la deja en el centro. A quien pide menos movimiento
-  // se le enseña ya colocada.
+  // The card arrives from off-screen: it starts above the edge and the
+  // resting spring leaves it at the center. Whoever asks for less motion is
+  // shown it already in place.
   const position = useRef({
     x: spring(),
     y: spring(reducedMotion ? 0 : entryOffsetY(viewport.height / 2, half.height)),
   });
   const rotation = useRef({ x: spring(), y: spring(), z: spring() });
-  /** Giro acumulado por el usuario, aparte del vaivén en reposo. */
+  /** Turn accumulated by the user, apart from the resting sway. */
   const spin = useRef({ pitch: 0, turn: 0 });
   const drag = useRef({
     mode: "idle" as Mode,
@@ -147,48 +148,49 @@ export function DraggableCard({
     targetY: 0,
   });
   /**
-   * El puntero amortiguado: es este y no el del navegador el que mueve, gira e
-   * inclina la tarjeta. Se sigue filtrando en reposo para que un gesto empiece
-   * ya al día y no arrastre el retraso de lo que se movió antes.
+   * The smoothed pointer: this one, and not the browser's, is what moves,
+   * turns and tilts the card. It keeps being filtered at rest so a gesture
+   * starts already up to date instead of dragging along the lag of whatever
+   * moved before.
    */
   const pointer = useRef(new THREE.Vector2());
   /**
-   * El puntero sin filtrar, tal y como lo deja el navegador. La escena guarda
-   * siempre el mismo vector y lo reescribe en cada evento, así que se puede
-   * leer fuera del bucle de render: al soltar hace falta saber dónde acabó el
-   * gesto de verdad, no dónde iba el filtro.
+   * The unfiltered pointer, just as the browser leaves it. The scene always
+   * keeps the same vector and rewrites it on every event, so it can be read
+   * outside the render loop: on release one needs to know where the gesture
+   * really ended, not where the filter was heading.
    */
   const rawPointer = useThree((state) => state.pointer);
   const showingBack = useRef(false);
-  /** Toque en curso sobre la tarjeta y último toque completado, para el doble. */
+  /** Tap in progress on the card and last completed tap, for the double tap. */
   const pressed = useRef<PointerMark | null>(null);
   const lastTap = useRef<PointerMark | null>(null);
   const scratch = useRef(new THREE.Vector3());
   const previousFlips = useRef(flipCount);
   const previousResets = useRef(resetCount);
   /**
-   * El vaivén de bienvenida: cuándo apareció la tarjeta —se fija en el primer
-   * frame, que es cuando se la ve— y si todavía toca enseñarlo.
+   * The welcome sway: when the card appeared —set on the first frame, which
+   * is when it is seen— and whether it is still due to be shown.
    */
   const intro = useRef({ start: -1, live: true });
 
-  /** Quien ya ha tocado la tarjeta no necesita que le enseñen a moverla. */
+  /** Whoever has already touched the card needs no teaching on how to move it. */
   const cancelIntro = useCallback(() => {
     intro.current.live = false;
   }, []);
 
   /**
-   * Lo que en un escritorio hace el ratón, en un móvil lo hace el giroscopio:
-   * la tarjeta se asoma hacia donde se incline el aparato. Con ratón no se
-   * escucha —la tarjeta ya sigue al puntero y los dos asomos se sumarían—, y
-   * con `prefers-reduced-motion` tampoco, igual que el asomo del puntero.
+   * What the mouse does on a desktop, the gyroscope does on a phone: the card
+   * leans towards wherever the device tilts. With a mouse it is not listened
+   * to —the card already follows the pointer and the two leans would add
+   * up—, and with `prefers-reduced-motion` neither, same as the pointer lean.
    */
   const deviceTilt = useDeviceTilt(motionEnabled && !finePointer && !reducedMotion);
 
   /**
-   * Agitar el móvil da media vuelta a la tarjeta, como el botón de voltear o
-   * los dos toques. Sigue valiendo con `prefers-reduced-motion`: es una acción
-   * que se pide, no una animación que se pone sola.
+   * Shaking the phone gives the card half a turn, like the flip button or the
+   * double tap. It still works with `prefers-reduced-motion`: it is an action
+   * that is asked for, not an animation that starts by itself.
    */
   useShake(motionEnabled, () => {
     spin.current.turn += Math.PI;
@@ -210,10 +212,10 @@ export function DraggableCard({
   }, [resetCount, cancelIntro]);
 
   /**
-   * Un gesto empieza justo donde está el puntero: el filtro se planta en él en
-   * lugar de arrastrar el retraso que llevara acumulado. Si no, mover el ratón
-   * deprisa y pulsar movería o giraría la tarjeta un poco sola, terminando el
-   * viaje que el filtro traía a medias.
+   * A gesture starts right where the pointer is: the filter is planted on it
+   * instead of dragging along whatever lag it had accumulated. Otherwise,
+   * moving the mouse fast and pressing would move or turn the card a little
+   * on its own, finishing the trip the filter had half-way done.
    */
   const startGesture = (event: ThreeEvent<PointerEvent>) => {
     cancelIntro();
@@ -230,9 +232,9 @@ export function DraggableCard({
     drag.current.mode = "move";
     drag.current.grabX = event.point.x - (current?.position.x ?? 0);
     drag.current.grabY = event.point.y - (current?.position.y ?? 0);
-    // El objetivo arranca donde está la tarjeta: si no, al reagarrarla en
-    // pleno vuelo el primer frame mide un salto que no ha existido y la
-    // inclina de golpe.
+    // The target starts where the card is: otherwise, grabbing it again in
+    // mid-flight makes the first frame measure a jump that never happened
+    // and tilts it all at once.
     drag.current.targetX = current?.position.x ?? 0;
     drag.current.targetY = current?.position.y ?? 0;
   };
@@ -245,22 +247,23 @@ export function DraggableCard({
   };
 
   /**
-   * Fin del gesto, venga de donde venga. Es idempotente a propósito: además
-   * del `pointerup` normal lo invocan la cancelación del gesto y la pérdida
-   * de la captura del puntero.
+   * End of the gesture, wherever it comes from. It is idempotent on purpose:
+   * besides the normal `pointerup`, it is invoked by the gesture's
+   * cancellation and by the loss of pointer capture.
    */
   const endDrag = useCallback(() => {
     pressed.current = null;
     if (drag.current.mode === "idle") return;
     if (drag.current.mode === "rotate") {
-      // El giro suma el recorrido del puntero amortiguado, que va por detrás
-      // del de verdad: al soltar siempre le queda un trozo del gesto sin
-      // repartir. Se le cobra aquí, antes de encajar, para que la tarjeta gire
-      // lo que se movió el ratón y no menos. Sin esto, un giro rápido se queda
-      // corto —a la velocidad de un golpe de muñeca, más de 30°— y encaja en la
-      // cara de la que venía: el gesto parecería no haber servido de nada.
+      // The turn adds up the travel of the smoothed pointer, which lags
+      // behind the real one: on release there is always a piece of the
+      // gesture left to hand out. It is charged here, before snapping, so the
+      // card turns as much as the mouse moved and not less. Without this, a
+      // fast turn falls short —at the speed of a flick of the wrist, more
+      // than 30°— and snaps to the face it came from: the gesture would seem
+      // to have been for nothing.
       spin.current.turn += (rawPointer.x - drag.current.lastPointerX) * SPIN_GAIN;
-      // Al soltar, la tarjeta encaja mostrando una cara entera.
+      // On release, the card snaps to showing a whole face.
       spin.current.turn = snapToHalfTurn(spin.current.turn);
       spin.current.pitch = 0;
     }
@@ -274,15 +277,16 @@ export function DraggableCard({
   };
 
   /**
-   * Soltar la tarjeta. Además de terminar el gesto, mira si lo que acaba de
-   * pasar es el segundo de dos toques rápidos: en ese caso la tarjeta se da
-   * la vuelta. El doble toque se reconoce aquí, con los eventos de puntero,
-   * y no con `dblclick`, porque ese evento es del ratón: en un móvil no
-   * llega (y donde llega, el navegador se lo reserva para el zoom).
+   * Releasing the card. Besides ending the gesture, it checks whether what
+   * just happened is the second of two quick taps: in that case the card
+   * flips over. The double tap is recognized here, with the pointer events,
+   * and not with `dblclick`, because that event belongs to the mouse: on a
+   * phone it does not arrive (and where it does, the browser keeps it for
+   * zooming).
    *
-   * Un solo `pointerup` entra aquí varias veces, una por cada malla de la
-   * tarjeta que atraviesa el rayo, así que el toque se consume al leerlo:
-   * solo la primera entrega llega con marca y cuenta.
+   * A single `pointerup` enters here several times, once per mesh of the
+   * card the ray goes through, so the tap is consumed on reading: only the
+   * first delivery arrives with a mark and counts.
    */
   const releaseCard = (event: ThreeEvent<PointerEvent>) => {
     const down = pressed.current;
@@ -294,12 +298,12 @@ export function DraggableCard({
   };
 
   /**
-   * Red de seguridad del gesto. React Three Fiber no reparte `pointercancel`
-   * entre los objetos de la escena (solo lo usa para deshacer el hover), así
-   * que un gesto interrumpido —una llamada entrante, un gesto del sistema,
-   * el puntero que se va con la captura— nunca llegaría a los manejadores de
-   * la tarjeta y esta se quedaría pegada al puntero hasta recargar la página.
-   * Estos dos eventos sí llegan siempre al canvas.
+   * Safety net for the gesture. React Three Fiber does not dispatch
+   * `pointercancel` to the objects of the scene (it only uses it to undo the
+   * hover), so an interrupted gesture —an incoming call, a system gesture,
+   * the pointer leaving along with the capture— would never reach the card's
+   * handlers and it would stay stuck to the pointer until the page is
+   * reloaded. These two events do always reach the canvas.
    */
   const gl = useThree((state) => state.gl);
   useEffect(() => {
@@ -320,9 +324,9 @@ export function DraggableCard({
     const { mode } = drag.current;
     const previousTargetX = drag.current.targetX;
 
-    // El puntero que manda es el amortiguado. De él salen las tres cosas que
-    // siguen al ratón —a dónde va la tarjeta, cuánto gira y hacia dónde se
-    // asoma—, así que suavizarlo aquí las suaviza todas.
+    // The pointer in charge is the smoothed one. From it come the three
+    // things that follow the mouse —where the card goes, how much it turns
+    // and where it leans—, so smoothing it here smooths them all.
     const smoothing =
       finePointer && !reducedMotion ? POINTER_SMOOTHING : POINTER_DIRECT;
     pointer.current.set(
@@ -352,8 +356,8 @@ export function DraggableCard({
       );
     }
 
-    // Vaivén de reposo: solo cuando nadie toca la tarjeta y si el sistema
-    // no ha pedido reducir el movimiento.
+    // Resting sway: only when nobody is touching the card and if the system
+    // has not asked for reduced motion.
     const idle = mode === "idle" && !reducedMotion;
     const t = state.clock.elapsedTime;
     const swayFromDrag =
@@ -365,16 +369,16 @@ export function DraggableCard({
           )
         : 0;
 
-    // Bienvenida: la tarjeta se balancea sola una vez para enseñar que se
-    // mueve. Se apaga al terminar y también al primer gesto.
+    // Welcome: the card rocks by itself once to show that it moves. It
+    // switches off when done and also on the first gesture.
     if (intro.current.start < 0) intro.current.start = t;
     const introElapsed = t - intro.current.start;
     if (introElapsed > INTRO_SWAY_END) intro.current.live = false;
     const welcome = idle && intro.current.live ? introSway(introElapsed) : null;
 
-    // La tarjeta se asoma sin moverse del sitio, para que se le vea el
-    // volumen: hacia donde esté el puntero con ratón, y hacia donde se incline
-    // el aparato con el giroscopio.
+    // The card leans without leaving its spot, so its volume can be seen:
+    // towards wherever the pointer is with a mouse, and towards wherever the
+    // device tilts with the gyroscope.
     const tilt = !idle
       ? null
       : finePointer
@@ -410,9 +414,10 @@ export function DraggableCard({
       onFaceChange(back);
     }
 
-    // Sacarla de la pantalla es la otra forma de verle el reverso: cuando la
-    // tarjeta se va de la vista se suelta sola, y el muelle de vuelta la trae
-    // al centro ya girada y sin inclinación, como recién dejada.
+    // Taking it off the screen is the other way to see its back: when the
+    // card leaves the view it is released by itself, and the return spring
+    // brings it to the center already turned and untilted, as if just set
+    // down.
     if (
       mode === "move" &&
       hasLeftView(
@@ -434,9 +439,10 @@ export function DraggableCard({
   return (
     <>
       {/*
-        Superficie de fondo: recoge los arrastres que no empiezan sobre la
-        tarjeta y los convierte en giro. Vive aquí, junto al resto de la
-        interacción, y no en la escena, para no repartir el gesto en dos sitios.
+        Background surface: it catches the drags that do not start on the
+        card and turns them into rotation. It lives here, next to the rest of
+        the interaction, and not in the scene, so as not to split the gesture
+        across two places.
       */}
       <mesh position={[0, 0, -4]} onPointerDown={startRotate} onPointerUp={release}>
         <planeGeometry args={[60, 60]} />

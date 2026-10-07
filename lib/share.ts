@@ -1,11 +1,11 @@
 /**
- * Compartir la tarjeta: qué se manda y por dónde.
+ * Sharing the card: what gets sent and through where.
  *
- * El camino bueno es el diálogo del sistema (`navigator.share`), que en un
- * móvil ofrece las aplicaciones que ya usa quien comparte. Donde no existe
- * —el escritorio, casi siempre— queda copiar el enlace, que es lo que se
- * estaba haciendo a mano en la barra del navegador. La elección vive aquí,
- * separada del botón, para poder probarla sin navegador.
+ * The good path is the system dialog (`navigator.share`), which on a phone
+ * offers the apps the sharer already uses. Where it does not exist —the
+ * desktop, almost always— what is left is copying the link, which is what was
+ * being done by hand from the browser's address bar. The choice lives here,
+ * apart from the button, so it can be tested without a browser.
  */
 
 import { CONTACT } from "./contact";
@@ -13,54 +13,53 @@ import { dictionary } from "./dictionary";
 import type { Language } from "./i18n";
 import { SITE_URL } from "./site";
 
-/** Lo que se comparte: el título de la tarjeta y su dirección. */
+/** What gets shared: the card's title and its address. */
 export type ShareTarget = {
   title: string;
   url: string;
 };
 
 /**
- * En qué acabó el intento:
- * - `shared`: lo recogió el diálogo del sistema.
- * - `dismissed`: se abrió el diálogo y se cerró sin compartir.
- * - `copied`: no había diálogo (o no pudo abrirse) y el enlace está copiado.
- * - `failed`: tampoco se pudo copiar; es lo único que hay que contar.
+ * How the attempt ended:
+ * - `shared`: the system dialog took it.
+ * - `dismissed`: the dialog opened and was closed without sharing.
+ * - `copied`: there was no dialog (or it could not open) and the link is copied.
+ * - `failed`: copying failed too; it is the only one worth reporting.
  */
 export type ShareOutcome = "shared" | "dismissed" | "copied" | "failed";
 
-/** Lo que el navegador pone para compartir, inyectado para poder probarlo. */
+/** What the browser provides for sharing, injected so it can be tested. */
 export type ShareTools = {
-  /** `navigator.share`, o nada si el navegador no lo trae. */
+  /** `navigator.share`, or nothing if the browser does not have it. */
   share?: (target: ShareTarget) => Promise<void>;
-  /** `navigator.clipboard.writeText`: el camino de los botones de copiar. */
+  /** `navigator.clipboard.writeText`: the path the copy buttons take. */
   copy: (text: string) => Promise<void>;
-  /** Dónde se cuenta lo que falla: un error tragado no se arregla nunca. */
+  /** Where failures get reported: a swallowed error never gets fixed. */
   warn: (error: unknown) => void;
 };
 
 /**
- * Lo que se comparte, en el idioma que se está viendo. La dirección es la
- * canónica del sitio y no `location.href`: quien recibe el enlace tiene que
- * llegar a la tarjeta, no a la ruta con los parámetros con los que se llegó
- * a ella.
+ * What gets shared, in the language being viewed. The address is the site's
+ * canonical one and not `location.href`: whoever receives the link has to
+ * land on the card, not on the route with the parameters it was reached with.
  */
 export function shareTarget(language: Language): ShareTarget {
   return { title: dictionary(language).meta.title(CONTACT.name), url: SITE_URL };
 }
 
 /**
- * Cerrar el diálogo del sistema sin compartir llega como un `AbortError`. Eso
- * no es un fallo: es alguien que se ha arrepentido, y enseñarle un aviso de
- * error sería contarle que se ha roto algo que funciona.
+ * Closing the system dialog without sharing arrives as an `AbortError`. That
+ * is not a failure: it is someone who changed their mind, and showing them an
+ * error notice would tell them something that works is broken.
  */
 function isDismissal(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
 }
 
 /**
- * Comparte la tarjeta por el mejor camino disponible. Si el diálogo del
- * sistema no existe, o existe pero revienta al abrirse, se cae en copiar el
- * enlace: el botón nunca se queda sin hacer nada.
+ * Shares the card through the best path available. If the system dialog does
+ * not exist, or exists but blows up on opening, it falls back to copying the
+ * link: the button never ends up doing nothing.
  */
 export async function shareCard(
   target: ShareTarget,
@@ -86,13 +85,14 @@ export async function shareCard(
 }
 
 /**
- * Qué aviso deja cada final, o ninguno. Compartir de verdad no lleva aviso
- * —el propio diálogo del sistema ya lo es— y cancelarlo tampoco: quien se
- * arrepiente no ha roto nada, y enseñarle un error le contaría lo contrario.
+ * Which notice each ending leaves, or none. Actually sharing carries no notice
+ * —the system dialog itself already is one— and cancelling it does not either:
+ * whoever changes their mind has broken nothing, and showing them an error
+ * would tell them otherwise.
  *
- * Va en la tabla y no en un par de `if` dentro del botón porque el tipo obliga
- * a decidirlo para cada final: un camino nuevo en `ShareOutcome` no puede
- * colarse sin que alguien diga qué se le cuenta a quien pulsa.
+ * It goes in the table and not in a couple of `if`s inside the button because
+ * the type forces deciding it for every ending: a new path in `ShareOutcome`
+ * cannot slip in without someone saying what the presser gets told.
  */
 const FEEDBACK: Record<ShareOutcome, "done" | "failed" | null> = {
   shared: null,
@@ -101,7 +101,7 @@ const FEEDBACK: Record<ShareOutcome, "done" | "failed" | null> = {
   failed: "failed",
 };
 
-/** El aviso pasajero del botón para este final, o `null` si no toca ninguno. */
+/** The button's passing notice for this ending, or `null` if none applies. */
 export function shareFeedback(outcome: ShareOutcome): "done" | "failed" | null {
   return FEEDBACK[outcome];
 }

@@ -6,9 +6,9 @@ import type { Language } from "@/lib/i18n";
 import { useFeedback } from "@/lib/use-feedback";
 
 /**
- * Copia un dato al portapapeles. El resultado se ve (el icono cambia) y se
- * oye (el aviso vive en una región `status`), porque un botón que no confirma
- * nada deja a quien lo pulsa sin saber si ha funcionado.
+ * Copies a value to the clipboard. The outcome is seen (the icon changes) and
+ * heard (the notice lives in a `status` region), because a button that
+ * confirms nothing leaves whoever presses it not knowing whether it worked.
  */
 export function CopyButton({
   value,
@@ -24,13 +24,14 @@ export function CopyButton({
 
   const copy = useCallback(async () => {
     try {
-      // No existe en contextos no seguros: ahí `writeText` revienta y se
-      // avisa igual, en vez de fingir que se ha copiado.
+      // It does not exist in non-secure contexts: there `writeText` blows up
+      // and the failure is announced all the same, instead of pretending it
+      // was copied.
       await navigator.clipboard.writeText(value);
       announce("done");
     } catch (error) {
-      // El registro es para diagnosticar, no para leer: va sin traducir.
-      console.warn(`No se ha podido copiar ${label}:`, error);
+      // The log is for diagnosing, not for reading: it goes untranslated.
+      console.warn(`Could not copy ${label}:`, error);
       announce("failed");
     }
   }, [value, label, announce]);

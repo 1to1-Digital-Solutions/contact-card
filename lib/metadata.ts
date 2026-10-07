@@ -5,12 +5,12 @@ import { type Language, LANGUAGES, OG_LOCALE } from "./i18n";
 import { SITE_URL } from "./site";
 
 /**
- * Los metadatos de la página en el idioma que se sirve. Van en `lib/` y no en
- * el layout para poder comprobarlos sin arrastrar `next/headers`.
+ * The page metadata in the language being served. It lives in `lib/` and not
+ * in the layout so it can be checked without dragging in `next/headers`.
  *
- * No hay una URL por idioma que declarar en `alternates.languages`: es la
- * misma página negociada con el navegador. Lo que sí se dice es que existe la
- * otra versión, con `alternateLocale`.
+ * There is no per-language URL to declare in `alternates.languages`: it is the
+ * same page negotiated with the browser. What is stated is that the other
+ * version exists, through `alternateLocale`.
  */
 export function buildMetadata(language: Language): Metadata {
   const t = dictionary(language);
@@ -33,9 +33,9 @@ export function buildMetadata(language: Language): Metadata {
       title,
       description,
     },
-    // La imagen de la previsualización y su `alt` los declaran
-    // `app/opengraph-image.tsx` y `app/twitter-image.tsx`; aquí solo se pide la
-    // tarjeta grande, que es la que la enseña entera.
+    // The preview image and its `alt` are declared by `app/opengraph-image.tsx`
+    // and `app/twitter-image.tsx`; here only the large card is requested, which
+    // is the one that shows it whole.
     twitter: {
       card: "summary_large_image",
       title,

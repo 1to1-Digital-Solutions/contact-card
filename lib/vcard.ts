@@ -3,9 +3,9 @@ import type { Contact } from "./contact";
 const CRLF = "\r\n";
 
 /**
- * Escapa un valor de vCard según RFC 6350 §3.4: la barra invertida primero
- * (si no, se re-escaparían las barras que introducimos después), y luego
- * los separadores y los saltos de línea.
+ * Escapes a vCard value per RFC 6350 §3.4: the backslash first (otherwise
+ * the backslashes we introduce afterwards would get re-escaped), and then the
+ * separators and the line breaks.
  */
 export function escapeVCardValue(value: string): string {
   return value
@@ -13,16 +13,17 @@ export function escapeVCardValue(value: string): string {
     .replace(/\r\n?/g, "\n")
     .replace(/\n/g, "\\n")
     .replace(/,/g, "\\,")
-    .replace(/;/g, "\\;");
+    .replace(/;/g, "\;");
 }
 
 /**
- * Construye una vCard 3.0 (la versión que aún importan sin fricción los
- * contactos de iOS y Android) a partir de los datos de contacto.
+ * Builds a vCard 3.0 (the version that iOS and Android contacts still import
+ * without friction) from the contact data.
  *
- * No aplica el plegado de líneas a 75 octetos del estándar: ningún campo
- * nuestro se acerca a ese límite y plegar en UTF-8 exige no partir
- * caracteres multibyte. Si algún día hay campos largos, habrá que añadirlo.
+ * It does not apply the standard's line folding at 75 octets: none of our
+ * fields comes close to that limit and folding in UTF-8 requires not
+ * splitting multibyte characters. If one day there are long fields, it will
+ * have to be added.
  */
 export function buildVCard(contact: Contact): string {
   const e = escapeVCardValue;
@@ -41,7 +42,7 @@ export function buildVCard(contact: Contact): string {
   return lines.join(CRLF) + CRLF;
 }
 
-/** Nombre de fichero sugerido al descargar, sin acentos ni espacios. */
+/** File name suggested on download, without accents or spaces. */
 export function vCardFilename(contact: Contact): string {
   const slug = contact.name
     .normalize("NFD")

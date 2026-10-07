@@ -10,30 +10,31 @@ import Image, { alt, contentType, size } from "./opengraph-image";
 import * as twitter from "./twitter-image";
 
 /**
- * La previsualización al compartir es lo primero que se ve del enlace y no hay
- * navegador que la revise: aquí se genera de verdad y se le miran los píxeles.
- * Lo que se comprueba es que el color sale de la paleta de marca —ningún tono
- * escrito a mano— y que los metadatos que la declaran siguen en su sitio.
+ * The preview when sharing is the first thing seen of the link and there is
+ * no browser to check it: here it is actually generated and its pixels are
+ * inspected. What is checked is that the color comes from the brand palette
+ * —no hand-written tone— and that the metadata declaring it is still in
+ * place.
  */
 
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** La imagen se genera una vez: el renderizado va por WebAssembly y no es gratis. */
+/** The image is generated once: rendering goes through WebAssembly and is not free. */
 const png = Buffer.from(await (await Image()).arrayBuffer());
 
 type Bitmap = {
   width: number;
   height: number;
   counts: Map<string, number>;
-  /** El color de un píxel, en la misma notación que la paleta. */
+  /** The color of a pixel, in the same notation as the palette. */
   at: (x: number, y: number) => string;
 };
 
 /**
- * Decodifica el PNG a un recuento de colores. No hay librería de imagen en el
- * proyecto y tampoco hace falta: basta con leer la cabecera, descomprimir los
- * datos y deshacer el filtro de cada línea (PNG, RFC 2083 §6), que es lo que
- * separa los bytes crudos de los píxeles.
+ * Decodes the PNG into a color count. There is no image library in the
+ * project and none is needed: it is enough to read the header, decompress
+ * the data and undo each scanline's filter (PNG, RFC 2083 §6), which is what
+ * separates the raw bytes from the pixels.
  */
 function decodePng(bytes: Buffer): Bitmap {
   expect([...bytes.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -53,14 +54,14 @@ function decodePng(bytes: Buffer): Bitmap {
       };
     }
     if (type === "IDAT") chunks.push(data);
-    // Cada trozo lleva 4 bytes de longitud, 4 de tipo y 4 de suma de control.
+    // Each chunk carries 4 bytes of length, 4 of type and 4 of checksum.
     at += 12 + length;
   }
 
   expect(header).toBeDefined();
   const { width, height, depth, color } = header!;
-  // El generador escribe color verdadero de 8 bits con alfa; el resto de
-  // combinaciones que admite el formato no se sabrían leer aquí.
+  // The generator writes 8-bit truecolor with alpha; the other combinations
+  // the format allows could not be read here.
   expect([depth, color]).toEqual([8, 6]);
 
   const CHANNELS = 4;
@@ -92,7 +93,7 @@ function decodePng(bytes: Buffer): Bitmap {
   return { width, height, counts, at };
 }
 
-/** Lo que el filtro de la línea le restó al píxel: sus vecinos, según el tipo. */
+/** What the scanline's filter subtracted from the pixel: its neighbors, by type. */
 function undoFilter(filter: number, left: number, up: number, corner: number): number {
   switch (filter) {
     case 0:
@@ -104,7 +105,7 @@ function undoFilter(filter: number, left: number, up: number, corner: number): n
     case 3:
       return (left + up) >> 1;
     case 4: {
-      // Paeth: se queda con el vecino que menos se aparta de la suma de los tres.
+      // Paeth: keeps the neighbor that strays least from the sum of the three.
       const estimate = left + up - corner;
       const [dLeft, dUp, dCorner] = [left, up, corner].map((v) =>
         Math.abs(estimate - v),
@@ -113,36 +114,36 @@ function undoFilter(filter: number, left: number, up: number, corner: number): n
       return dUp <= dCorner ? up : corner;
     }
     default:
-      throw new Error(`Filtro PNG desconocido: ${filter}`);
+      throw new Error(`Unknown PNG filter: ${filter}`);
   }
 }
 
 const image = decodePng(png);
 const PIXELS = image.width * image.height;
 
-/** El tema con el que se abre la página, que es del que va la imagen. */
+/** The theme the page opens with, which is the one the image is about. */
 const THEME = THEMES[DEFAULT_THEME];
 
-/** La imagen va en un solo idioma, el de recurso: es el que lleva sus textos. */
+/** The image goes in a single language, the fallback one: it is the one its texts carry. */
 const CONTACT = contactIn(DEFAULT_LANGUAGE);
 const metadata = buildMetadata(DEFAULT_LANGUAGE);
 
-/** Los tokens que la imagen tiene derecho a pintar: la paleta y nada más. */
+/** The tokens the image is entitled to paint: the palette and nothing else. */
 const PALETTE = new Set<string>([...Object.values(BRAND), ...Object.values(THEME)]);
 
-describe("imagen de Open Graph", () => {
-  it("es un PNG del tamaño que declaran los metadatos", () => {
+describe("Open Graph image", () => {
+  it("is a PNG of the size the metadata declares", () => {
     expect(size).toEqual({ width: 1200, height: 630 });
     expect(contentType).toBe("image/png");
     expect([image.width, image.height]).toEqual([size.width, size.height]);
   });
 
   /**
-   * El umbral deja fuera el suavizado de los bordes del texto y de las esquinas
-   * redondeadas, que son mezclas de los colores de al lado: lo que se vigila es
-   * que ninguna superficie de verdad venga de un tono inventado.
+   * The threshold leaves out the anti-aliasing of the text edges and of the
+   * rounded corners, which are blends of the neighboring colors: what is
+   * watched is that no real surface comes from an invented tone.
    */
-  it("no pinta ninguna superficie con un color de fuera de la paleta", () => {
+  it("paints no surface with a color from outside the palette", () => {
     const painted = [...image.counts]
       .filter(([, count]) => count >= PIXELS * 0.005)
       .map(([hex]) => hex);
@@ -151,28 +152,28 @@ describe("imagen de Open Graph", () => {
     for (const hex of painted) expect(PALETTE).toContain(hex);
   });
 
-  /** Cada token que dibuja algo reconocible: si uno desaparece, el diseño cambió. */
+  /** Each token that draws something recognizable: if one disappears, the design changed. */
   const drawn: Array<[string, string]> = [
-    [THEME.backdrop, "el fondo de la escena alrededor de la tarjeta"],
-    [THEME.card, "la cara de la tarjeta"],
-    [THEME.cardEdge, "el canto que la separa del fondo"],
-    [THEME.ink, "el nombre y los datos"],
-    [THEME.inkMuted, "el cargo y el lema"],
-    [THEME.accentInk, "la empresa"],
-    [BRAND.accent, "el filete y el logotipo"],
+    [THEME.backdrop, "the scene background around the card"],
+    [THEME.card, "the card face"],
+    [THEME.cardEdge, "the edge that separates it from the background"],
+    [THEME.ink, "the name and the data"],
+    [THEME.inkMuted, "the job title and the tagline"],
+    [THEME.accentInk, "the company"],
+    [BRAND.accent, "the hairline and the logo"],
   ];
 
-  it.each(drawn)("pinta %s: %s", (hex) => {
+  it.each(drawn)("paints %s: %s", (hex) => {
     expect(image.counts.get(hex) ?? 0).toBeGreaterThan(0);
   });
 
   /**
-   * El verde también está en el logotipo, así que la presencia del token no
-   * basta para saber que el filete sigue ahí: se busca donde vive. A media
-   * altura el canto de la tarjeta es recto, de modo que lo primero que aparece
-   * al entrar desde el borde izquierdo tiene que ser el filete.
+   * The green is also in the logo, so the token's presence is not enough to
+   * know the hairline is still there: it is looked for where it lives. At
+   * mid-height the card's edge is straight, so the first thing that appears
+   * when coming in from the left edge has to be the hairline.
    */
-  it("lleva el filete de marca en el canto izquierdo de la tarjeta", () => {
+  it("carries the brand hairline on the card's left edge", () => {
     const middle = Math.round(image.height / 2);
     let x = 0;
     while (x < image.width && image.at(x, middle) === THEME.backdrop) x++;
@@ -182,22 +183,22 @@ describe("imagen de Open Graph", () => {
     expect(image.at(x, middle)).toBe(BRAND.accent);
   });
 
-  it("va del tema de partida, que es con el que se abre la página", () => {
+  it("is about the starting theme, which is the one the page opens with", () => {
     const dominant = [...image.counts].sort((a, b) => b[1] - a[1])[0][0];
     expect(dominant).toBe(THEME.card);
   });
 
-  /** Como en el favicon y en el `themeColor`: los colores se piden a la paleta. */
-  it("no lleva ningún color escrito a mano", () => {
+  /** As with the favicon and the `themeColor`: colors are requested from the palette. */
+  it("carries no hand-written color", () => {
     expect(source("./opengraph-image.tsx").match(/#[0-9a-f]{6}\b/gi)).toBeNull();
   });
 
   /**
-   * El otro lado del mismo trato: los textos tampoco se copian. Si un dato
-   * apareciera aquí escrito, cambiarlo en `lib/contact.ts` dejaría la
-   * previsualización enseñando el viejo, que es justo lo que no puede pasar.
+   * The other side of the same deal: the texts are not copied either. If a
+   * value appeared written here, changing it in `lib/contact.ts` would leave
+   * the preview showing the old one, which is exactly what must not happen.
    */
-  it("no lleva ningún dato de contacto escrito a mano", () => {
+  it("carries no hand-written contact data", () => {
     const code = source("./opengraph-image.tsx");
     const data = [
       ...Object.values(CONTACT),
@@ -207,16 +208,17 @@ describe("imagen de Open Graph", () => {
   });
 });
 
-describe("metadatos de la previsualización", () => {
-  it("describe la imagen con los datos del contacto, no con un texto suelto", () => {
+describe("preview metadata", () => {
+  it("describes the image with the contact's data, not with a loose text", () => {
     expect(alt).toContain(CONTACT.name);
     expect(alt).toContain(CONTACT.jobTitle);
     expect(alt).toContain(CONTACT.company);
-    // El lema se ve en la imagen: quien no la ve tiene que enterarse igual.
+    // The tagline is seen in the image: whoever cannot see it has to find
+    // out all the same.
     expect(alt).toContain(CONTACT.tagline);
   });
 
-  it("da a Twitter/X la misma imagen que a Open Graph", () => {
+  it("gives Twitter/X the same image as Open Graph", () => {
     expect(twitter.default).toBe(Image);
     expect([twitter.alt, twitter.contentType, twitter.size]).toEqual([
       alt,
@@ -225,18 +227,19 @@ describe("metadatos de la previsualización", () => {
     ]);
   });
 
-  it("pide la tarjeta grande, que es la que enseña la imagen entera", () => {
+  it("asks for the large card, which is the one that shows the whole image", () => {
     expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
   });
 
-  /** La imagen la declara la convención de ficheros: si además se listara a
-   *  mano en `openGraph.images`, saldrían dos y ganaría la escrita a mano. */
-  it("no declara la imagen a mano en los metadatos", () => {
+  /** The image is declared by the file convention: if it were also listed by
+   *  hand in `openGraph.images`, there would be two and the hand-written one
+   *  would win. */
+  it("does not declare the image by hand in the metadata", () => {
     expect(metadata.openGraph).not.toHaveProperty("images");
     expect(metadata.twitter).not.toHaveProperty("images");
   });
 
-  it("apunta la previsualización a la misma URL que el canónico", () => {
+  it("points the preview to the same URL as the canonical", () => {
     expect(metadata.openGraph).toMatchObject({ url: metadata.alternates?.canonical });
   });
 });

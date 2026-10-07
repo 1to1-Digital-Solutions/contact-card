@@ -1,29 +1,29 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 /**
- * Hay ratón: el puntero es fino y se mueve solo, sin tocar la pantalla. De
- * ello dependen los gestos que siguen al cursor, que en una pantalla táctil se
- * quedarían fijos en el último sitio que se tocó.
+ * There is a mouse: the pointer is fine and moves on its own, without
+ * touching the screen. The gestures that follow the cursor depend on it; on a
+ * touch screen they would stay stuck at the last spot that was touched.
  */
 export const FINE_POINTER = "(pointer: fine)";
 
 /**
- * Móvil apaisado: sobra ancho y falta alto. Es la misma consulta que la
- * variante `phone-landscape` de `app/globals.css` —el CSS y la escena tienen
- * que repartirse la pantalla con el mismo criterio, y `use-media-query.test.ts`
- * compara las dos—, y se corta por debajo de `lg` para no alcanzar a un
- * escritorio con la ventana baja, donde el panel de datos sigue al lado.
+ * Phone in landscape: width to spare and height lacking. It is the same query
+ * as the `phone-landscape` variant in `app/globals.css` —the CSS and the scene
+ * have to split the screen by the same criterion, and `use-media-query.test.ts`
+ * compares the two—, and it cuts off below `lg` so as not to reach a desktop
+ * with a short window, where the data panel still sits alongside.
  */
 export const PHONE_LANDSCAPE =
   "(orientation: landscape) and (max-height: 32rem) and (max-width: 63.99rem)";
 
 /**
- * `true` si la consulta de medios se cumple en este navegador, y se vuelve a
- * mirar cuando deja de cumplirse (girar el móvil, cambiar la preferencia del
- * sistema, mover la ventana a otra pantalla).
+ * `true` if the media query holds in this browser, and it is checked again
+ * when it stops holding (rotating the phone, changing the system preference,
+ * moving the window to another screen).
  *
- * En el servidor devuelve `false` para que el primer render coincida con el
- * del cliente antes de hidratar; el valor real llega en cuanto hay `window`.
+ * On the server it returns `false` so the first render matches the client's
+ * before hydrating; the real value arrives as soon as there is a `window`.
  */
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(

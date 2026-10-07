@@ -3,17 +3,17 @@ import { DEFAULT_LANGUAGE, LANGUAGE_COOKIE } from "./i18n";
 import { requestLanguage } from "./request-language";
 
 /**
- * `pickLanguage` ya se prueba a fondo con cabeceras de verdad; lo que falta
- * comprobar es el cable, que es donde el fallo no se ve: si el nombre de la
- * cabecera o el de la cookie se escribieran mal, `get` devolvería `null` sin
- * quejarse y la página saldría en español para todo el mundo —justo lo que
- * esta tarea venía a arreglar— con los demás tests en verde.
+ * `pickLanguage` is already tested thoroughly with real headers; what is left
+ * to check is the wiring, which is where a failure goes unseen: if the header
+ * name or the cookie name were misspelled, `get` would return `null` without
+ * complaint and the page would come out in Spanish for everyone —exactly what
+ * this task came to fix— with every other test green.
  */
 
 const { cookies, headers } = vi.hoisted(() => ({ cookies: vi.fn(), headers: vi.fn() }));
 vi.mock("next/headers", () => ({ cookies, headers }));
 
-/** Una petición con las cabeceras y la cookie de idioma que se le pasen. */
+/** A request with the headers and the language cookie it is given. */
 function request({ header, cookie }: { header?: string; cookie?: string } = {}) {
   headers.mockResolvedValue(new Headers(header ? { "Accept-Language": header } : {}));
   cookies.mockResolvedValue({
@@ -23,28 +23,29 @@ function request({ header, cookie }: { header?: string; cookie?: string } = {}) 
 }
 
 describe("requestLanguage", () => {
-  it("sirve el idioma que pide la cabecera del navegador", async () => {
+  it("serves the language the browser header asks for", async () => {
     request({ header: "en-GB,en;q=0.9,es;q=0.8" });
     await expect(requestLanguage()).resolves.toBe("en");
   });
 
-  it("cae en el idioma de recurso cuando la petición no trae cabecera", async () => {
+  it("falls back to the fallback language when the request carries no header", async () => {
     request();
     await expect(requestLanguage()).resolves.toBe(DEFAULT_LANGUAGE);
   });
 
-  it("cae en el idioma de recurso cuando pide uno que no servimos", async () => {
+  it("falls back to the fallback language when it asks for one we do not serve", async () => {
     request({ header: "ja-JP,ja;q=0.9" });
     await expect(requestLanguage()).resolves.toBe(DEFAULT_LANGUAGE);
   });
 
   /**
-   * La elección del conmutador es más explícita que la cabecera: quien pulsó
-   * el botón dijo en qué idioma quiere la tarjeta y el navegador solo dice en
-   * cuáles sabe leer. Si la cabecera ganara, la elección duraría lo que dura
-   * la visita, que es justo lo que había antes de recordarla.
+   * The switcher's choice is more explicit than the header: whoever pressed
+   * the button said which language they want the card in and the browser only
+   * says which ones they can read. If the header won, the choice would last
+   * as long as the visit, which is exactly what there was before remembering
+   * it.
    */
-  it("sirve el idioma recordado aunque el navegador pida el otro", async () => {
+  it("serves the remembered language even when the browser asks for the other", async () => {
     request({ header: "es-ES,es;q=0.9", cookie: "en" });
     await expect(requestLanguage()).resolves.toBe("en");
 
@@ -52,18 +53,18 @@ describe("requestLanguage", () => {
     await expect(requestLanguage()).resolves.toBe("es");
   });
 
-  it("sirve el idioma recordado cuando la petición no trae cabecera", async () => {
+  it("serves the remembered language when the request carries no header", async () => {
     request({ cookie: "en" });
     await expect(requestLanguage()).resolves.toBe("en");
   });
 
   /**
-   * Una cookie la escribe cualquiera: otra página del dominio, una extensión o
-   * la propia consola. Si no se valida, un valor inventado se colaría hasta el
-   * diccionario y dejaría la página sin textos.
+   * Anyone can write a cookie: another page on the domain, an extension or
+   * the console itself. Without validation, a made-up value would slip all the
+   * way into the dictionary and leave the page without texts.
    */
   it.each(["", "de", "es-ES", "EN", "null", "<script>"])(
-    "ignora la cookie con un valor que no servimos (%s) y negocia con la cabecera",
+    "ignores the cookie with a value we do not serve (%s) and negotiates with the header",
     async (cookie) => {
       request({ header: "en-GB,en;q=0.9", cookie });
       await expect(requestLanguage()).resolves.toBe("en");

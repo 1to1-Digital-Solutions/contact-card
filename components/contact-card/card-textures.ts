@@ -12,15 +12,14 @@ import type { Contact, ContactData } from "@/lib/contact";
 import type { Dictionary } from "@/lib/dictionary";
 
 /**
- * Las dos caras de la tarjeta se dibujan en un canvas 2D en tiempo de
- * ejecución en lugar de cargarse como imágenes: así el contenido sale de
- * `lib/contact.ts` (una sola fuente de verdad), el color sale del tema y no
- * hay que mantener sincronizada ninguna imagen del texto. Las únicas
- * excepciones son los dibujos de marca de `LOGO`, que son los ficheros
- * oficiales y no se redibujan.
+ * The two faces of the card are drawn on a 2D canvas at runtime instead of
+ * being loaded as images: that way the content comes from `lib/contact.ts`
+ * (a single source of truth), the color comes from the theme and there is no
+ * image of the text to keep in sync. The only exceptions are the brand
+ * artwork in `LOGO`, which are the official files and are not redrawn.
  */
 
-/** Resolución de la cara larga. 2048 mantiene el texto nítido en pantallas HiDPI. */
+/** Resolution of the long side. 2048 keeps the text crisp on HiDPI screens. */
 const W = 2048;
 const H = Math.round((W * CARD.height) / CARD.width);
 const RADIUS_PX = (CARD.radius / CARD.width) * W;
@@ -35,29 +34,28 @@ function font(size: number, weight = 400) {
   return `${weight} ${size}px ${FONT_STACK}`;
 }
 
-/** `letterSpacing` no existe en todos los navegadores; sin él el texto sale igual, solo más junto. */
+/** `letterSpacing` does not exist in every browser; without it the text comes out the same, just tighter. */
 function setTracking(ctx: Ctx, px: number) {
   if ("letterSpacing" in ctx) ctx.letterSpacing = `${px}px`;
 }
 
-/** Lado del mosaico de ruido. Basta con uno pequeño: se repite. */
+/** Side of the noise tile. A small one is enough: it repeats. */
 const GRAIN_TILE = 256;
-/** Cuántas veces cabe el mosaico a lo ancho de la tarjeta: fija el tamaño del grano. */
+/** How many times the tile fits across the card's width: sets the grain size. */
 const GRAIN_REPEAT = 7;
 
-/** Cuánto se aparta del gris medio cada punto del ruido. */
+/** How far each noise point strays from mid-gray. */
 const GRAIN_SPREAD = 64;
-/** Con cuánta fuerza se vela la cara con el ruido. */
+/** How strongly the face is veiled with the noise. */
 const GRAIN_ALPHA = 0.045;
 
 let grainTile: HTMLCanvasElement | null = null;
 
 /**
- * Mosaico de ruido alrededor del gris medio. Que oscile en los dos sentidos
- * es lo que hace que el mismo grano se vea tanto sobre una cara clara como
- * sobre una oscura: velado con poca opacidad, unos puntos aclaran y otros
- * oscurecen. Se genera una sola vez y se reparte entre las dos caras y el
- * relieve del material.
+ * Noise tile around mid-gray. Swinging both ways is what makes the same
+ * grain show both on a light face and on a dark one: veiled at low opacity,
+ * some points lighten and others darken. It is generated once and shared
+ * between the two faces and the material's relief.
  */
 function getGrainTile(): HTMLCanvasElement {
   if (grainTile) return grainTile;
@@ -66,7 +64,7 @@ function getGrainTile(): HTMLCanvasElement {
   canvas.width = GRAIN_TILE;
   canvas.height = GRAIN_TILE;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("El navegador no permite dibujar en un canvas 2D");
+  if (!ctx) throw new Error("The browser does not allow drawing on a 2D canvas");
 
   const image = ctx.createImageData(GRAIN_TILE, GRAIN_TILE);
   for (let i = 0; i < image.data.length; i += 4) {
@@ -83,10 +81,11 @@ function getGrainTile(): HTMLCanvasElement {
 }
 
 /**
- * Relieve del papel para el material: el mismo ruido, repetido, hace de mapa
- * de relieve. Es lo que rompe el reflejo liso y deja la superficie mate y con
- * textura al girarla contra la luz. El número de repeticiones a lo alto sale
- * de la proporción de la tarjeta para que el grano no salga estirado.
+ * Paper relief for the material: the same noise, repeated, acts as the bump
+ * map. It is what breaks the flat reflection and leaves the surface matte
+ * and textured when turned against the light. The number of repetitions
+ * along the height comes from the card's aspect ratio so the grain does not
+ * come out stretched.
  */
 export function createGrainTexture(): THREE.CanvasTexture {
   const texture = new THREE.CanvasTexture(getGrainTile());
@@ -96,7 +95,7 @@ export function createGrainTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-/** Vela la cara con el grano para que el color no salga plano de imprenta. */
+/** Veils the face with the grain so the color does not come out print-flat. */
 function drawGrain(ctx: Ctx) {
   const pattern = ctx.createPattern(getGrainTile(), "repeat");
   if (!pattern) return;
@@ -109,16 +108,16 @@ function drawGrain(ctx: Ctx) {
 }
 
 /**
- * Crea el canvas de una cara con las esquinas ya recortadas: lo que quede
- * fuera del radio es transparente, de modo que la textura encaja con las
- * esquinas redondeadas del cuerpo 3D en vez de sobresalir por ellas.
+ * Creates a face canvas with the corners already clipped: whatever falls
+ * outside the radius is transparent, so the texture fits the rounded corners
+ * of the 3D body instead of sticking out past them.
  */
 function createFaceCanvas(background: string): { canvas: HTMLCanvasElement; ctx: Ctx } {
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("El navegador no permite dibujar en un canvas 2D");
+  if (!ctx) throw new Error("The browser does not allow drawing on a 2D canvas");
 
   ctx.beginPath();
   ctx.roundRect(0, 0, W, H, RADIUS_PX);
@@ -137,7 +136,7 @@ function toTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
   return texture;
 }
 
-/** Etiqueta en versalitas sobre el valor, al estilo de una tarjeta impresa. */
+/** Small-caps label above the value, in the style of a printed card. */
 function drawField(
   ctx: Ctx,
   palette: ThemePalette,
@@ -156,16 +155,16 @@ function drawField(
   ctx.fillText(value, PAD, y + 58);
 }
 
-/** Altura que le toca a un dibujo de marca al pintarlo con ese ancho. */
+/** The height a brand artwork gets when painted at that width. */
 function heightOf(artwork: BrandArtwork, width: number) {
   return (width * artwork.height) / artwork.width;
 }
 
 /**
- * Dibuja un dibujo de marca centrado en `cx`, con la altura que le toca por su
- * proporción y la opacidad que se le pida (`alpha`, para la marca de agua). Es
- * un SVG que se carga como imagen, así que el dibujo llega después: quien
- * llame debe refrescar la textura cuando la promesa resuelva.
+ * Draws a brand artwork centered at `cx`, with the height its aspect ratio
+ * gives it and the opacity requested (`alpha`, for the watermark). It is an
+ * SVG loaded as an image, so the drawing arrives later: the caller must
+ * refresh the texture when the promise resolves.
  */
 function drawArtwork(
   ctx: Ctx,
@@ -179,27 +178,27 @@ function drawArtwork(
 ): Promise<void> {
   const height = heightOf(artwork, width);
   return new Promise((resolve, reject) => {
-    // Las medidas van en el constructor para que el SVG rasterice al tamaño
-    // final y no al de su lienzo, que es mucho más pequeño.
+    // The dimensions go in the constructor so the SVG rasterizes at the final
+    // size and not at that of its own canvas, which is much smaller.
     const image = new Image(width, height);
     image.onload = () => {
-      // La opacidad se pone aquí y no antes: para cuando la imagen carga, el
-      // resto de la cara ya está pintado y el contexto ha seguido su curso.
+      // The opacity is set here and not earlier: by the time the image loads,
+      // the rest of the face is already painted and the context has moved on.
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.drawImage(image, cx - width / 2, top, width, height);
       ctx.restore();
       resolve();
     };
-    image.onerror = () => reject(new Error(`No se pudo cargar ${artwork.src}`));
+    image.onerror = () => reject(new Error(`Could not load ${artwork.src}`));
     image.src = artwork.src;
   });
 }
 
 /**
- * Marca de agua del anverso: el logotipo en la tinta que se lee sobre la cara
- * del tema, al pie del hueco que deja el bloque de texto. Equilibra el peso
- * visual sin competir con los datos.
+ * Front watermark: the logo in the ink that reads over the theme's face, at
+ * the foot of the gap the text block leaves. It balances the visual weight
+ * without competing with the data.
  */
 function drawWatermark(ctx: Ctx, theme: ThemeName): Promise<void> {
   const width = 700;
@@ -212,8 +211,9 @@ function drawWatermark(ctx: Ctx, theme: ThemeName): Promise<void> {
 }
 
 /**
- * Sube la cara a la GPU ya y la refresca cuando el SVG que falta termine de
- * decodificarse. Si no llega, la cara se queda sin ese dibujo pero legible.
+ * Uploads the face to the GPU right away and refreshes it when the missing
+ * SVG finishes decoding. If it never arrives, the face is left without that
+ * drawing but legible.
  */
 function refreshWhenDrawn(
   texture: THREE.CanvasTexture,
@@ -230,9 +230,9 @@ function refreshWhenDrawn(
 }
 
 /**
- * Anverso: los datos de contacto sobre el papel del tema. La marca de agua se
- * pinta encima del resto por ser asíncrona, pero no tapa nada: cae en la
- * esquina inferior derecha, fuera del bloque de texto.
+ * Front: the contact data over the theme's paper. The watermark is painted
+ * after everything else because it is asynchronous, but it covers nothing:
+ * it lands in the bottom-right corner, outside the text block.
  */
 export function createFrontTexture(
   contact: Contact,
@@ -243,7 +243,7 @@ export function createFrontTexture(
   const { canvas, ctx } = createFaceCanvas(palette.card);
   ctx.textBaseline = "top";
 
-  // Filete de marca en el canto izquierdo.
+  // Brand hairline along the left edge.
   ctx.fillStyle = BRAND.accent;
   ctx.fillRect(0, 0, 16, H);
 
@@ -252,9 +252,9 @@ export function createFrontTexture(
   setTracking(ctx, -2);
   ctx.fillText(contact.name, PAD, 230);
 
-  // El cargo, entre el nombre y la empresa: en tinta apagada y sin versalitas
-  // para que matice el nombre sin disputarle la jerarquía ni pisar el verde
-  // con el que firma la empresa.
+  // The job title, between the name and the company: in muted ink and
+  // without small caps so it qualifies the name without disputing its
+  // hierarchy or stepping on the green the company signs with.
   ctx.fillStyle = palette.inkMuted;
   ctx.font = font(46, 400);
   setTracking(ctx, 0);
@@ -265,11 +265,12 @@ export function createFrontTexture(
   setTracking(ctx, 10);
   ctx.fillText(contact.company.toUpperCase(), PAD, 460);
 
-  // El lema, separado del bloque de identidad por un respiro para que se lea
-  // como una frase aparte y no como una cuarta línea del nombre. Va en tinta
-  // apagada y más pequeño que el cargo: dice qué hace la empresa sin quitarle
-  // el sitio a quien firma la tarjeta. A este cuerpo cabe de sobra en una línea
-  // en los dos idiomas, con más de un tercio del ancho libre.
+  // The tagline, separated from the identity block by some breathing room so
+  // it reads as a sentence of its own and not as a fourth line of the name.
+  // It goes in muted ink and smaller than the job title: it says what the
+  // company does without taking the place of whoever signs the card. At this
+  // size it fits on one line with room to spare in both languages, with more
+  // than a third of the width free.
   ctx.fillStyle = palette.inkMuted;
   ctx.font = font(38, 400);
   setTracking(ctx, 0);
@@ -280,7 +281,7 @@ export function createFrontTexture(
   ctx.fillRect(PAD, 680, W - PAD * 2, 2);
   ctx.globalAlpha = 1;
 
-  // Bloque de datos anclado al borde inferior, con el mismo margen que arriba.
+  // Data block anchored to the bottom edge, with the same margin as at the top.
   const first = H - PAD - (58 + 54) - 2 * 160;
   drawField(ctx, palette, first, labels.email, contact.email);
   drawField(ctx, palette, first + 160, labels.phone, contact.phone);
@@ -290,17 +291,17 @@ export function createFrontTexture(
   refreshWhenDrawn(
     texture,
     drawWatermark(ctx, theme),
-    "El anverso de la tarjeta se queda sin marca de agua",
+    "The front of the card is left without its watermark",
   );
 
   return texture;
 }
 
 /**
- * Reverso: el logotipo en verde de marca —el mismo en los dos temas— y la
- * web. El nombre de la empresa no se repite debajo porque el propio logotipo
- * ya lo dice. Es la única cara sin texto traducible, así que le basta con los
- * datos que no dependen del idioma.
+ * Back: the logo in brand green —the same in both themes— and the website.
+ * The company name is not repeated underneath because the logo itself
+ * already says it. It is the only face with no translatable text, so the
+ * data that does not depend on the language is enough for it.
  */
 export function createBackTexture(
   contact: ContactData,
@@ -323,7 +324,7 @@ export function createBackTexture(
   refreshWhenDrawn(
     texture,
     drawArtwork(ctx, LOGO.brand, { cx, top: 370, width: 820 }),
-    "El reverso de la tarjeta se queda sin logotipo",
+    "The back of the card is left without its logo",
   );
 
   return texture;

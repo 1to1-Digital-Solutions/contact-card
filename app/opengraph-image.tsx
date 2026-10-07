@@ -7,25 +7,27 @@ import { DEFAULT_LANGUAGE } from "@/lib/i18n";
 import { DEFAULT_THEME } from "@/lib/theme";
 
 /**
- * Previsualización al compartir el enlace (WhatsApp, LinkedIn, Slack). Se
- * genera desde el código, como las caras de la tarjeta: el contenido sale de
- * `lib/contact.ts` y el color de `lib/brand.ts`, así que no puede
- * desincronizarse de la marca. El mismo fichero sirve para Twitter/X, que lo
- * reexporta desde `app/twitter-image.tsx`.
+ * Preview when sharing the link (WhatsApp, LinkedIn, Slack). It is generated
+ * from code, like the card faces: the content comes from `lib/contact.ts`
+ * and the color from `lib/brand.ts`, so it cannot drift from the brand. The
+ * same file serves Twitter/X, which re-exports it from
+ * `app/twitter-image.tsx`.
  *
- * Es una sola imagen y la página tiene dos temas, así que va con el de
- * partida (`DEFAULT_THEME`, hoy el oscuro): el que se ve al abrir el enlace.
+ * It is a single image and the page has two themes, so it goes with the
+ * starting one (`DEFAULT_THEME`, today the dark one): the one seen when
+ * opening the link.
  *
- * Y va en un solo idioma, el de recurso, por la misma razón y una más: los
- * únicos textos de la imagen que se traducen son el cargo y el lema (el
- * nombre, la empresa y los datos se escriben igual), y una previsualización no
- * se negocia. Quien la pide es el servicio de mensajería, que no manda el
- * idioma de nadie y cachea una sola imagen por URL para todos los que ven el
- * mensaje: dos imágenes no llegarían a quien toca.
+ * And it goes in a single language, the fallback one, for the same reason
+ * and one more: the only texts in the image that get translated are the job
+ * title and the tagline (the name, the company and the data are written the
+ * same), and a preview is not negotiated. Whoever requests it is the
+ * messaging service, which sends nobody's language and caches a single image
+ * per URL for everyone who sees the message: two images would not reach the
+ * right person.
  *
- * El `alt` va con ella y no con la página: describe lo que pone la imagen, así
- * que se queda en el idioma en el que está escrita. Traducirlo describiría en
- * inglés unas frases que en la imagen están en español.
+ * The `alt` goes with it and not with the page: it describes what the image
+ * says, so it stays in the language the image is written in. Translating it
+ * would describe in English sentences that are in Spanish in the image.
  */
 
 const CONTACT = contactIn(DEFAULT_LANGUAGE);
@@ -35,28 +37,28 @@ export const contentType = "image/png";
 export const alt = `Tarjeta de contacto de ${CONTACT.name}, ${CONTACT.jobTitle} de ${CONTACT.company}. «${CONTACT.tagline}» Con su email, su teléfono y su web.`;
 
 /**
- * El tema de partida de la página, no el oscuro por su nombre: si mañana la
- * página abriera en claro, la previsualización se mudaría con ella.
+ * The page's starting theme, not the dark one by name: if tomorrow the page
+ * opened in light, the preview would move along with it.
  */
 const PALETTE = THEMES[DEFAULT_THEME];
 
-/** Margen de fondo alrededor de la tarjeta: el color de la escena hace de mesa. */
+/** Background margin around the card: the scene's color acts as the table. */
 const MARGIN = 40;
 const CARD_WIDTH = size.width - MARGIN * 2;
 
 /**
- * Las medidas de dentro van en tanto por uno del ancho de la tarjeta, con las
- * mismas proporciones que la versión plana (`card-fallback.tsx`, en `cqw`):
- * margen 5.8%, filete 1%, nombre 5.8%, cargo 3.2%, empresa 2.5% y datos 3.4%.
+ * The inner dimensions go as a fraction of the card's width, with the same
+ * proportions as the flat version (`card-fallback.tsx`, in `cqw`): margin
+ * 5.8%, hairline 1%, name 5.8%, job title 3.2%, company 2.5% and data 3.4%.
  */
 const of = (ratio: number) => Math.round(CARD_WIDTH * ratio);
 
-/** El logotipo del reverso, en verde de marca, al 20% del ancho de la tarjeta. */
+/** The back's logo, in brand green, at 20% of the card's width. */
 const LOGO_WIDTH = of(0.2);
 
 /**
- * El logotipo oficial, incrustado en la imagen: el generador no resuelve rutas
- * públicas, así que el SVG viaja como data URI.
+ * The official logo, embedded in the image: the generator does not resolve
+ * public paths, so the SVG travels as a data URI.
  */
 function logoDataUri(): string {
   const svg = readFileSync(join(process.cwd(), "public", LOGO.brand.src));
@@ -82,8 +84,8 @@ export default function Image() {
             justifyContent: "space-between",
             width: "100%",
             padding: of(0.058),
-            // El canto del papel es lo que separa la tarjeta del fondo: los dos
-            // tonos son casi el mismo, como en la escena.
+            // The paper's edge is what separates the card from the background:
+            // the two tones are almost the same, as in the scene.
             border: `2px solid ${PALETTE.cardEdge}`,
             borderLeft: `${of(0.01)}px solid ${BRAND.accent}`,
             borderRadius: of(CARD.radius / CARD.width),
@@ -113,15 +115,16 @@ export default function Image() {
             >
               {CONTACT.company.toUpperCase()}
             </span>
-            {/* El lema entra en la previsualización porque entra en la tarjeta:
-                a este cuerpo cabe en una línea con holgura, y es lo que hace
-                que quien ve el enlace compartido sepa a qué se dedica.
+            {/* The tagline makes it into the preview because it makes it onto
+                the card: at this size it fits on one line with room to spare,
+                and it is what lets whoever sees the shared link know what the
+                company does.
 
-                Su respiro es menor que el de la cara de la tarjeta: aquí el
-                papel es mucho más apaisado y el aire que queda entre los dos
-                bloques es escaso, así que un margen mayor separaría el lema de
-                la identidad y lo pegaría a los datos, que es lo contrario de a
-                dónde pertenece. */}
+                Its breathing room is smaller than on the card face: here the
+                paper is far more landscape and the air left between the two
+                blocks is scarce, so a larger margin would separate the
+                tagline from the identity and stick it to the data, which is
+                the opposite of where it belongs. */}
             <span
               style={{
                 marginTop: of(0.016),

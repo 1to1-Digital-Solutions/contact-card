@@ -4,45 +4,45 @@ import { describe, expect, it } from "vitest";
 import { PHONE_LANDSCAPE } from "./use-media-query";
 
 /**
- * El reparto de la pantalla en un móvil apaisado lo hacen dos a la vez: el CSS
- * mueve los mandos y esconde el título, y la escena le da su tamaño a la
- * tarjeta. Si cada uno usa un corte distinto queda un tramo en el que la
- * tarjeta se hace grande con los mandos todavía en medio, o al revés.
+ * Splitting the screen on a phone in landscape is done by two at once: the
+ * CSS moves the controls and hides the title, and the scene gives the card
+ * its size. If each uses a different cutoff there is a stretch where the card
+ * grows large with the controls still in the middle, or the other way round.
  */
 
 const CSS = readFileSync(fileURLToPath(new URL("../app/globals.css", import.meta.url)), "utf8");
 
-describe("consulta del móvil apaisado", () => {
-  it("es la misma en la escena que en la variante de Tailwind", () => {
+describe("phone landscape query", () => {
+  it("is the same in the scene as in the Tailwind variant", () => {
     const variant = CSS.match(/@custom-variant phone-landscape \(@media ([\s\S]*?)\);/)?.[1];
     expect(variant).toBe(PHONE_LANDSCAPE);
   });
 
-  it("se queda por debajo del ancho del panel fijo", () => {
-    // A partir de `lg` los datos van en una columna al lado y la escena ya no
-    // tiene la pantalla entera: ahí este modo no pinta nada.
+  it("stays below the width of the fixed panel", () => {
+    // From `lg` up the data goes in a column alongside and the scene no
+    // longer has the whole screen: there this mode has no business.
     expect(PHONE_LANDSCAPE).toContain("max-width");
   });
 
   /**
-   * Ya está escrita dos veces (aquí y en la escena) y eso es lo que este
-   * fichero vigila. Una tercera copia a mano dentro del propio CSS —para una
-   * regla que no se puede poner como utilidad— se desincronizaría sin que nadie
-   * se enterase: para eso está `@variant phone-landscape`.
+   * It is already written twice (here and in the scene) and that is what this
+   * file watches. A third hand-written copy inside the CSS itself —for a rule
+   * that cannot be expressed as a utility— would drift out of sync without
+   * anyone noticing: that is what `@variant phone-landscape` is for.
    */
-  it("no se escribe a mano una segunda vez en el CSS", () => {
+  it("is not written by hand a second time in the CSS", () => {
     const written = CSS.match(/\(orientation: landscape\)/g) ?? [];
     expect(written).toHaveLength(1);
   });
 });
 
 /**
- * Apaisado la hoja cuelga del borde derecho, y una hoja que cuelga de la
- * derecha tiene que entrar por la derecha: el deslizamiento vertical la traería
- * desde abajo hasta un sitio en el que ya está.
+ * In landscape the sheet hangs from the right edge, and a sheet that hangs
+ * from the right has to enter from the right: the vertical slide would bring
+ * it up from below to a place where it already is.
  */
-describe("entrada de la hoja de datos", () => {
-  /** El cuerpo del bloque que abre `marker`, con sus llaves equilibradas. */
+describe("data sheet entrance", () => {
+  /** The body of the block `marker` opens, with its braces balanced. */
   const blockAt = (marker: string) => {
     const start = CSS.indexOf(marker);
     if (start < 0) return "";
@@ -60,19 +60,20 @@ describe("entrada de la hoja de datos", () => {
 
   const landscapeRules = () => blockAt("@variant phone-landscape");
 
-  it("va por el eje X en apaisado y por el Y en el resto", () => {
+  it("moves along the X axis in landscape and along Y elsewhere", () => {
     const landscape = landscapeRules();
     expect(landscape).toContain("translate: 100% 0");
     expect(landscape).not.toContain("translate: 0 100%");
-    // Lo de siempre sigue fuera de la variante: la hoja de abajo no se toca.
+    // The usual stays outside the variant: the bottom sheet is left alone.
     expect(CSS.replace(landscape, "")).toContain("translate: 0 100%");
   });
 
-  it("solo se mueve para quien no ha pedido menos movimiento", () => {
-    // El deslizamiento entero —los dos ejes— cuelga de esa preferencia: a quien
-    // pide menos movimiento le queda el fundido, que no desplaza nada. Se mira
-    // que la variante esté DENTRO de ese bloque, y no que aparezca más abajo en
-    // el fichero: sacarla fuera la dejaría igual de abajo y ya no colgaría.
+  it("only moves for those who have not asked for less motion", () => {
+    // The whole slide —both axes— hangs from that preference: whoever asks
+    // for less motion gets the fade, which displaces nothing. What is checked
+    // is that the variant is INSIDE that block, not that it shows up further
+    // down the file: pulling it out would leave it just as far down and it
+    // would no longer hang from it.
     const reduced = blockAt("@media (prefers-reduced-motion: no-preference)");
     expect(reduced).toContain("@variant phone-landscape");
     expect(reduced).toContain("translate: 100% 0");

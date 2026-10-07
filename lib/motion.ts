@@ -1,9 +1,9 @@
 /**
- * Muelles amortiguados para la animación de la tarjeta.
+ * Damped springs for the card animation.
  *
- * Se integran a mano (Euler semi-implícito) en lugar de tirar de una
- * librería de animación porque la tarjeta se anima dentro del bucle de
- * render de three.js, donde ya recibimos el delta de cada frame.
+ * They are integrated by hand (semi-implicit Euler) instead of pulling in an
+ * animation library because the card animates inside the three.js render
+ * loop, where we already receive each frame's delta.
  */
 
 export type SpringState = {
@@ -12,18 +12,18 @@ export type SpringState = {
 };
 
 export type SpringConfig = {
-  /** Cuánto tira hacia el objetivo. Más alto = más rápido y más rígido. */
+  /** How hard it pulls towards the target. Higher = faster and stiffer. */
   stiffness: number;
-  /** Cuánto frena. Más alto = menos rebote. */
+  /** How much it brakes. Higher = less bounce. */
   damping: number;
-  /** Inercia. Por defecto 1. */
+  /** Inertia. Defaults to 1. */
   mass?: number;
 };
 
 /**
- * Paso máximo de integración. Un frame perdido (pestaña en segundo plano,
- * GC) puede traer un delta enorme; sin subdividir, el integrador explota
- * y la tarjeta sale disparada.
+ * Maximum integration step. A dropped frame (background tab, GC) can bring a
+ * huge delta; without subdividing, the integrator blows up and the card shoots
+ * off.
  */
 const MAX_STEP = 1 / 120;
 
@@ -55,20 +55,20 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * Amortiguación de primer orden, para filtrar una señal que llega a saltos
- * —el puntero— antes de que la persiga un muelle.
+ * First-order smoothing, to filter a signal that arrives in jumps —the
+ * pointer— before a spring chases it.
  *
- * A diferencia del muelle no tiene inercia: no sobrepasa el objetivo ni
- * rebota, solo llega más tarde. Por eso vale para suavizar la *entrada* del
- * gesto sin cambiar a dónde va.
+ * Unlike the spring it has no inertia: it neither overshoots the target nor
+ * bounces, it just arrives later. That is why it works for smoothing the
+ * *input* of the gesture without changing where it goes.
  */
 export type SmoothConfig = {
-  /** Segundos en recorrer la mitad de lo que falta. 0 deja pasar la señal tal cual. */
+  /** Seconds to cover half of what is left. 0 lets the signal through as is. */
   halfLife: number;
   /**
-   * Distancia por debajo de la cual se planta en el objetivo. Sin ella el
-   * filtro se acerca eternamente sin llegar, y lo que se movía sigue moviéndose
-   * —cada vez menos— mucho después de que el puntero se haya parado.
+   * Distance below which it snaps to the target. Without it the filter keeps
+   * approaching forever without arriving, and whatever was moving keeps moving
+   * —less and less— long after the pointer has stopped.
    */
   rest: number;
 };
@@ -82,9 +82,10 @@ export function smoothTowards(
   if (dt <= 0) return current;
   if (config.halfLife <= 0) return target;
 
-  // Solución exacta de la caída exponencial, no una fracción fija por frame:
-  // así el recorrido depende del tiempo transcurrido y no de cuántas veces se
-  // haya llamado, y un frame perdido no acelera ni frena el filtro.
+  // Exact solution of the exponential decay, not a fixed fraction per frame:
+  // that way the distance covered depends on the elapsed time and not on how
+  // many times it was called, and a dropped frame neither speeds up nor slows
+  // down the filter.
   const remaining = (current - target) * 2 ** (-dt / config.halfLife);
   return Math.abs(remaining) <= config.rest ? target : target + remaining;
 }

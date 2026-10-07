@@ -4,14 +4,15 @@ import { dictionary } from "@/lib/dictionary";
 import { type Language, nextLanguage } from "@/lib/i18n";
 
 /**
- * Cambia el idioma de la página. La detección por `Accept-Language` acierta
- * casi siempre, pero este botón cubre lo que no puede acertar: enseñar la
- * tarjeta en tu móvil a alguien que no lee tu idioma, que es medio motivo de
- * tener una tarjeta digital en un evento.
+ * Switches the page language. Detection via `Accept-Language` gets it right
+ * almost always, but this button covers what it cannot get right: showing
+ * the card on your phone to someone who does not read your language, which
+ * is half the point of having a digital card at an event.
  *
- * Como el de tema, muestra a dónde lleva y no dónde se está. Y lo dice en el
- * idioma de destino, con su `lang`, para que lo entienda —y lo pronuncie bien
- * un lector de pantalla— quien no lee el de la página.
+ * Like the theme one, it shows where it leads and not where you are. And it
+ * says so in the target language, with its `lang`, so that whoever does not
+ * read the page's language understands it —and a screen reader pronounces it
+ * properly—.
  */
 export function LanguageToggle({
   language,

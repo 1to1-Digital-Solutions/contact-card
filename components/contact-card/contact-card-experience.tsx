@@ -26,10 +26,10 @@ import { SceneErrorBoundary } from "./scene-error-boundary";
 import { ShareControl } from "./share-control";
 
 /**
- * @param served Idioma con el que el servidor pintó el HTML: el que se eligió
- *   en una visita anterior o, si no hay elección guardada, el que negoció el
- *   navegador. El conmutador lo cambia aquí y lo deja recordado para la
- *   próxima visita.
+ * @param served Language the server rendered the HTML with: the one chosen
+ *   on a previous visit or, if there is no saved choice, the one the browser
+ *   negotiated. The toggle changes it here and leaves it remembered for the
+ *   next visit.
  */
 export function ContactCardExperience({ language: served }: { language: Language }) {
   const [language, setLanguage] = useState(served);
@@ -38,16 +38,16 @@ export function ContactCardExperience({ language: served }: { language: Language
   const reducedMotion = useReducedMotion();
   const { theme, toggle } = useTheme();
   /**
-   * Los sensores del aparato, que en un móvil hacen lo que en un escritorio
-   * hace el ratón. Se piden solo donde hay una pantalla táctil: en un
-   * escritorio los eventos existen pero no los provoca nadie, y la pista
-   * hablaría de agitar un móvil que no está.
+   * The device sensors, which on a phone do what the mouse does on a desktop.
+   * They are requested only where there is a touch screen: on a desktop the
+   * events exist but nobody triggers them, and the hint would talk about
+   * shaking a phone that is not there.
    */
   const { access: motionAccess, request: requestMotion } = useMotionAccess();
   const finePointer = useMediaQuery(FINE_POINTER);
   const motionEnabled = motionAccess === "granted" && !finePointer;
-  // La escena solo puede montarse en el navegador: dibuja las caras de la
-  // tarjeta en un canvas 2D, que no existe durante el render del servidor.
+  // The scene can only mount in the browser: it draws the card faces on a 2D
+  // canvas, which does not exist during server rendering.
   const status = useWebGLStatus();
   const [flipCount, setFlipCount] = useState(0);
   const [resetCount, setResetCount] = useState(0);
@@ -55,8 +55,8 @@ export function ContactCardExperience({ language: served }: { language: Language
   const [grabbing, setGrabbing] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // El `lang` de `<html>` y el título de la pestaña los pintó el servidor:
-  // viven fuera de este árbol y hay que moverlos a mano, como el tema.
+  // The `lang` of `<html>` and the tab title were rendered by the server:
+  // they live outside this tree and have to be moved by hand, like the theme.
   useEffect(() => {
     applyLanguage(language, dictionary(language).meta.title(CONTACT.name));
   }, [language]);
@@ -67,16 +67,16 @@ export function ContactCardExperience({ language: served }: { language: Language
   const switchLanguage = () => {
     const chosen = nextLanguage(language);
     setLanguage(chosen);
-    // Fuera del actualizador de estado: React puede llamarlo dos veces, y
-    // esto sale del componente (escribe una cookie).
+    // Outside the state updater: React may call it twice, and this leaves the
+    // component (it writes a cookie).
     rememberLanguage(chosen);
   };
-  // Estable: de él cuelga la suscripción al ancho de pantalla de la hoja.
+  // Stable: the sheet's subscription to the screen width hangs from it.
   const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   return (
-    // La pantalla completa y sin scroll: la tarjeta es el contenido, no un
-    // adorno al principio de una página por la que haya que bajar.
+    // Full screen and no scrolling: the card is the content, not an ornament
+    // at the top of a page one has to scroll down.
     <div className="flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[1fr_26rem]">
       <section
         aria-label={t.scene.label}
@@ -125,9 +125,10 @@ export function ContactCardExperience({ language: served }: { language: Language
         </div>
 
         <header className="pointer-events-none relative z-10 flex items-start justify-between gap-4 p-6 phone-landscape:justify-end phone-landscape:p-3">
-          {/* En un móvil apaisado el título se oye pero no se ve: la tarjeta
-              ocupa la pantalla y ya lleva impresos el nombre y la empresa, así
-              que repetirlos aquí encima solo le quitaría sitio. */}
+          {/* On a phone in landscape the title is heard but not seen: the card
+              takes up the screen and already has the name and the company
+              printed on it, so repeating them up here would only take room
+              from it. */}
           <div className="phone-landscape:sr-only">
             <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
               {CONTACT.name}
@@ -151,27 +152,28 @@ export function ContactCardExperience({ language: served }: { language: Language
           </div>
         </header>
 
-        {/* Como la cabecera: la banda deja pasar el gesto al lienzo y solo los
-            mandos lo recogen. Ahora que la tarjeta ocupa la pantalla entera,
-            esta franja cae encima de la escena —sobre la propia tarjeta en un
-            móvil apaisado—, y sin esto sería una zona muerta de lado a lado. */}
+        {/* Like the header: the strip lets the gesture through to the canvas
+            and only the controls catch it. Now that the card takes up the
+            whole screen, this band lands on top of the scene —over the card
+            itself on a phone in landscape—, and without this it would be a
+            dead zone from side to side. */}
         <div className="pointer-events-none relative z-10 flex flex-col items-center gap-3 p-6 phone-landscape:absolute phone-landscape:inset-0 phone-landscape:justify-end phone-landscape:p-3 lg:items-start">
-          {/* En un móvil los mandos son solo el icono y caben de sobra en una
-              línea; el `flex-wrap` es para el rótulo que aparece con pantalla
-              de sobra, que crece con el idioma: sin él, un texto más largo que
-              el de hoy se saldría de la pantalla en vez de bajar de línea.
-              Apaisado no hay alto que gastar en una banda: los mandos se van
-              en columna al borde derecho, flotando sobre la tarjeta. Se
-              centran en lo que queda por debajo de la cabecera (`top-14`, que
-              es su relleno más el alto de un botón) y no en la pantalla
-              entera: con los cinco mandos —los cuatro de siempre más el del
-              permiso de iOS— la columna mide más que el hueco libre de un
-              móvil bajo y se subiría encima de los conmutadores. */}
+          {/* On a phone the controls are icon-only and fit on one line with
+              room to spare; the `flex-wrap` is for the label that appears
+              with a roomy screen, which grows with the language: without it,
+              a text longer than today's would run off the screen instead of
+              wrapping. In landscape there is no height to spend on a strip:
+              the controls go in a column at the right edge, floating over the
+              card. They are centered in what is left below the header
+              (`top-14`, which is its padding plus the height of a button) and
+              not in the whole screen: with the five controls —the usual four
+              plus the iOS permission one— the column is taller than the free
+              space on a short phone and would climb over the toggles. */}
           <div className="flex flex-wrap items-center justify-center gap-3 phone-landscape:absolute phone-landscape:top-14 phone-landscape:bottom-0 phone-landscape:right-3 phone-landscape:flex-col phone-landscape:flex-nowrap phone-landscape:gap-2">
-            {/* Voltear y recolocar solo existen con la escena: la tarjeta
-                plana se gira pulsándola. Van aquí en todos los tamaños y no
-                dentro de la hoja de datos: desde la hoja, el giro que
-                disparan queda tapado justo mientras ocurre. */}
+            {/* Flip and recenter only exist with the scene: the flat card is
+                flipped by pressing it. They go here at every size and not
+                inside the data sheet: from the sheet, the turn they trigger
+                stays covered right while it happens. */}
             {status === "ready" && (
               <>
                 <SceneControl
@@ -185,13 +187,14 @@ export function ContactCardExperience({ language: served }: { language: Language
                   onClick={reset}
                 />
 
-                {/* Solo donde el navegador exige permiso para leer los
-                    sensores (iOS), y solo hasta que se conceda: donde no hace
-                    falta pedirlo, la tarjeta ya responde al móvil sin que
-                    nadie pulse nada. Con ratón tampoco se ofrece: un iPad con
-                    teclado dice `pointer: fine` y ahí los sensores no se
-                    escuchan, así que el botón abriría el diálogo del sistema
-                    para pedir un permiso que no se va a usar. */}
+                {/* Only where the browser demands permission to read the
+                    sensors (iOS), and only until it is granted: where asking
+                    is not needed, the card already responds to the phone
+                    without anyone pressing anything. With a mouse it is not
+                    offered either: an iPad with a keyboard reports
+                    `pointer: fine` and there the sensors are not listened
+                    to, so the button would open the system dialog to ask for
+                    a permission that is not going to be used. */}
                 {motionAccess === "prompt" && !finePointer && (
                   <SceneControl
                     label={t.controls.useMotion}
@@ -202,9 +205,9 @@ export function ContactCardExperience({ language: served }: { language: Language
               </>
             )}
 
-            {/* La puerta a los datos no depende de la escena: en pantalla
-                estrecha el panel lateral está oculto, así que este botón es
-                la única forma de llegar a ellos, también sin WebGL. */}
+            {/* The door to the data does not depend on the scene: on a narrow
+                screen the side panel is hidden, so this button is the only
+                way to reach it, also without WebGL. */}
             <SceneControl
               label={t.controls.showData}
               icon={<DetailsIcon />}
@@ -212,18 +215,18 @@ export function ContactCardExperience({ language: served }: { language: Language
               className="lg:hidden"
             />
 
-            {/* Compartir va el último y con el mismo aspecto sobrio que sus
-                vecinos: la acción principal sigue siendo «Guardar contacto»,
-                que es el único botón con el color de marca. */}
+            {/* Share goes last and with the same sober look as its neighbors:
+                the primary action is still "Save contact", which is the only
+                button in the brand color. */}
             <ShareControl language={language} />
           </div>
 
           {status === "ready" && (
             <>
-              {/* La misma pista, dicha en corto donde no cabe entera: en un
-                  móvil, cada línea de texto aquí abajo se la quita a la
-                  tarjeta. Con los sensores en marcha cuenta lo de agitar, que
-                  es lo más rápido y lo único que no se descubre solo. */}
+              {/* The same hint, said briefly where it does not fit in full: on
+                  a phone, every line of text down here is taken from the
+                  card. With the sensors running it mentions shaking, which is
+                  the fastest and the only one that is not discovered alone. */}
               <p className="text-center text-sm text-ink-muted roomy:hidden">
                 {motionEnabled ? t.scene.hintMotion : t.scene.hintShort}
               </p>

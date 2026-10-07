@@ -6,9 +6,9 @@ type Props = { children: ReactNode; fallback: ReactNode };
 type State = { failed: boolean };
 
 /**
- * Si la escena 3D revienta al montarse (driver, contexto WebGL perdido al
- * crear las texturas…), la página enseña la tarjeta plana en lugar de
- * quedarse en blanco.
+ * If the 3D scene blows up while mounting (driver, WebGL context lost while
+ * creating the textures…), the page shows the flat card instead of staying
+ * blank.
  */
 export class SceneErrorBoundary extends Component<Props, State> {
   state: State = { failed: false };
@@ -18,7 +18,7 @@ export class SceneErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: unknown) {
-    console.error("No se pudo montar la tarjeta en 3D:", error);
+    console.error("Could not mount the 3D card:", error);
   }
 
   render() {

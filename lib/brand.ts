@@ -1,42 +1,43 @@
 /**
- * Tokens de marca de 1to1 Digital Solutions.
+ * Brand tokens for 1to1 Digital Solutions.
  *
- * Los valores salen de la paleta oficial: la escala verde (primary-200
- * `#1ac89a`, primary-300 `#1f957a`, primary-500 `#116e57`), el `--on-primary`
- * `#1c1c1f` y los neutros de los temas oscuro (`#27272a`, `#1e1e21`,
- * `#ededed`) y claro (`#f4f4f5`, `#ffffff`, `#1a1a1a`). La marca no define
- * grises intermedios para texto secundario ni para el canto del papel: se
- * derivan de los neutros oficiales y están fijados en el escalón que cumple
- * WCAG AA (`brand.test.ts` comprueba cada par de color y fondo, tema a tema).
+ * The values come from the official palette: the green scale (primary-200
+ * `#1ac89a`, primary-300 `#1f957a`, primary-500 `#116e57`), the `--on-primary`
+ * `#1c1c1f` and the neutrals of the dark (`#27272a`, `#1e1e21`, `#ededed`)
+ * and light (`#f4f4f5`, `#ffffff`, `#1a1a1a`) themes. The brand defines no
+ * intermediate greys for secondary text or for the card edge: they are
+ * derived from the official neutrals and pinned at the step that meets
+ * WCAG AA (`brand.test.ts` checks every colour/background pair, theme by
+ * theme).
  *
- * Los valores viven aquí en JS porque three.js no lee variables CSS; los
- * mismos nombres están duplicados en `app/globals.css` para Tailwind, y hay
- * que cambiar los dos a la vez.
+ * The values live here in JS because three.js cannot read CSS variables;
+ * the same names are duplicated in `app/globals.css` for Tailwind, and both
+ * must be changed together.
  */
 
-/** Los dos colores que no dependen del tema: el verde de marca y su tinta. */
+/** The two colours that do not depend on the theme: the brand green and its ink. */
 export const BRAND = {
-  /** Acento de marca (primary-300). Para grafismos: como texto no llega a AA. */
+  /** Brand accent (primary-300). For graphics: as text it falls short of AA. */
   accent: "#1f957a",
-  /** Texto sobre el verde de marca (`--on-primary` de la marca). */
+  /** Text over the brand green (the brand's `--on-primary`). */
   onAccent: "#1c1c1f",
 } as const;
 
 export type ThemeName = "light" | "dark";
 
-/** Los colores que cambian con el tema. Mismos nombres en `app/globals.css`. */
+/** The colours that change with the theme. Same names in `app/globals.css`. */
 export type ThemePalette = {
-  /** Fondo de la escena y de la página. */
+  /** Background of the scene and of the page. */
   backdrop: string;
-  /** Cuerpo de la tarjeta. Las dos caras van del mismo color. */
+  /** Body of the card. Both faces share the same colour. */
   card: string;
-  /** Canto de la tarjeta: la cara desviada un escalón, como el corte del papel. */
+  /** Edge of the card: the face shifted one step, like the cut of the paper. */
   cardEdge: string;
-  /** Texto principal, tanto sobre la tarjeta como sobre el fondo. */
+  /** Main text, both over the card and over the backdrop. */
   ink: string;
-  /** Texto secundario: la tinta apagada hasta el escalón que cumple AA. */
+  /** Secondary text: the ink dimmed down to the step that still meets AA. */
   inkMuted: string;
-  /** Acento legible como texto en este tema (primary-200 / primary-500). */
+  /** Accent readable as text in this theme (primary-200 / primary-500). */
   accentInk: string;
 };
 
@@ -59,7 +60,7 @@ export const THEMES = {
   },
 } as const satisfies Record<ThemeName, ThemePalette>;
 
-/** Un dibujo de marca: su fichero y el lienzo con el que se escala. */
+/** A brand artwork: its file and the canvas it is scaled with. */
 export type BrandArtwork = {
   readonly src: string;
   readonly width: number;
@@ -67,16 +68,17 @@ export type BrandArtwork = {
 };
 
 /**
- * Dibujos oficiales de la marca, los únicos que no se generan aquí: los
- * ficheros son los mismos que usa la web, recortados al lienzo del logotipo
- * (los tres dibujan el mismo trazado y solo cambia la tinta). Las medidas
- * sirven para escalarlos sin deformarlos (`brand.test.ts` lo comprueba).
+ * Official brand artworks, the only ones not generated here: the files are
+ * the same ones the website uses, cropped to the logo's canvas (all three
+ * draw the same path and only the ink changes). The dimensions are there to
+ * scale them without distortion (`brand.test.ts` checks it).
  *
- * - `brand` lleva el trazo en verde: es el del reverso, en los dos temas.
- * - `positive` y `negative` son el mismo logotipo en tinta y en blanco: la
- *   marca de agua del anverso usa el que se lee sobre la cara de cada tema.
- * - `isotype` es solo el símbolo. No se dibuja en la tarjeta: es la fuente
- *   del favicon `app/icon.svg`, que copia sus trazados a mano.
+ * - `brand` carries the stroke in green: it is the one on the back, in both
+ *   themes.
+ * - `positive` and `negative` are the same logo in ink and in white: the
+ *   watermark on the front uses whichever reads over each theme's face.
+ * - `isotype` is just the symbol. It is not drawn on the card: it is the
+ *   source of the favicon `app/icon.svg`, which copies its paths by hand.
  */
 export const LOGO = {
   brand: { src: "/logo-brand.svg", width: 246, height: 133 },
@@ -85,17 +87,17 @@ export const LOGO = {
   isotype: { src: "/isotype.svg", width: 188, height: 188 },
 } as const satisfies Record<string, BrandArtwork>;
 
-/** La marca de agua del anverso: la tinta que se lee sobre la cara del tema. */
+/** The watermark on the front: the ink that reads over the theme's face. */
 export const WATERMARK: Record<ThemeName, BrandArtwork> = {
   light: LOGO.positive,
   dark: LOGO.negative,
 };
 
-/** Proporciones físicas de una tarjeta de visita estándar (85 × 55 mm). */
+/** Physical proportions of a standard business card (85 × 55 mm). */
 export const CARD = {
   width: 3.2,
   height: (3.2 * 55) / 85,
   thickness: 0.045,
-  /** Radio de las esquinas, en las mismas unidades que el ancho. */
+  /** Corner radius, in the same units as the width. */
   radius: 0.09,
 } as const;

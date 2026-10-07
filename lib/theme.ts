@@ -1,40 +1,40 @@
-// Entre módulos de `lib/` la ruta va relativa, como en el resto del
-// directorio; el alias `@/` se reserva para cruzar de carpeta.
+// Between `lib/` modules the path is relative, as in the rest of the
+// directory; the `@/` alias is reserved for crossing folders.
 import { type ThemeName, THEMES } from "./brand";
 
-/** Dónde recuerda el navegador el tema que eligió quien visita la página. */
+/** Where the browser remembers the theme the visitor chose. */
 export const THEME_STORAGE_KEY = "contact-card-theme";
 
 /**
- * Tema de partida. La tarjeta nace oscura por decisión de diseño, no por
- * seguir la preferencia del sistema: el botón de la interfaz es el que manda
- * y su elección se recuerda.
+ * Starting theme. The card is born dark by design decision, not by following
+ * the system preference: the interface button is what rules and its choice is
+ * remembered.
  */
 export const DEFAULT_THEME: ThemeName = "dark";
 
-/** Cualquier valor que no sea uno de los dos temas cae en el de partida. */
+/** Any value that is not one of the two themes falls back to the starting one. */
 export function parseTheme(value: string | null | undefined): ThemeName {
   return value === "light" || value === "dark" ? value : DEFAULT_THEME;
 }
 
-/** El marco del navegador (barra de direcciones) va del color del fondo. */
+/** The browser chrome (address bar) takes the colour of the backdrop. */
 export const CHROME_COLOR: Record<ThemeName, string> = {
   light: THEMES.light.backdrop,
   dark: THEMES.dark.backdrop,
 };
 
-/** Selector del `<meta>` que pinta ese marco. Lo emite `app/layout.tsx`. */
+/** Selector of the `<meta>` that paints that chrome. `app/layout.tsx` emits it. */
 const THEME_COLOR_META = 'meta[name="theme-color"]';
 
 /**
- * Script que corre antes del primer pintado para dejar la clase del tema en
- * `<html>`. Va en línea a propósito: si esperase a la hidratación, la página
- * se vería un instante con el tema que no es. Si el almacenamiento está
- * bloqueado (navegación privada) se queda el tema de partida, que es el que
- * ya trae el HTML del servidor.
+ * Script that runs before first paint to leave the theme class on `<html>`.
+ * It is inline on purpose: if it waited for hydration, the page would be seen
+ * for an instant with the wrong theme. If storage is blocked (private
+ * browsing) the starting theme stays, which is the one the server HTML
+ * already carries.
  *
- * De paso corrige el `theme-color`: los metadatos de Next son estáticos y no
- * pueden saber qué tema se recordó, así que salen con el de partida.
+ * Along the way it fixes `theme-color`: Next's metadata is static and cannot
+ * know which theme was remembered, so it comes out with the starting one.
  */
 export const THEME_SCRIPT = [
   "var d=document.documentElement,t,m;",
@@ -47,9 +47,9 @@ export const THEME_SCRIPT = [
 ].join("");
 
 /**
- * El tema que hay puesto ahora mismo en el documento. Si `<html>` viniera sin
- * clase —un fallo del script— cae en el de partida, que es con el que se
- * pintó la página: no se da por hecho cuál de los dos es.
+ * The theme currently set on the document. If `<html>` came without a class
+ * —a script failure— it falls back to the starting one, which is the one the
+ * page was painted with: it does not assume which of the two it is.
  */
 export function readTheme(): ThemeName {
   const { classList } = document.documentElement;
@@ -58,14 +58,14 @@ export function readTheme(): ThemeName {
   return DEFAULT_THEME;
 }
 
-/** Deja el tema en `<html>`: de ahí cuelgan los tokens de `app/globals.css`. */
+/** Leaves the theme on `<html>`: the tokens in `app/globals.css` hang from it. */
 export function applyTheme(theme: ThemeName): void {
   const root = document.documentElement;
   root.classList.remove("light", "dark");
   root.classList.add(theme);
 
-  // El marco del navegador acompaña al cambio; si no, la barra de direcciones
-  // se queda del color del tema anterior hasta recargar.
+  // The browser chrome follows the change; otherwise the address bar stays
+  // the colour of the previous theme until reload.
   const meta = document.querySelector<HTMLMetaElement>(THEME_COLOR_META);
   if (meta) meta.content = CHROME_COLOR[theme];
 }

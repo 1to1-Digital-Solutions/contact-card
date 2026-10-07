@@ -4,16 +4,16 @@ import { DICTIONARIES, dictionary } from "./dictionary";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "./i18n";
 
 /**
- * El tipo `Dictionary` ya obliga a que los dos idiomas tengan las mismas
- * claves; lo que no puede comprobar el compilador es que estén *traducidas*.
- * Copiar el español al inglés para «rellenar» compila igual de bien, y en
- * pantalla se ve una tarjeta a medias.
+ * The `Dictionary` type already forces both languages to have the same keys;
+ * what the compiler cannot check is that they are *translated*. Copying the
+ * Spanish into the English to "fill it in" compiles just as well, and on
+ * screen it shows a half-done card.
  */
 
-/** Cadenas de prueba con las que se resuelven los textos con hueco. */
-const ARGS = ["Nombre", "Empresa"];
+/** Sample strings the texts with a slot are resolved with. */
+const ARGS = ["Name", "Company"];
 
-/** Aplana el diccionario a `clave.anidada` → texto, resolviendo las funciones. */
+/** Flattens the dictionary to `nested.key` → text, resolving the functions. */
 function flatten(value: unknown, path = ""): Map<string, string> {
   const flat = new Map<string, string>();
   if (typeof value === "string") {
@@ -31,31 +31,31 @@ function flatten(value: unknown, path = ""): Map<string, string> {
 }
 
 /**
- * Lo único que se escribe igual en los dos idiomas. Cualquier otra
- * coincidencia es una traducción que falta.
+ * The only thing written the same in both languages. Any other match is a
+ * missing translation.
  */
 const SHARED = new Set(["fields.email"]);
 
 const flat = new Map(LANGUAGES.map((language) => [language, flatten(dictionary(language))]));
 const spanish = flat.get("es")!;
 
-describe("diccionarios", () => {
-  it("cubre los idiomas que se sirven, y solo esos", () => {
+describe("dictionaries", () => {
+  it("covers the languages that are served, and only those", () => {
     expect(Object.keys(DICTIONARIES).sort()).toEqual([...LANGUAGES].sort());
   });
 
-  it.each(LANGUAGES)("tiene en %s las mismas claves que en español", (language) => {
+  it.each(LANGUAGES)("has in %s the same keys as in Spanish", (language) => {
     expect([...flat.get(language)!.keys()].sort()).toEqual([...spanish.keys()].sort());
   });
 
-  it.each(LANGUAGES)("no deja ningún texto vacío en %s", (language) => {
+  it.each(LANGUAGES)("leaves no text empty in %s", (language) => {
     for (const [key, text] of flat.get(language)!) {
       expect(text.trim(), `${language}.${key}`).not.toBe("");
     }
   });
 
   it.each(LANGUAGES.filter((language) => language !== "es"))(
-    "traduce al %s todo lo que no se escribe igual",
+    "translates into %s everything that is not written the same",
     (language) => {
       const copied = [...flat.get(language)!]
         .filter(([key, text]) => !SHARED.has(key) && text === spanish.get(key))
@@ -66,14 +66,14 @@ describe("diccionarios", () => {
   );
 
   /**
-   * La pista corta existe para caber en una línea en un móvil: con `text-sm`
-   * (14 px) y los 24 px de margen a cada lado, en una pantalla de 375 px entran
-   * unos 46 caracteres. Se deja algo de holgura sobre ese número; si se pasa,
-   * vuelve a comerse dos líneas y con ellas el sitio de la tarjeta.
+   * The short hint exists to fit on one line on a phone: with `text-sm`
+   * (14 px) and 24 px of margin on each side, about 46 characters fit on a
+   * 375 px screen. Some slack is left under that number; if it goes over, it
+   * eats two lines again and with them the card's room.
    */
   const SHORT_HINT_LIMIT = 44;
 
-  it.each(LANGUAGES)("dice la pista en corto para el móvil en %s", (language) => {
+  it.each(LANGUAGES)("says the hint briefly for the phone in %s", (language) => {
     const { hint, hintShort, hintMotion } = dictionary(language).scene;
     for (const short of [hintShort, hintMotion]) {
       expect(short.length).toBeLessThanOrEqual(SHORT_HINT_LIMIT);
@@ -82,21 +82,21 @@ describe("diccionarios", () => {
   });
 
   it.each(LANGUAGES)(
-    "puede etiquetar el conmutador con su texto visible en %s",
+    "can label the switch with its visible text in %s",
     (language) => {
-      // El nombre accesible de un control tiene que contener su texto visible
-      // para poder pulsarlo por voz (WCAG 2.5.3): el conmutador enseña «EN» y
-      // se anuncia «Switch to English».
+      // A control's accessible name has to contain its visible text so it
+      // can be activated by voice (WCAG 2.5.3): the switch shows "EN" and
+      // announces "Switch to English".
       const { code, switchTo } = dictionary(language).language;
       expect(switchTo.toLowerCase()).toContain(code.toLowerCase());
     },
   );
 
   it.each(LANGUAGES)(
-    "nombra el enlace de cada perfil sin perder lo que se ve en %s",
+    "names each profile's link without losing what is visible in %s",
     (language) => {
-      // Misma regla que en el conmutador (WCAG 2.5.3): el nombre accesible del
-      // enlace tiene que contener el texto visible, que aquí es la dirección.
+      // Same rule as for the switch (WCAG 2.5.3): the link's accessible name
+      // has to contain the visible text, which here is the address.
       for (const { name, address } of PROFILES) {
         const label = dictionary(language).panel.profile(name, address);
         expect(label).toContain(address);
@@ -107,25 +107,26 @@ describe("diccionarios", () => {
 });
 
 /**
- * Los textos de la ficha —el cargo, el lema y a qué se dedica— viven en
- * `lib/contact.ts` y no en el diccionario, pero corren el mismo riesgo: que
- * alguno se quede sin traducir o repetido del español. Se recorren todos en vez
- * de nombrarlos uno a uno para que el próximo entre solo.
+ * The profile texts (the job title, the tagline and what the business does)
+ * live in `lib/contact.ts` and not in the dictionary, but they run the same
+ * risk: that one is left untranslated or copied from the Spanish. They are
+ * all iterated instead of named one by one so that the next one joins on its
+ * own.
  */
-describe("textos de la ficha", () => {
+describe("profile texts", () => {
   const entries = Object.entries(TRANSLATED);
 
-  it("cubre los que hay, que son los que resuelve `contactIn`", () => {
+  it("covers the ones there are, which are the ones `contactIn` resolves", () => {
     expect(entries.map(([key]) => key)).toEqual(["jobTitle", "tagline", "services"]);
   });
 
-  it.each(entries)("escribe %s en todos los idiomas y en cada uno el suyo", (key, byLanguage) => {
+  it.each(entries)("writes %s in every language, and in each one its own", (key, byLanguage) => {
     expect(Object.keys(byLanguage).sort()).toEqual([...LANGUAGES].sort());
     expect(new Set(Object.values(byLanguage)).size, key).toBe(LANGUAGES.length);
     for (const text of Object.values(byLanguage)) expect(text.trim()).not.toBe("");
   });
 
-  it("sale en español cuando el navegador no pide nada", () => {
+  it("comes out in Spanish when the browser asks for nothing", () => {
     expect(TRANSLATED.jobTitle[DEFAULT_LANGUAGE]).toBe("Desarrollador full-stack");
     expect(TRANSLATED.services[DEFAULT_LANGUAGE]).toBe(
       "Desarrollo de software personalizado",
@@ -133,12 +134,12 @@ describe("textos de la ficha", () => {
   });
 
   /**
-   * El lema se imprime en una línea de la tarjeta, y ahí no hay reflujo que
-   * valga: si crece, se sale del papel. El tope sale del cuerpo con el que se
-   * dibuja (38 px sobre 2048 de ancho, con 150 de margen a cada lado) dejando
-   * un tercio de holgura para las fuentes anchas.
+   * The tagline is printed on one line of the card, and there is no reflow
+   * there: if it grows, it runs off the paper. The limit comes from the font
+   * size it is drawn with (38 px over 2048 of width, with 150 of margin on
+   * each side), leaving a third of slack for wide fonts.
    */
-  it.each(LANGUAGES)("dice el lema en una línea de tarjeta en %s", (language) => {
+  it.each(LANGUAGES)("says the tagline in one card line in %s", (language) => {
     expect(TRANSLATED.tagline[language].length).toBeLessThanOrEqual(70);
   });
 });

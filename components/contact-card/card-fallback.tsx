@@ -8,13 +8,13 @@ import { dictionary } from "@/lib/dictionary";
 import type { Language } from "@/lib/i18n";
 
 /**
- * Tarjeta plana para cuando no hay WebGL o la escena 3D falla. Conserva lo
- * esencial —el mismo diseño y las dos caras, del color del tema, que se giran
- * con un clic o con el teclado— usando solo CSS. El grano que en 3D da el
- * relieve del material aquí lo pone `.paper-grain`.
+ * Flat card for when there is no WebGL or the 3D scene fails. It keeps the
+ * essentials —the same design and the two faces, in the theme's color, which
+ * flip with a click or with the keyboard— using CSS only. The grain that in
+ * 3D comes from the material's relief is provided here by `.paper-grain`.
  *
- * El contenido visual se oculta a los lectores de pantalla porque los
- * mismos datos ya están, enlazables, en el panel de contacto.
+ * The visual content is hidden from screen readers because the same data is
+ * already there, as links, in the contact panel.
  */
 export function CardFallback({
   note,
@@ -34,16 +34,16 @@ export function CardFallback({
           type="button"
           onClick={() => setShowingBack((value) => !value)}
           aria-label={showingBack ? t.flipToFront : t.flipToBack}
-          // El `45dvh` es lo que la ata al alto y no solo al ancho: la página
-          // ya no tiene scroll, así que en un hueco bajo —un móvil apaisado—
-          // la tarjeta plana crecía hasta meterse debajo de la cabecera y de
-          // la banda de mandos, y el texto salía encabalgado. En pantallas
-          // altas nunca manda: ahí sigue decidiendo el ancho.
+          // The `45dvh` is what ties it to the height and not only to the
+          // width: the page no longer scrolls, so in a short viewport —a phone
+          // in landscape— the flat card grew until it slid under the header
+          // and the controls strip, and the text came out overlapping. On tall
+          // screens it never wins: there the width keeps deciding.
           //
-          // `@container` es lo que deja que lo de dentro se mida en `cqw`
-          // —centésimas del ancho de la propia tarjeta— en vez de en píxeles:
-          // así el papel impreso se encoge entero, con sus proporciones, en
-          // lugar de recortar el texto cuando la tarjeta baja de tamaño.
+          // `@container` is what lets what is inside measure itself in `cqw`
+          // —hundredths of the card's own width— instead of in pixels: that
+          // way the printed paper shrinks as a whole, keeping its proportions,
+          // instead of clipping the text when the card gets smaller.
           className="@container relative block aspect-[85/55] w-[min(90vw,26rem,45dvh)] rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink"
         >
           <span
@@ -51,11 +51,11 @@ export function CardFallback({
             className="relative block h-full w-full transition-transform duration-700 [transform-style:preserve-3d] motion-reduce:duration-0"
             style={{ transform: showingBack ? "rotateY(180deg)" : undefined }}
           >
-            {/* Las dos caras van del mismo color; el filete del canto les
-                devuelve la silueta que en 3D da el grosor del papel. Las
-                medidas van en `cqw` para que la cara entera se escale con la
-                tarjeta: los valores son los mismos de antes (24 px de margen,
-                24 px de nombre…) traducidos sobre su ancho máximo, 26rem. */}
+            {/* Both faces share the same color; the edge hairline gives them
+                back the silhouette that in 3D comes from the paper's
+                thickness. Sizes are in `cqw` so the whole face scales with
+                the card: the values are the same as before (24 px margin,
+                24 px name…) translated over its maximum width, 26rem. */}
             <span className="paper-grain absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border border-ink/10 border-l-[1cqw] border-l-accent bg-card p-[5.8cqw] text-left shadow-2xl [backface-visibility:hidden]">
               <span>
                 <span className="block text-[5.8cqw] font-semibold text-ink">
@@ -67,11 +67,12 @@ export function CardFallback({
                 <span className="mt-[1cqw] block text-[2.5cqw] font-semibold uppercase tracking-[0.2em] text-accent-ink">
                   {contact.company}
                 </span>
-                {/* El lema, con el mismo respiro por encima que en la cara 3D:
-                    va aparte del bloque de identidad y por debajo de él en
-                    jerarquía. Aquí puede caer en dos líneas cuando la tarjeta
-                    se estrecha, y caben: el hueco entre los dos bloques da de
-                    sobra hasta en un móvil apaisado, que es el más bajo. */}
+                {/* The tagline, with the same breathing room above it as on
+                    the 3D face: it sits apart from the identity block and
+                    below it in hierarchy. Here it may wrap onto two lines
+                    when the card narrows, and they fit: the gap between the
+                    two blocks has room to spare even on a phone in
+                    landscape, which is the shortest viewport. */}
                 <span className="mt-[3cqw] block text-[2.6cqw] leading-snug text-ink-muted">
                   {contact.tagline}
                 </span>
@@ -84,10 +85,10 @@ export function CardFallback({
             </span>
 
             <span className="paper-grain absolute inset-0 flex flex-col items-center justify-center gap-[3.8cqw] overflow-hidden rounded-2xl border border-ink/10 bg-card p-[5.8cqw] shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
-              {/* El mismo fichero que dibuja el reverso en 3D, aquí sin canvas.
-                  El `alt` va vacío porque las dos caras cuelgan de un
-                  `aria-hidden` (los datos se leen en el panel), y sin
-                  optimizar porque es un SVG: se sirve tal cual. */}
+              {/* The same file that draws the back in 3D, here without a
+                  canvas. The `alt` is empty because both faces hang from an
+                  `aria-hidden` (the data is read in the panel), and it is
+                  unoptimized because it is an SVG: it is served as is. */}
               <Image
                 src={LOGO.brand.src}
                 alt=""

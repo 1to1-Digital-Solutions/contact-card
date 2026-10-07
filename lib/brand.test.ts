@@ -3,13 +3,14 @@ import { describe, expect, it } from "vitest";
 import { type ThemeName, BRAND, LOGO, THEMES, WATERMARK } from "./brand";
 
 /**
- * Los tokens de marca solo valen si el texto se lee encima de su fondo. Aquí
- * está fijada cada combinación que existe en la tarjeta y en la página, en los
- * dos temas, con el umbral que le toca: 4.5:1 para texto (WCAG 2.2, criterio
- * 1.4.3 AA) y 3:1 para lo que es solo forma (1.4.11).
+ * The brand tokens are only worth anything if the text reads over its
+ * background. Pinned here is every combination that exists on the card and
+ * on the page, in both themes, with the threshold each one is due: 4.5:1 for
+ * text (WCAG 2.2, criterion 1.4.3 AA) and 3:1 for what is shape only
+ * (1.4.11).
  */
 
-/** Canal sRGB a luz lineal, según la definición de luminancia relativa de WCAG. */
+/** sRGB channel to linear light, per the WCAG definition of relative luminance. */
 function toLinear(channel: number): number {
   const c = channel / 255;
   return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
@@ -29,7 +30,7 @@ function contrast(a: string, b: string): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
-/** Superpone `top` con opacidad `alpha` sobre `bottom`, como hace el navegador. */
+/** Lays `top` with opacity `alpha` over `bottom`, the way the browser does. */
 function blend(top: string, alpha: number, bottom: string): string {
   const t = Number.parseInt(top.slice(1), 16);
   const b = Number.parseInt(bottom.slice(1), 16);
@@ -43,7 +44,7 @@ function blend(top: string, alpha: number, bottom: string): string {
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 const CSS = source("../app/globals.css");
 
-/** Las declaraciones de un bloque de `app/globals.css`, por nombre de variable. */
+/** The declarations of one block of `app/globals.css`, by variable name. */
 function declarationsIn(selector: RegExp): Map<string, string> {
   const body = CSS.match(selector)?.[1] ?? "";
   return new Map(
@@ -62,14 +63,14 @@ const BLOCKS = {
 };
 
 /**
- * El fondo NO es `backdrop` a secas donde vive el texto de la escena: encima
- * llevan la veladura del `body` y el halo de la tarjeta, que lo mueven (en el
- * tema oscuro lo aclaran y en el claro lo oscurecen). El peor caso es el
- * centro de la escena —ahí se lee «Cargando la tarjeta…» y la nota de la
- * versión plana—: el halo entero sobre la veladura más fuerte, que es la
- * única que llega hasta ahí (las dos están en esquinas opuestas). Las dos
- * opacidades y la tinta del halo se leen del CSS para que no puedan
- * desincronizarse.
+ * The background is NOT plain `backdrop` where the scene's text lives: on
+ * top of it sit the `body` glaze and the card's halo, which shift it (in the
+ * dark theme they lighten it, in the light one they darken it). The worst
+ * case is the centre of the scene (that is where "Loading the card…" and the
+ * flat-version note are read): the full halo over the strongest glaze, which
+ * is the only one that reaches that far (the two sit in opposite corners).
+ * Both opacities and the halo's ink are read from the CSS so they cannot
+ * drift out of sync.
  */
 function litBackdrop(theme: ThemeName): string {
   const block = BLOCKS[theme];
@@ -81,58 +82,58 @@ function litBackdrop(theme: ThemeName): string {
   );
 }
 
-/** Pares de texto sobre fondo, con dónde aparece cada uno. */
+/** Text-over-background pairs, with where each one appears. */
 function textPairs(theme: ThemeName): Array<[string, string, string]> {
   const { card, backdrop, ink, inkMuted, accentInk } = THEMES[theme];
   const lit = litBackdrop(theme);
   return [
-    [ink, card, "nombre y datos del anverso"],
-    [inkMuted, card, "cargo, lema y etiquetas del anverso, web del reverso"],
-    [accentInk, card, "empresa en el anverso"],
-    [ink, backdrop, "titular y enlaces del panel"],
-    [inkMuted, backdrop, "etiquetas del panel"],
-    [accentInk, backdrop, "empresa en la cabecera"],
-    [BRAND.onAccent, BRAND.accent, "texto del botón de guardar contacto"],
-    [ink, lit, "mandos de la escena sobre el fondo velado"],
-    [inkMuted, lit, "«Cargando la tarjeta…» y la nota de la versión plana"],
+    [ink, card, "name and details on the front"],
+    [inkMuted, card, "job title, tagline and labels on the front, website on the back"],
+    [accentInk, card, "company on the front"],
+    [ink, backdrop, "panel heading and links"],
+    [inkMuted, backdrop, "panel labels"],
+    [accentInk, backdrop, "company in the header"],
+    [BRAND.onAccent, BRAND.accent, "text of the save-contact button"],
+    [ink, lit, "scene controls over the glazed backdrop"],
+    [inkMuted, lit, "\"Loading the card…\" and the flat-version note"],
   ];
 }
 
-/** Elementos que informan por su forma, no por su texto. */
+/** Elements that convey information by their shape, not by their text. */
 function graphicPairs(theme: ThemeName): Array<[string, string, string]> {
   const { card, accentInk } = THEMES[theme];
   return [
-    [BRAND.accent, card, "filete del anverso y remate del reverso"],
-    [accentInk, litBackdrop(theme), "foco del teclado sobre la escena"],
-    [accentInk, card, "foco del teclado sobre la tarjeta plana"],
+    [BRAND.accent, card, "rule on the front and finishing line on the back"],
+    [accentInk, litBackdrop(theme), "keyboard focus over the scene"],
+    [accentInk, card, "keyboard focus over the flat card"],
   ];
 }
 
-describe("contraste de la paleta de marca", () => {
-  it("mide el contraste como manda WCAG", () => {
+describe("brand palette contrast", () => {
+  it("measures contrast the way WCAG prescribes", () => {
     expect(contrast("#000000", "#ffffff")).toBeCloseTo(21, 5);
     expect(contrast("#767676", "#ffffff")).toBeCloseTo(4.54, 2);
     expect(contrast("#1f957a", "#1f957a")).toBeCloseTo(1, 5);
   });
 
   for (const theme of ["dark", "light"] as const) {
-    describe(`tema ${theme}`, () => {
-      it.each(textPairs(theme))("%s sobre %s llega a AA (%s)", (fg, bg) => {
+    describe(`${theme} theme`, () => {
+      it.each(textPairs(theme))("%s over %s reaches AA (%s)", (fg, bg) => {
         expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
       });
 
-      it.each(graphicPairs(theme))("%s sobre %s se distingue (%s)", (fg, bg) => {
+      it.each(graphicPairs(theme))("%s over %s is distinguishable (%s)", (fg, bg) => {
         expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
       });
 
-      it("mantiene el acento vivo fuera del texto: por eso existe `accentInk`", () => {
+      it("keeps the accent vivid outside text: that is why `accentInk` exists", () => {
         expect(contrast(BRAND.accent, THEMES[theme].card)).toBeLessThan(4.5);
       });
 
-      /** El canto es la cara desviada un escalón, no un color ajeno: si se separase
-       *  demasiado, volvería a verse encendido por las esquinas redondeadas de la
-       *  textura, que es justo lo que se quitó de en medio. */
-      it("deja el canto a un paso del color de la cara", () => {
+      /** The edge is the face shifted one step, not a foreign colour: if it drifted
+       *  too far apart, it would show up lit again through the rounded corners of
+       *  the texture, which is exactly what was taken out of the way. */
+      it("keeps the edge one step away from the face colour", () => {
         const { card, cardEdge } = THEMES[theme];
         expect(contrast(card, cardEdge)).toBeGreaterThan(1);
         expect(contrast(card, cardEdge)).toBeLessThan(1.5);
@@ -141,20 +142,20 @@ describe("contraste de la paleta de marca", () => {
   }
 });
 
-/** `inkMuted` → `--ink-muted`, el nombre que tiene la misma variable en el CSS. */
+/** `inkMuted` → `--ink-muted`, the name the same variable has in the CSS. */
 function cssVariable(token: string): string {
   return `--${token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
 }
 
-describe("paleta duplicada en app/globals.css", () => {
-  it("encuentra los tres bloques y sus declaraciones", () => {
+describe("palette duplicated in app/globals.css", () => {
+  it("finds the three blocks and their declarations", () => {
     expect(BLOCKS.theme.size).toBeGreaterThan(0);
     expect(BLOCKS.dark.size).toBeGreaterThan(0);
     expect(BLOCKS.light.size).toBeGreaterThan(0);
   });
 
   it.each(Object.entries(BRAND))(
-    "%s vale lo mismo en `lib/brand.ts` y en el CSS",
+    "%s has the same value in `lib/brand.ts` and in the CSS",
     (token, value) => {
       expect(BLOCKS.shared.get(cssVariable(token))).toBe(value);
     },
@@ -162,14 +163,14 @@ describe("paleta duplicada en app/globals.css", () => {
 
   for (const [theme, palette] of Object.entries(THEMES)) {
     it.each(Object.entries(palette))(
-      `${theme}: %s vale lo mismo en \`lib/brand.ts\` y en el CSS`,
+      `${theme}: %s has the same value in \`lib/brand.ts\` and in the CSS`,
       (token, value) => {
         expect(BLOCKS[theme as ThemeName].get(cssVariable(token))).toBe(value);
       },
     );
   }
 
-  it("expone en `@theme` exactamente los colores que conoce `lib/brand.ts`", () => {
+  it("exposes in `@theme` exactly the colours `lib/brand.ts` knows", () => {
     const expected = [...Object.keys(BRAND), ...Object.keys(THEMES.dark)]
       .map(cssVariable)
       .sort();
@@ -181,7 +182,7 @@ describe("paleta duplicada en app/globals.css", () => {
     expect(declared).toEqual(expected);
   });
 
-  it("hace que las utilidades apunten a la variable del tema, no a su valor", () => {
+  it("makes the utilities point at the theme variable, not at its value", () => {
     for (const token of Object.keys(THEMES.dark)) {
       const variable = cssVariable(token);
       expect(BLOCKS.theme.get(`--color${variable.slice(1)}`)).toBe(`var(${variable})`);
@@ -190,40 +191,41 @@ describe("paleta duplicada en app/globals.css", () => {
 });
 
 /**
- * Los dos sitios que no leen el CSS: los metadatos de Next y el favicon. El
- * `themeColor` ya sale de la paleta (`CHROME_COLOR`), así que aquí solo se
- * vigila que nadie vuelva a escribirlo a mano; el favicon, en cambio, es un
- * SVG estático y sus colores sí van copiados.
+ * The two places that do not read the CSS: the Next metadata and the
+ * favicon. The `themeColor` already comes from the palette (`CHROME_COLOR`),
+ * so here we only watch that nobody writes it by hand again; the favicon, on
+ * the other hand, is a static SVG and its colours really are copied.
  */
-describe("colores fuera del CSS", () => {
+describe("colours outside the CSS", () => {
   const hexesIn = (text: string) =>
     [...text.matchAll(/#[0-9a-f]{6}\b/gi)].map(([hex]) => hex.toLowerCase());
 
-  it("saca el `themeColor` de la paleta y no de un color escrito a mano", () => {
+  it("takes the `themeColor` from the palette and not from a hand-written colour", () => {
     const layout = source("../app/layout.tsx");
     expect(layout).toContain("themeColor: CHROME_COLOR[DEFAULT_THEME]");
     expect(hexesIn(layout)).toEqual([]);
   });
 
-  it("el favicon es el isotipo de marca sobre la tarjeta oscura", () => {
+  it("the favicon is the brand isotype over the dark card", () => {
     const used = [...new Set(hexesIn(source("../app/icon.svg")))].sort();
     expect(used).toEqual([THEMES.dark.card, BRAND.accent].sort());
   });
 
   /**
-   * El isotipo del favicon es el oficial, pero su lienzo no es el del icono:
-   * viene en un `viewBox` que arranca en 56 y se mete en el de 64 con una
-   * escala y un desplazamiento calculados a mano. Si se toca uno de los dos
-   * números, el isotipo deja de estar centrado sin que se note en un favicon
-   * de 16px, así que aquí se rehace la cuenta.
+   * The favicon's isotype is the official one, but its canvas is not the
+   * icon's: it comes in a `viewBox` that starts at 56 and is fitted into the
+   * 64 one with a hand-computed scale and offset. If either number is
+   * touched, the isotype stops being centred without it showing in a 16px
+   * favicon, so the arithmetic is redone here.
    */
-  it("encaja el isotipo centrado dentro del lienzo del favicon", () => {
+  it("fits the isotype centred inside the favicon canvas", () => {
     const svg = source("../app/icon.svg");
     /**
-     * El lienzo del isotipo, leído del `viewBox` del fichero que lo guarda (no
-     * de sus `width`/`height`, que son otra cosa). La cuenta de abajo aplica un
-     * solo origen y un solo tamaño a los dos ejes, así que el lienzo tiene que
-     * ser cuadrado y arrancar en el mismo número en X y en Y.
+     * The isotype's canvas, read from the `viewBox` of the file that holds it
+     * (not from its `width`/`height`, which are something else). The
+     * arithmetic below applies a single origin and a single size to both
+     * axes, so the canvas has to be square and start at the same number in X
+     * and in Y.
      */
     const [minX, minY, boxWidth, boxHeight] = (
       source(`../public${LOGO.isotype.src}`).match(/viewBox="([^"]+)"/)?.[1] ?? ""
@@ -257,16 +259,16 @@ describe("colores fuera del CSS", () => {
 });
 
 /**
- * Los dibujos de marca son los únicos que no se generan: son los ficheros
- * oficiales, copiados del sitio web. Aquí se comprueba que siguen donde `LOGO`
- * dice, que se escalan con las medidas de su propio lienzo (si no, salen
- * deformados en la textura) y que cada versión lleva la tinta que se lee sobre
- * la cara en la que se usa.
+ * The brand artworks are the only ones not generated: they are the official
+ * files, copied from the website. Here we check that they are still where
+ * `LOGO` says, that they are scaled with the dimensions of their own canvas
+ * (otherwise they come out distorted in the texture) and that each version
+ * carries the ink that reads over the face it is used on.
  */
-describe("dibujos de marca", () => {
+describe("brand artworks", () => {
   const artwork = (src: string) => new URL(`../public${src}`, import.meta.url);
   const svgOf = (src: string) => readFileSync(artwork(src), "utf8");
-  /** Los SVG oficiales nombran el blanco y el negro en vez de escribir su hex. */
+  /** The official SVGs name white and black instead of writing their hex. */
   const NAMED: Record<string, string> = { white: "#ffffff", black: "#000000" };
   const fillsOf = (svg: string) =>
     new Set(
@@ -277,12 +279,12 @@ describe("dibujos de marca", () => {
     );
   const pathsOf = (svg: string) => [...svg.matchAll(/\sd="([^"]+)"/g)].map(([, d]) => d);
 
-  it.each(Object.entries(LOGO))("%s está en `public/`, donde apunta", (_, art) => {
+  it.each(Object.entries(LOGO))("%s is in `public/`, where it points", (_, art) => {
     expect(existsSync(artwork(art.src))).toBe(true);
   });
 
   it.each(Object.entries(LOGO))(
-    "%s tiene el lienzo con el que se escala",
+    "%s has the canvas it is scaled with",
     (_, art) => {
       const svg = svgOf(art.src);
       expect(svg).toContain(`width="${art.width}"`);
@@ -290,34 +292,34 @@ describe("dibujos de marca", () => {
     },
   );
 
-  /** Un solo logotipo con tres tintas: si una versión se cambia por otra, deja
-   *  de dibujar lo mismo y hay que traerla otra vez de la marca. */
-  it("las tres versiones del logotipo dibujan el mismo trazado", () => {
+  /** One logo with three inks: if one version is swapped for another, it stops
+   *  drawing the same thing and has to be fetched from the brand again. */
+  it("the three versions of the logo draw the same path", () => {
     const reference = pathsOf(svgOf(LOGO.brand.src));
     expect(reference.length).toBeGreaterThan(0);
     expect(pathsOf(svgOf(LOGO.positive.src))).toEqual(reference);
     expect(pathsOf(svgOf(LOGO.negative.src))).toEqual(reference);
   });
 
-  it("el logotipo del reverso va en el verde de marca", () => {
+  it("the logo on the back is in the brand green", () => {
     expect([...fillsOf(svgOf(LOGO.brand.src))]).toEqual([BRAND.accent]);
   });
 
   /**
-   * El logotipo del reverso es el mismo en los dos temas, así que su verde
-   * tiene que distinguirse sobre las dos caras. Como grafismo le basta 3:1: el
-   * texto que lleva dentro es la marca, que WCAG 1.4.3 deja fuera del umbral
-   * de texto.
+   * The logo on the back is the same in both themes, so its green has to be
+   * distinguishable over both faces. As a graphic, 3:1 is enough: the text it
+   * carries inside is the brand, which WCAG 1.4.3 leaves out of the text
+   * threshold.
    */
   it.each(["dark", "light"] as const)(
-    "el logotipo del reverso se distingue sobre la cara %s",
+    "the logo on the back is distinguishable over the %s face",
     (theme) => {
       expect(contrast(BRAND.accent, THEMES[theme].card)).toBeGreaterThanOrEqual(3);
     },
   );
 
   it.each(["dark", "light"] as const)(
-    "la marca de agua del anverso %s lleva la tinta que se lee sobre esa cara",
+    "the %s watermark on the front carries the ink that reads over that face",
     (theme) => {
       const fills = [...fillsOf(svgOf(WATERMARK[theme].src))];
       expect(fills.length).toBeGreaterThan(0);
@@ -327,8 +329,8 @@ describe("dibujos de marca", () => {
     },
   );
 
-  /** El símbolo del favicon sale de aquí: un único dibujo oficial. */
-  it("el isotipo dibuja el mismo símbolo que el favicon", () => {
+  /** The favicon's symbol comes from here: a single official artwork. */
+  it("the isotype draws the same symbol as the favicon", () => {
     expect(pathsOf(svgOf(LOGO.isotype.src))).toEqual(pathsOf(source("../app/icon.svg")));
   });
 });

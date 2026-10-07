@@ -6,15 +6,16 @@ import { screenAngles, stepDeviceTilt, type TiltState } from "./device-tilt";
 
 const STILL: PointerTilt = { turn: 0, pitch: 0 };
 
-/** Cómo está girada la pantalla respecto del aparato, en grados. */
+/** How the screen is rotated relative to the device, in degrees. */
 const screenAngle = (): number => window.screen?.orientation?.angle ?? 0;
 
 /**
- * El asomo que pide el giroscopio, para leerlo desde el bucle de render.
+ * The peek the gyroscope asks for, to be read from the render loop.
  *
- * Va en un ref y no en el estado porque las lecturas llegan a sesenta por
- * segundo: cada una provocaría un render de React para algo que solo mira la
- * escena. Al apagarse deja la tarjeta de frente en vez de donde estuviera.
+ * It goes in a ref and not in state because readings arrive sixty times a
+ * second: each one would trigger a React render for something only the scene
+ * looks at. When switched off it leaves the card facing front instead of
+ * wherever it was.
  */
 export function useDeviceTilt(enabled: boolean): RefObject<PointerTilt> {
   const tilt = useRef<PointerTilt>(STILL);
@@ -28,8 +29,8 @@ export function useDeviceTilt(enabled: boolean): RefObject<PointerTilt> {
 
     const onOrientation = (event: DeviceOrientationEvent) => {
       if (event.beta === null || event.gamma === null) return;
-      // Al girar el móvil, los ejes de la pantalla cambian de sitio y la
-      // postura de partida deja de valer: se vuelve a tomar.
+      // When the phone rotates, the screen axes swap places and the starting
+      // posture no longer holds: it gets taken again.
       const current = screenAngle();
       if (current !== angle) {
         angle = current;

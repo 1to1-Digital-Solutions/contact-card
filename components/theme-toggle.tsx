@@ -5,9 +5,9 @@ import { dictionary } from "@/lib/dictionary";
 import type { Language } from "@/lib/i18n";
 
 /**
- * Cambia el tema de la página y, con él, el color de las dos caras de la
- * tarjeta. El icono muestra a dónde lleva el botón, no dónde se está: es lo
- * que se espera de un interruptor con etiqueta de acción.
+ * Switches the page theme and, with it, the color of the card's two faces.
+ * The icon shows where the button leads, not where you are: that is what is
+ * expected of a toggle with an action label.
  */
 export function ThemeToggle({
   theme,

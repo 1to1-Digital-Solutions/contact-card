@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
-/** Rutas públicas. Al añadir una página nueva, añádela aquí. */
+/** Public routes. When adding a new page, add it here. */
 const STATIC_ROUTES = ["/"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
