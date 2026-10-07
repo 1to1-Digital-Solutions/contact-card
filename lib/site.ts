@@ -1,17 +1,23 @@
-import { CONTACT } from "./contact";
+/**
+ * Where the card is published. It is the fallback for `SITE_URL`, so a build
+ * with no variable set still points `metadataBase`, `robots.txt`, the sitemap
+ * and the shared link at the card itself and not at the company website,
+ * which is a different site on the parent domain.
+ */
+export const CARD_URL = "https://card.1to1digital.solutions";
 
 /**
- * Origen público del sitio. Se puede fijar con `NEXT_PUBLIC_SITE_URL`
- * (necesario en despliegues de vista previa); si el valor no es una URL
- * válida se ignora, porque `metadataBase`, `robots.txt` y el sitemap se
- * generan en build y una variable mal puesta tumbaría la compilación.
+ * Public origin of the site. It can be set with `NEXT_PUBLIC_SITE_URL`
+ * (needed in preview deployments); if the value is not a valid URL it is
+ * ignored, because `metadataBase`, `robots.txt` and the sitemap are generated
+ * at build time and a misconfigured variable would take the build down.
  */
 export function resolveSiteUrl(raw: string | undefined): string {
-  if (!raw) return CONTACT.websiteUrl;
+  if (!raw) return CARD_URL;
   try {
     return new URL(raw).origin;
   } catch {
-    return CONTACT.websiteUrl;
+    return CARD_URL;
   }
 }
 
