@@ -71,7 +71,7 @@ describe("buildVCard", () => {
 
   /** `TITLE` is the standard's field for the job title; it is what address books read. */
   it("carries the job title in TITLE", () => {
-    expect(lines).toContain("TITLE:Desarrollador full-stack");
+    expect(lines).toContain("TITLE:Ingeniero informático");
   });
 
   /**

@@ -127,7 +127,7 @@ describe("profile texts", () => {
   });
 
   it("comes out in Spanish when the browser asks for nothing", () => {
-    expect(TRANSLATED.jobTitle[DEFAULT_LANGUAGE]).toBe("Desarrollador full-stack");
+    expect(TRANSLATED.jobTitle[DEFAULT_LANGUAGE]).toBe("Ingeniero informático");
     expect(TRANSLATED.services[DEFAULT_LANGUAGE]).toBe(
       "Desarrollo de software personalizado",
     );

@@ -98,8 +98,8 @@ export const PROFILES: readonly Profile[] = [
  */
 export const TRANSLATED: Record<keyof ContactText, Record<Language, string>> = {
   jobTitle: {
-    es: "Desarrollador full-stack",
-    en: "Full-stack developer",
+    es: "Ingeniero informático",
+    en: "Software engineer",
   },
   tagline: {
     es: "Tú creas tu negocio, nosotros nos encargamos de tu tecnología.",

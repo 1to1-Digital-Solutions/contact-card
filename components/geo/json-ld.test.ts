@@ -17,7 +17,7 @@ describe("personSchema", () => {
   });
 
   it("declares the job title in `jobTitle`, which is the standard's property", () => {
-    expect(schema.jobTitle).toBe("Desarrollador full-stack");
+    expect(schema.jobTitle).toBe("Ingeniero informático");
   });
 
   /**
