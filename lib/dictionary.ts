@@ -60,6 +60,8 @@ export type Dictionary = {
     reset: string;
     showData: string;
     share: string;
+    /** Opens the QR code of the card's address, to be scanned in person. */
+    showQr: string;
     /**
      * Grants the page permission to read the phone's sensors. It only appears
      * where the browser demands it, and only grants it when pressed.
@@ -89,6 +91,14 @@ export type Dictionary = {
      * visible text (WCAG 2.5.3), and `dictionary.test.ts` checks it.
      */
     profile: (network: string, address: string) => string;
+  };
+  qr: {
+    title: string;
+    /** What to do with it, for whoever has never scanned one. */
+    hint: string;
+    /** What the image is, for whoever cannot see it. */
+    alt: string;
+    close: string;
   };
   copy: {
     action: (field: string) => string;
@@ -137,6 +147,7 @@ const es: Dictionary = {
     reset: "Recolocar",
     showData: "Ver los datos",
     share: "Compartir",
+    showQr: "Código QR",
     useMotion: "Usar el movimiento",
     flipToFront: "Ver el anverso de la tarjeta",
     flipToBack: "Ver el reverso de la tarjeta",
@@ -153,6 +164,12 @@ const es: Dictionary = {
     close: "Cerrar los datos de contacto",
     save: "Guardar contacto (.vcf)",
     profile: (network, address) => `Perfil de ${network}: ${address}`,
+  },
+  qr: {
+    title: "Escanea para abrir la tarjeta",
+    hint: "Apunta con la cámara del móvil y se abre el enlace.",
+    alt: "Código QR con la dirección de la tarjeta",
+    close: "Cerrar el código QR",
   },
   copy: {
     action: (field) => `Copiar ${field.toLowerCase()}`,
@@ -200,6 +217,7 @@ const en: Dictionary = {
     reset: "Recenter",
     showData: "See the details",
     share: "Share",
+    showQr: "QR code",
     useMotion: "Use motion",
     flipToFront: "See the front of the card",
     flipToBack: "See the back of the card",
@@ -216,6 +234,12 @@ const en: Dictionary = {
     close: "Close the contact details",
     save: "Save contact (.vcf)",
     profile: (network, address) => `${network} profile: ${address}`,
+  },
+  qr: {
+    title: "Scan to open the card",
+    hint: "Point your phone's camera at it and the link opens.",
+    alt: "QR code with the card's address",
+    close: "Close the QR code",
   },
   copy: {
     action: (field) => `Copy ${field.toLowerCase()}`,

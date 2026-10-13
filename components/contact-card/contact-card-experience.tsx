@@ -8,6 +8,7 @@ import { dictionary } from "@/lib/dictionary";
 import { applyLanguage, type Language, nextLanguage, rememberLanguage } from "@/lib/i18n";
 import { FINE_POINTER, useMediaQuery } from "@/lib/use-media-query";
 import { useMotionAccess } from "@/lib/use-motion-access";
+import type { QrCode } from "@/lib/qr";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { useTheme } from "@/lib/use-theme";
 import { useWebGLStatus } from "@/lib/use-webgl-status";
@@ -23,6 +24,7 @@ import {
   SceneControl,
 } from "./scene-control";
 import { SceneErrorBoundary } from "./scene-error-boundary";
+import { QrControl } from "./qr-control";
 import { ShareControl } from "./share-control";
 
 /**
@@ -31,7 +33,16 @@ import { ShareControl } from "./share-control";
  *   negotiated. The toggle changes it here and leaves it remembered for the
  *   next visit.
  */
-export function ContactCardExperience({ language: served }: { language: Language }) {
+export function ContactCardExperience({
+  language: served,
+  qr,
+  url,
+}: {
+  language: Language;
+  /** The card's address as a QR code, drawn on the server. */
+  qr: QrCode;
+  url: string;
+}) {
   const [language, setLanguage] = useState(served);
   const t = dictionary(language);
 
@@ -219,6 +230,7 @@ export function ContactCardExperience({ language: served }: { language: Language
                 the primary action is still "Save contact", which is the only
                 button in the brand color. */}
             <ShareControl language={language} />
+            <QrControl language={language} code={qr} url={url} />
           </div>
 
           {status === "ready" && (

@@ -87,6 +87,11 @@ copy lives in another: `lib/dictionary.ts`.
   notice the copy buttons give. What gets shared is the card title in the
   language being viewed and the canonical address of the site, not whatever is
   in the address bar (`lib/share.ts`).
+- **The QR code is drawn on the server.** The address is a build-time
+  constant, so `lib/qr.ts` turns it into one SVG path once and the browser
+  gets a few hundred bytes of markup and no encoder. It is the hand-over
+  channel that works between any two phones: no web page can push a link
+  into the phone next to it, on either platform.
 - **The link preview is generated from code too** (`app/opengraph-image.tsx`,
   with `ImageResponse`): same data and same palette as the card, so there is no
   PNG to re-export. Twitter/X reuses it. It comes in a single language (only the
@@ -113,6 +118,7 @@ copy lives in another: `lib/dictionary.ts`.
 | ES/EN button in the header                | Switch language; remembered                         |
 | "See the details" (phone)                 | Open the sheet with the details, copy and save      |
 | "Share"                                   | System dialog; where there is none, copy the link   |
+| "QR code"                                 | Full-screen QR of the card's address, to be scanned |
 | Move the mouse around the page            | The card leans towards the pointer without moving   |
 
 When the page opens, the card drops in from off screen and sways once, so it
@@ -124,6 +130,14 @@ On a narrow screen the card fills the viewport and there is no scrolling: the
 details live in the sheet. From `lg` up they are always visible in the side
 panel. A phone held sideways gets the card at full size, with the controls in
 a column on the right edge.
+
+## Printing it
+
+The physical card is the same card. `npm run print:cards` draws both faces
+with the data, palette and logos of the web card and writes print-ready PDFs
+to `print/out/`: 85 × 55 mm with 3 mm of bleed on every side (91 × 61 mm, no
+crop marks), one pair per language, plus 300 dpi PNG previews. The text is set
+slightly larger than on screen so the smallest labels stay above 5 pt on paper.
 
 ## License
 

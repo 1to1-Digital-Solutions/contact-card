@@ -94,6 +94,19 @@ export function RecenterIcon() {
   );
 }
 
+/** QR: three finder squares and a few modules, the shape everyone knows. */
+export function QrIcon() {
+  return (
+    <Icon>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <path d="M6.5 6.5h.01M17.5 6.5h.01M6.5 17.5h.01" />
+      <path d="M14 14h3v3M21 14v2M14 21h2M18 18h3v3" />
+    </Icon>
+  );
+}
+
 /** The contact data: the "i" for information. */
 export function DetailsIcon() {
   return (

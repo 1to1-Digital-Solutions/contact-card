@@ -80,3 +80,19 @@ async function streamToString(stream: NodeJS.ReadableStream): Promise<string> {
   for await (const chunk of stream) chunks.push(Buffer.from(chunk as Buffer));
   return Buffer.concat(chunks).toString("utf8");
 }
+
+test.describe("the QR code", () => {
+  test("opens a dialog with the card's address as a QR code", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "QR code" }).click();
+
+    const dialog = page.getByRole("dialog", { name: "Scan to open the card" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("img", { name: "QR code with the card's address" })).toBeVisible();
+    await expect(dialog.getByRole("img").locator("path")).toHaveAttribute("d", /^M0 0h7v1h-7z/);
+    await expect(dialog.getByText("card.1to1digital.solutions")).toBeVisible();
+
+    await dialog.getByRole("button", { name: "Close the QR code" }).click();
+    await expect(dialog).toBeHidden();
+  });
+});
