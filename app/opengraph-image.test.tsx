@@ -131,6 +131,30 @@ const metadata = buildMetadata(DEFAULT_LANGUAGE);
 /** The tokens the image is entitled to paint: the palette and nothing else. */
 const PALETTE = new Set<string>([...Object.values(BRAND), ...Object.values(THEME)]);
 
+const channels = (hex: string) =>
+  [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
+
+/**
+ * Whether a color lies between two others, channel by channel and at the
+ * same point of the way in each: what a translucent layer of one over the
+ * other produces. The tolerance absorbs the rounding of 8-bit channels.
+ */
+function isBlendOf(hex: string, a: string, b: string): boolean {
+  const [x, from, to] = [hex, a, b].map(channels);
+  const ratios: number[] = [];
+  for (let i = 0; i < 3; i++) {
+    const span = to[i] - from[i];
+    if (Math.abs(span) < 3) {
+      if (Math.abs(x[i] - from[i]) > 2) return false;
+      continue;
+    }
+    const ratio = (x[i] - from[i]) / span;
+    if (ratio < -0.02 || ratio > 1.02) return false;
+    ratios.push(ratio);
+  }
+  return ratios.every((ratio) => Math.abs(ratio - ratios[0]) <= 0.06);
+}
+
 describe("Open Graph image", () => {
   it("is a PNG of the size the metadata declares", () => {
     expect(size).toEqual({ width: 1200, height: 630 });
@@ -141,15 +165,24 @@ describe("Open Graph image", () => {
   /**
    * The threshold leaves out the anti-aliasing of the text edges and of the
    * rounded corners, which are blends of the neighboring colors: what is
-   * watched is that no real surface comes from an invented tone.
+   * watched is that no real surface comes from an invented tone. Two
+   * surfaces are allowed to blend, as on the card's front: the glow in the
+   * corner (the brand green laid translucent over the card) and the
+   * watermark (the logo in white or black, at a tenth of its opacity).
    */
-  it("paints no surface with a color from outside the palette", () => {
+  it("paints no surface with a color from outside the palette, save the glow and the watermark", () => {
     const painted = [...image.counts]
       .filter(([, count]) => count >= PIXELS * 0.005)
       .map(([hex]) => hex);
+    const watermarkInk = DEFAULT_THEME === "dark" ? "#ffffff" : "#000000";
 
     expect(painted.length).toBeGreaterThan(0);
-    for (const hex of painted) expect(PALETTE).toContain(hex);
+    for (const hex of painted) {
+      const allowed = PALETTE.has(hex) ||
+        isBlendOf(hex, THEME.card, BRAND.accent) ||
+        isBlendOf(hex, THEME.card, watermarkInk);
+      expect(allowed, hex).toBe(true);
+    }
   });
 
   /** Each token that draws something recognizable: if one disappears, the design changed. */
@@ -158,8 +191,8 @@ describe("Open Graph image", () => {
     [THEME.card, "the card face"],
     [THEME.cardEdge, "the edge that separates it from the background"],
     [THEME.ink, "the name and the data"],
-    [THEME.inkMuted, "the job title and the tagline"],
-    [THEME.accentInk, "the company"],
+    [THEME.inkMuted, "the job title and the labels"],
+    [THEME.accentInk, "the tagline"],
     [BRAND.accent, "the hairline and the logo"],
   ];
 

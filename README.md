@@ -74,8 +74,15 @@ copy lives in another: `lib/dictionary.ts`.
   the class of `<html>` and an inline script sets it before the first paint
   (`lib/theme.ts`). The page and the two faces of the card depend on it, and
   they always match.
-- **No remote fonts.** The system font stack is used both in the interface and
-  inside the card, so they match and nothing is downloaded.
+- **The landing's type, self-hosted.** Inter for the text and Outfit for the
+  name, as on https://1to1digital.solutions: the latin subsets live in
+  `public/fonts/` (SIL Open Font License) and nothing is fetched from anywhere
+  else. The faces drawn on canvas wait for them and are drawn again if they
+  arrive late.
+- **The web card and the printed one are the same card.** The front is laid
+  out in the millimetres of the printed face (`scripts/print-cards.mjs`), in
+  the 3D texture, the flat card and, as far as its landscape paper allows, the
+  share image.
 - **No lanyard physics** (unlike Vercel's reference badge). The card moves on
   damped springs of our own (`lib/motion.ts`): pure code, with tests.
 - **No cast shadow.** The card floats over a gradient, not against a wall; the

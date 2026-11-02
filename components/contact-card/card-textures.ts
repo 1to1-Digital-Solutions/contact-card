@@ -25,13 +25,55 @@ const H = Math.round((W * CARD.height) / CARD.width);
 const RADIUS_PX = (CARD.radius / CARD.width) * W;
 const PAD = 150;
 
-const FONT_STACK =
-  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+/**
+ * Pixels per millimetre of the real card. The front is laid out in the
+ * millimetres of the printed one (`scripts/print-cards.mjs`), so the two are
+ * the same card: a measure changed there is changed here with the same number.
+ */
+const MM = W / 85;
+const mm = (value: number) => Math.round(value * MM);
+/** Points to pixels: the printed card sets its type in points. */
+const pt = (value: number) => mm((value * 25.4) / 72);
+
+/**
+ * The page's type (`app/globals.css`): Inter for the text, Outfit for the
+ * name. Both are self-hosted, and `whenTypeReady` is what makes the faces
+ * wait for them.
+ */
+const TEXT_STACK =
+  'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const HEADING_STACK = `Outfit, ${TEXT_STACK}`;
 
 type Ctx = CanvasRenderingContext2D;
 
-function font(size: number, weight = 400) {
-  return `${weight} ${size}px ${FONT_STACK}`;
+function font(
+  size: number,
+  weight = 400,
+  { family = TEXT_STACK, italic = false }: { family?: string; italic?: boolean } = {},
+) {
+  return `${italic ? "italic " : ""}${weight} ${size}px ${family}`;
+}
+
+/** The faces the front is drawn with, as the canvas asks for them. */
+const TYPE_NEEDED = [
+  `700 ${pt(13)}px Outfit`,
+  `400 ${pt(8)}px Inter`,
+  `600 ${pt(8)}px Inter`,
+];
+
+/** Whether the browser already has the page's type, so the first drawing is the final one. */
+function typeReady(): boolean {
+  if (typeof document === "undefined" || !document.fonts?.check) return true;
+  return TYPE_NEEDED.every((face) => document.fonts.check(face));
+}
+
+/**
+ * Resolves when the page's type is loaded. Where the browser cannot say,
+ * it resolves at once: the face is drawn with whatever is at hand.
+ */
+function whenTypeReady(): Promise<void> {
+  if (typeof document === "undefined" || !document.fonts?.load) return Promise.resolve();
+  return Promise.all(TYPE_NEEDED.map((face) => document.fonts.load(face))).then(() => undefined);
 }
 
 /** `letterSpacing` does not exist in every browser; without it the text comes out the same, just tighter. */
@@ -122,11 +164,16 @@ function createFaceCanvas(background: string): { canvas: HTMLCanvasElement; ctx:
   ctx.beginPath();
   ctx.roundRect(0, 0, W, H, RADIUS_PX);
   ctx.clip();
+  paintPaper(ctx, background);
+
+  return { canvas, ctx };
+}
+
+/** The paper itself: the face's color under the grain. Repainting it is what clears a face. */
+function paintPaper(ctx: Ctx, background: string) {
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, W, H);
   drawGrain(ctx);
-
-  return { canvas, ctx };
 }
 
 function toTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
@@ -136,6 +183,25 @@ function toTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
   return texture;
 }
 
+/**
+ * The front, in the millimetres and points of the printed card
+ * (`scripts/print-cards.mjs` has the same numbers and the reasons).
+ */
+const FRONT = {
+  /** The brand band on the left edge, thicker than a hairline so a cut inside the trim line leaves it. */
+  band: 1.6,
+  name: { top: 6.2, size: 13 },
+  jobTitle: { top: 11.5, size: 7.5 },
+  /** The size is fitted so the one line spans the text area edge to edge. */
+  tagline: { top: 15.8, size: 8 },
+  divider: { top: 21.3, height: 0.15 },
+  /** The label is clearly smaller than the value, and the block ends closer to the bottom edge than to the sides. */
+  fields: { label: 4.6, value: 8, labelToValue: 2.2, step: 6.9, bottom: 5, valueHeight: 2.85 },
+  watermark: { width: 20, bottom: 6.2 + 6.5 },
+  /** A soft glow of the brand green in the top-right corner, like the one behind the landing's hero. */
+  glow: { diameter: 52, offset: 22.8, stops: [0.22, 0.09, 0] as const },
+} as const;
+
 /** Small-caps label above the value, in the style of a printed card. */
 function drawField(
   ctx: Ctx,
@@ -144,15 +210,41 @@ function drawField(
   label: string,
   value: string,
 ) {
+  const labelSize = pt(FRONT.fields.label);
   ctx.fillStyle = palette.inkMuted;
-  ctx.font = font(30, 600);
-  setTracking(ctx, 6);
+  ctx.font = font(labelSize, 600);
+  setTracking(ctx, labelSize * 0.18);
   ctx.fillText(label.toUpperCase(), PAD, y);
 
   ctx.fillStyle = palette.ink;
-  ctx.font = font(54, 400);
+  ctx.font = font(pt(FRONT.fields.value), 400);
   setTracking(ctx, 0);
-  ctx.fillText(value, PAD, y + 58);
+  ctx.fillText(value, PAD, y + mm(FRONT.fields.labelToValue));
+}
+
+/** The brand green with an alpha, for the glow's gradient. */
+function accentWithAlpha(alpha: number): string {
+  const hex = BRAND.accent.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((at) => parseInt(hex.slice(at, at + 2), 16));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * The glow: a radial gradient of the brand green in the top-right corner,
+ * fading out well before the text. Its centre sits just off the card, as on
+ * the printed one, where it reaches into the bleed.
+ */
+function drawGlow(ctx: Ctx) {
+  const radius = mm(FRONT.glow.diameter / 2);
+  const cx = W + mm(FRONT.glow.offset) - radius;
+  const cy = -mm(FRONT.glow.offset) + radius;
+  const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+  const [centre, middle, edge] = FRONT.glow.stops;
+  gradient.addColorStop(0, accentWithAlpha(centre));
+  gradient.addColorStop(0.4, accentWithAlpha(middle));
+  gradient.addColorStop(0.7, accentWithAlpha(edge));
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
 }
 
 /** The height a brand artwork gets when painted at that width. */
@@ -174,7 +266,8 @@ function drawArtwork(
     top,
     width,
     alpha = 1,
-  }: { cx: number; top: number; width: number; alpha?: number },
+    stillWanted = () => true,
+  }: { cx: number; top: number; width: number; alpha?: number; stillWanted?: () => boolean },
 ): Promise<void> {
   const height = heightOf(artwork, width);
   return new Promise((resolve, reject) => {
@@ -182,6 +275,9 @@ function drawArtwork(
     // size and not at that of its own canvas, which is much smaller.
     const image = new Image(width, height);
     image.onload = () => {
+      // A face repainted in the meantime (the type arrived) has its own
+      // drawing on the way: this one would land on top of it, twice as dark.
+      if (!stillWanted()) return resolve();
       // The opacity is set here and not earlier: by the time the image loads,
       // the rest of the face is already painted and the context has moved on.
       ctx.save();
@@ -200,13 +296,14 @@ function drawArtwork(
  * the foot of the gap the text block leaves. It balances the visual weight
  * without competing with the data.
  */
-function drawWatermark(ctx: Ctx, theme: ThemeName): Promise<void> {
-  const width = 700;
+function drawWatermark(ctx: Ctx, theme: ThemeName, stillWanted: () => boolean): Promise<void> {
+  const width = mm(FRONT.watermark.width);
   return drawArtwork(ctx, WATERMARK[theme], {
     cx: W - PAD - width / 2,
-    top: H - PAD - heightOf(WATERMARK[theme], width),
+    top: H - mm(FRONT.watermark.bottom) - heightOf(WATERMARK[theme], width),
     width,
     alpha: 0.1,
+    stillWanted,
   });
 }
 
@@ -230,9 +327,15 @@ function refreshWhenDrawn(
 }
 
 /**
- * Front: the contact data over the theme's paper. The watermark is painted
- * after everything else because it is asynchronous, but it covers nothing:
- * it lands in the bottom-right corner, outside the text block.
+ * Front: the contact data over the theme's paper, laid out like the printed
+ * card. The watermark is painted after everything else because it is
+ * asynchronous, but it covers nothing: it lands in the bottom-right corner,
+ * outside the text block.
+ *
+ * The face is drawn at once with whatever type the browser has, so there is
+ * never an empty card; if the page's type was still loading, it is drawn
+ * again when it arrives. A drawing that a later one has replaced must not
+ * finish on top of it, hence the generation each one carries.
  */
 export function createFrontTexture(
   contact: Contact,
@@ -241,65 +344,76 @@ export function createFrontTexture(
   labels: Dictionary["fields"],
 ): THREE.CanvasTexture {
   const { canvas, ctx } = createFaceCanvas(palette.card);
-  ctx.textBaseline = "top";
-
-  // Brand hairline along the left edge.
-  ctx.fillStyle = BRAND.accent;
-  ctx.fillRect(0, 0, 16, H);
-
-  ctx.fillStyle = palette.ink;
-  ctx.font = font(116, 600);
-  setTracking(ctx, -2);
-  ctx.fillText(contact.name, PAD, 200);
-
-  // The job title, between the name and the company: in muted ink and
-  // without small caps so it qualifies the name without disputing its
-  // hierarchy or stepping on the green the company signs with.
-  ctx.fillStyle = palette.inkMuted;
-  ctx.font = font(46, 400);
-  setTracking(ctx, 0);
-  ctx.fillText(contact.jobTitle, PAD, 345);
-
-  ctx.fillStyle = palette.accentInk;
-  ctx.font = font(34, 600);
-  setTracking(ctx, 10);
-  ctx.fillText(contact.company.toUpperCase(), PAD, 425);
-
-  // The tagline, separated from the identity block by some breathing room so
-  // it reads as a sentence of its own and not as a fourth line of the name.
-  // It goes in muted ink and smaller than the job title: it says what the
-  // company stands for without taking the place of whoever signs the card.
-  // At this size it fits on one line with room to spare in both languages,
-  // with more than a third of the width free.
-  ctx.fillStyle = palette.inkMuted;
-  ctx.font = font(38, 400);
-  setTracking(ctx, 0);
-  ctx.fillText(contact.tagline, PAD, 505);
-
-  ctx.fillStyle = palette.inkMuted;
-  ctx.globalAlpha = 0.3;
-  ctx.fillRect(PAD, 600, W - PAD * 2, 2);
-  ctx.globalAlpha = 1;
-
-  // Data block anchored to the bottom edge, with the same margin as at the
-  // top. Four fields: the three ways to reach them and the LinkedIn profile,
-  // which is where a card handed over at an event usually leads next. The
-  // step between fields is tighter than with three, and the block still
-  // clears the divider.
-  const STEP = 135;
-  const first = H - PAD - (58 + 54) - 3 * STEP;
-  const [linkedIn] = PROFILES;
-  drawField(ctx, palette, first, labels.email, contact.email);
-  drawField(ctx, palette, first + STEP, labels.phone, contact.phone);
-  drawField(ctx, palette, first + 2 * STEP, labels.website, contact.website);
-  drawField(ctx, palette, first + 3 * STEP, linkedIn.name, linkedIn.address);
-
   const texture = toTexture(canvas);
-  refreshWhenDrawn(
-    texture,
-    drawWatermark(ctx, theme),
-    "The front of the card is left without its watermark",
-  );
+  let generation = 0;
+
+  const paint = (): Promise<void> => {
+    const mine = ++generation;
+    paintPaper(ctx, palette.card);
+    ctx.textBaseline = "top";
+
+    drawGlow(ctx);
+
+    // Brand band along the left edge.
+    ctx.fillStyle = BRAND.accent;
+    ctx.fillRect(0, 0, mm(FRONT.band), H);
+
+    const nameSize = pt(FRONT.name.size);
+    ctx.fillStyle = palette.ink;
+    ctx.font = font(nameSize, 700, { family: HEADING_STACK });
+    setTracking(ctx, -nameSize * 0.01);
+    ctx.fillText(contact.name, PAD, mm(FRONT.name.top));
+
+    // The job title, in muted ink and without small caps so it qualifies the
+    // name without disputing its hierarchy.
+    ctx.fillStyle = palette.inkMuted;
+    ctx.font = font(pt(FRONT.jobTitle.size), 400);
+    setTracking(ctx, 0);
+    ctx.fillText(contact.jobTitle, PAD, mm(FRONT.jobTitle.top));
+
+    // The tagline is what the card says: semibold italic in the brand green,
+    // on ONE line that runs edge to edge of the text area. It is measured as
+    // drawn and its size set to span exactly that width, whatever face the
+    // browser resolved the stack to. The company name is not written out on
+    // the front: the watermark and the back say it.
+    const width = W - PAD * 2;
+    ctx.font = font(pt(FRONT.tagline.size), 600, { italic: true });
+    const measured = ctx.measureText(contact.tagline).width;
+    ctx.font = font((pt(FRONT.tagline.size) * width) / measured, 600, { italic: true });
+    ctx.fillStyle = palette.accentInk;
+    ctx.fillText(contact.tagline, PAD, mm(FRONT.tagline.top));
+
+    // The divider sits halfway between the tagline and the first field.
+    ctx.fillStyle = palette.inkMuted;
+    ctx.globalAlpha = 0.3;
+    ctx.fillRect(PAD, mm(FRONT.divider.top), width, Math.max(2, mm(FRONT.divider.height)));
+    ctx.globalAlpha = 1;
+
+    // Four fields anchored to the bottom: the three ways to reach them and
+    // the LinkedIn profile, which is where a card handed over at an event
+    // usually leads next. Label and value close together, clear air between
+    // fields.
+    const { fields } = FRONT;
+    const step = mm(fields.step);
+    const first = H - mm(fields.bottom + fields.valueHeight + fields.labelToValue) - 3 * step;
+    const [linkedIn] = PROFILES;
+    drawField(ctx, palette, first, labels.email, contact.email);
+    drawField(ctx, palette, first + step, labels.phone, contact.phone);
+    drawField(ctx, palette, first + 2 * step, labels.website, contact.website);
+    drawField(ctx, palette, first + 3 * step, linkedIn.name, linkedIn.address);
+
+    texture.needsUpdate = true;
+    return drawWatermark(ctx, theme, () => mine === generation);
+  };
+
+  refreshWhenDrawn(texture, paint(), "The front of the card is left without its watermark");
+  if (!typeReady()) {
+    refreshWhenDrawn(
+      texture,
+      whenTypeReady().then(paint),
+      "The front of the card is left in the fallback type",
+    );
+  }
 
   return texture;
 }

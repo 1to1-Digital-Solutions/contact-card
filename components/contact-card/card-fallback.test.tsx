@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { contactIn, PROFILES } from "@/lib/contact";
+import { dictionary } from "@/lib/dictionary";
 import { LANGUAGES } from "@/lib/i18n";
 import { CardFallback } from "./card-fallback";
 
@@ -23,7 +24,17 @@ describe("flat card", () => {
     const contact = contactIn(language);
     expect(html).toContain(contact.name);
     expect(html).toContain(contact.jobTitle);
-    expect(html).toContain(contact.company);
+  });
+
+  /** The company name left the front: the watermark and the back say it. */
+  it("does not write the company name out on the front", () => {
+    expect(markup("es")).not.toContain(contactIn("es").company);
+  });
+
+  it.each(LANGUAGES)("labels the three ways to reach them in %s, like the 3D face", (language) => {
+    const html = markup(language);
+    const { email, phone, website } = dictionary(language).fields;
+    for (const label of [email, phone, website]) expect(html).toContain(label);
   });
 
   /**

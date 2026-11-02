@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { LOGO } from "@/lib/brand";
+import { LOGO, WATERMARK } from "@/lib/brand";
 import { contactIn, PROFILES } from "@/lib/contact";
 import { dictionary } from "@/lib/dictionary";
 import type { Language } from "@/lib/i18n";
@@ -23,7 +23,7 @@ export function CardFallback({
   note: string;
   language: Language;
 }) {
-  const t = dictionary(language).controls;
+  const { controls: t, fields: labels } = dictionary(language);
   const contact = contactIn(language);
   const [showingBack, setShowingBack] = useState(false);
 
@@ -53,38 +53,66 @@ export function CardFallback({
           >
             {/* Both faces share the same color; the edge hairline gives them
                 back the silhouette that in 3D comes from the paper's
-                thickness. Sizes are in `cqw` so the whole face scales with
-                the card: the values are the same as before (24 px margin,
-                24 px name…) translated over its maximum width, 26rem. */}
-            <span className="paper-grain absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border border-ink/10 border-l-[1cqw] border-l-accent bg-card p-[5.8cqw] text-left shadow-2xl [backface-visibility:hidden]">
-              <span>
-                <span className="block text-[5.8cqw] font-semibold text-ink">
-                  {contact.name}
-                </span>
-                <span className="mt-[1.2cqw] block text-[3.2cqw] text-ink-muted">
-                  {contact.jobTitle}
-                </span>
-                <span className="mt-[1cqw] block text-[2.5cqw] font-semibold uppercase tracking-[0.2em] text-accent-ink">
-                  {contact.company}
-                </span>
-                {/* The tagline, with the same breathing room above it as on
-                    the 3D face: it sits apart from the identity block and
-                    below it in hierarchy. Here it may wrap onto two lines
-                    when the card narrows, and they fit: the gap between the
-                    two blocks has room to spare even on a phone in
-                    landscape, which is the shortest viewport. */}
-                <span className="mt-[3cqw] block text-[2.6cqw] leading-snug text-ink-muted">
-                  {contact.tagline}
-                </span>
+                thickness. Sizes are in `cqw` —hundredths of the card's
+                width— so the whole face scales with the card. The numbers are
+                the millimetres of the printed card (`scripts/print-cards.mjs`)
+                over its 85 mm of width: 1 mm is 1.18 cqw. The 3D face
+                (`card-textures.ts`) is laid out from the same millimetres. */}
+            <span className="paper-grain absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-ink/10 border-l-[1.9cqw] border-l-accent bg-card px-[7.3cqw] pt-[7.3cqw] pb-[5.9cqw] text-left shadow-2xl [backface-visibility:hidden]">
+              {/* The glow of the brand green in the top-right corner, like
+                  the one behind the landing's hero: its centre sits just off
+                  the card. */}
+              <span className="absolute -top-[26.8cqw] -right-[26.8cqw] block size-[61.2cqw] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent)_22%,transparent)_0%,color-mix(in_srgb,var(--accent)_9%,transparent)_40%,transparent_70%)]" />
+              <span className="relative block font-heading text-[5.4cqw] leading-none font-bold tracking-[-0.01em] text-ink">
+                {contact.name}
               </span>
-              <span className="flex flex-col gap-[0.8cqw] text-[3.2cqw] text-ink">
-                <span>{contact.email}</span>
-                <span>{contact.phone}</span>
-                <span>{contact.website}</span>
-                {/* The LinkedIn profile, as on the 3D face: the first of the
-                    profiles is the one that goes on the card. */}
-                <span>{PROFILES[0].address}</span>
+              <span className="relative mt-[0.85cqw] block text-[3.1cqw] leading-none text-ink-muted">
+                {contact.jobTitle}
               </span>
+              {/* The tagline is what the card says: semibold italic in the
+                  brand green, on one line across the text area. The company
+                  name is not written out: the watermark and the back say it. */}
+              <span className="relative mt-[1.95cqw] block text-[2.95cqw] leading-none font-semibold whitespace-nowrap text-accent-ink italic">
+                {contact.tagline}
+              </span>
+              <span className="relative mt-[3.4cqw] block h-[0.18cqw] w-full bg-ink-muted/30" />
+              {/* Four fields anchored to the bottom, label and value close
+                  together with clear air between fields. */}
+              <span className="relative mt-auto flex flex-col gap-[2.2cqw]">
+                {[
+                  [labels.email, contact.email],
+                  [labels.phone, contact.phone],
+                  [labels.website, contact.website],
+                  // The LinkedIn profile, as on the 3D face: the first of
+                  // the profiles is the one that goes on the card.
+                  [PROFILES[0].name, PROFILES[0].address],
+                ].map(([label, value]) => (
+                  <span key={label} className="flex flex-col gap-[0.7cqw]">
+                    <span className="text-[1.9cqw] leading-none font-semibold tracking-[0.18em] text-ink-muted uppercase">
+                      {label}
+                    </span>
+                    <span className="text-[3.3cqw] leading-none text-ink">{value}</span>
+                  </span>
+                ))}
+              </span>
+              {/* The watermark: the logo in the ink that reads over each
+                  theme's face, at the foot of the gap the text leaves. */}
+              <Image
+                src={WATERMARK.dark.src}
+                alt=""
+                width={WATERMARK.dark.width}
+                height={WATERMARK.dark.height}
+                unoptimized
+                className="absolute right-[7.3cqw] bottom-[14.9cqw] hidden h-auto w-[23.5cqw] opacity-10 dark:block"
+              />
+              <Image
+                src={WATERMARK.light.src}
+                alt=""
+                width={WATERMARK.light.width}
+                height={WATERMARK.light.height}
+                unoptimized
+                className="absolute right-[7.3cqw] bottom-[14.9cqw] block h-auto w-[23.5cqw] opacity-10 dark:hidden"
+              />
             </span>
 
             <span className="paper-grain absolute inset-0 flex flex-col items-center justify-center gap-[3.8cqw] overflow-hidden rounded-2xl border border-ink/10 bg-card p-[5.8cqw] shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">

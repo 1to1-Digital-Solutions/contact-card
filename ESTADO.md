@@ -7,31 +7,17 @@
 
 ## ⏭️ NEXT STEP (first thing on return)
 
-- **Bring the web card in line with the print face.** The two must be the same card, and on
-  2026-11-02 the print face (`scripts/print-cards.mjs`, Spanish only for now) moved ahead
-  of the web one (`components/contact-card/card-textures.ts`, `card-fallback.tsx`,
-  `app/opengraph-image.tsx`). What changed there and still has to be ported:
-  1. The company name line ("1TO1 DIGITAL SOLUTIONS") is gone from the front: the
-     watermark and the back say it.
-  2. The name is smaller (15 → 13 pt on paper) and the tagline is the main line: semibold
-     italic in the brand green (`accentInk`, which the company line used to carry), on ONE
-     line whose size is fitted so it spans the text area edge to edge (≈7.3 pt on paper).
-  3. Each field keeps its label and value close together, with clearer air between
-     fields (label-to-value 1.9 mm, step 7 mm on paper); the label is clearly smaller than
-     the value (4.6 pt against 8 pt), and the block runs closer to the bottom edge (5.2 mm)
-     than to the sides (6.2 mm).
-  4. The brand band on the left is thicker (1.6 mm on paper, against a 0.85 mm hairline on
-     screen).
-  5. The watermark is smaller (26 → 20 mm on paper).
-  6. A soft green glow in the top-right corner (radial gradient of the brand green at
-     ~0.2 opacity, like the landing's hero).
-  7. The landing's type: Outfit 700 for the name, Inter for everything else
-     (`print/fonts/`, OFL). The web card draws with the system stack by decision ("nothing
-     remote at runtime"); self-hosting these two subsets from `public/` keeps that decision
-     and makes the faces match. The divider sits halfway between the tagline and the first
-     field.
-  The `card-fallback` and `opengraph-image` tests pin the company name and the tagline
-  on the front: update them with the change.
+- Nothing pending. The web card was brought in line with the printed one on 2026-11-02
+  (see below); it is committed on `develop` and **not yet published**: the user reviews it
+  first (`npm run dev`, or a Vercel preview), then `main` and `vercel deploy --prod`.
+- Done on 2026-11-02 (afternoon): the front of the web card —3D face, flat card and share
+  image— now follows the printed face (`scripts/print-cards.mjs`) millimetre by millimetre:
+  no company line (the watermark and the back say it), Outfit 700 for the name, the tagline
+  as the main line in semibold italic brand green fitted to one full-width line, labels
+  clearly smaller than values with air between fields, a 1.6 mm brand band, a smaller
+  watermark and a soft green glow top-right. Inter and Outfit are self-hosted from
+  `public/fonts/` and the whole page is set in Inter, like the landing. The share image
+  keeps the generator's default type: it takes TTF/OTF and only the WOFF2 subsets ship.
 - Done on 2026-11-02: the card got its definitive tagline («Entiende e integra la
   IA en tu negocio de forma segura» / «Understand and integrate AI into your business safely»)
   and the LinkedIn profile as a fourth field on the face; the print-ready files in
@@ -50,7 +36,8 @@ reasoning behind each piece lives next to the code, in its comments and tests.
 - three.js through React Three Fiber and drei. Vitest for unit tests, Playwright for e2e.
 - No lanyard physics: the card is free, on damped springs of our own (`lib/motion.ts`).
 - All contact details come from `lib/contact.ts`; all interface copy from `lib/dictionary.ts`.
-- No remote fonts or HDRI: nothing to download at runtime.
+- Nothing remote at runtime: the type (Inter, Outfit) is self-hosted from `public/fonts/`.
+- The web card and the printed one are the same card, laid out in the same millimetres.
 - Manual commits: never commit unless asked to.
 
 ## How to run it

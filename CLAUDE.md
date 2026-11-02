@@ -21,8 +21,10 @@ anything done. `README.md` explains the stack, the layout and the design decisio
   Playwright for end-to-end tests.
 - The card is free (no lanyard physics, unlike Vercel's reference): it moves on the damped
   springs in `lib/motion.ts`.
-- Nothing remote at runtime: no fonts, no HDRI, no images for the faces (they are drawn on
-  a 2D canvas).
+- Nothing remote at runtime: no HDRI, no images for the faces (they are drawn on a 2D
+  canvas), and the type —Inter and Outfit, the landing's— is self-hosted from `public/fonts/`.
+- The web card and the printed one (`scripts/print-cards.mjs`) are the same card: the front
+  is laid out in the same millimetres in both, and a change in one is made in the other.
 - The page works without WebGL: there is always a flat version with the same details.
 - Manual commits: never commit unless asked to.
 

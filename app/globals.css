@@ -45,8 +45,33 @@
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
+  --font-heading: Outfit, var(--font-sans);
+}
+
+/*
+  The landing's type (https://1to1digital.solutions): Inter for the text and
+  Outfit for the name on the card. Self-hosted from `public/fonts/` —the latin
+  subsets next/font builds for the landing, under the SIL Open Font License—
+  so nothing is fetched from anywhere else at runtime. The card faces drawn
+  on canvas use the same two families (`components/contact-card/card-textures.ts`
+  waits for them) and the printed card too (`scripts/print-cards.mjs`).
+*/
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Outfit;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/outfit-latin.woff2") format("woff2");
 }
 
 :root {
