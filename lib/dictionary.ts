@@ -154,7 +154,7 @@ const es: Dictionary = {
   },
   fields: {
     jobTitle: "Cargo",
-    services: "Servicios",
+    services: "Servicio",
     email: "Email",
     phone: "Teléfono",
     website: "Web",
@@ -224,7 +224,7 @@ const en: Dictionary = {
   },
   fields: {
     jobTitle: "Role",
-    services: "Services",
+    services: "Service",
     email: "Email",
     phone: "Phone",
     website: "Website",

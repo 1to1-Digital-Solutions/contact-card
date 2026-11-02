@@ -37,7 +37,7 @@ export type ContactText = {
   jobTitle: string;
   /** Company tagline: the one line that says what they stand for, on the card itself. */
   tagline: string;
-  /** What the business does, in plain words. Goes in the details panel and the structured data, not on the card. */
+  /** The service on offer, in plain words: what it is, for whom and how long. Goes in the details panel and the structured data, not on the card. */
   services: string;
 };
 
@@ -106,8 +106,8 @@ export const TRANSLATED: Record<keyof ContactText, Record<Language, string>> = {
     en: "Understand and integrate AI into your business safely",
   },
   services: {
-    es: "Desarrollo de software personalizado",
-    en: "Custom software development",
+    es: "Mentoría de 8 semanas para que pymes y autónomos integren la IA en su negocio",
+    en: "8-week mentoring for small businesses and freelancers to integrate AI into their business",
   },
 };
 

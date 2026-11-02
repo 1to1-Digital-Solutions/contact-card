@@ -38,7 +38,7 @@ describe("personSchema", () => {
    * say what anyone does.
    */
   it("declares what they do in `description`", () => {
-    expect(schema.description).toBe("Desarrollo de software personalizado");
+    expect(schema.description).toBe("Mentoría de 8 semanas para que pymes y autónomos integren la IA en su negocio");
   });
 
   it.each(LANGUAGES)("declares what they do in the served language (%s)", (language) => {
