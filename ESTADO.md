@@ -14,8 +14,8 @@
   1. The company name line ("1TO1 DIGITAL SOLUTIONS") is gone from the front: the
      watermark and the back say it.
   2. The name is smaller (15 → 13 pt on paper) and the tagline is the main line: larger
-     and heavier than the job title (8 pt semibold in full ink, not muted), on two
-     balanced lines.
+     and heavier than the job title (8 pt semibold), in the brand green (`accentInk`,
+     which the company line used to carry), on two balanced lines.
   3. Each field keeps its label and value close together, with clearer air between
      fields (label-to-value 2.1 mm, step 6.1 mm on paper).
   4. The brand band on the left is thicker (1.6 mm on paper, against a 0.85 mm hairline on

@@ -61,11 +61,15 @@ function page(body) {
 <html><head><meta charset="utf-8">
 <style>
   @page { size: ${PAGE.width}mm ${PAGE.height}mm; margin: 0; }
-  html, body { margin: 0; padding: 0; }
+  /* The PDF page is rounded to whole points (89 mm → 252 pt = 88.9 mm), so a
+     face cut exactly to size leaves a hairline of the body showing on one
+     edge. The body is painted like the card and the face is a touch larger
+     than the page: whatever the rounding does, the edge stays dark. */
+  html, body { margin: 0; padding: 0; background: ${PALETTE.card}; }
   body { font-family: ${FONT_STACK}; -webkit-font-smoothing: antialiased; }
   .page {
     position: relative; overflow: hidden;
-    width: ${PAGE.width}mm; height: ${PAGE.height}mm;
+    width: ${PAGE.width + 0.5}mm; height: ${PAGE.height + 0.5}mm;
     background: ${PALETTE.card}; color: ${PALETTE.ink};
     page-break-after: always;
   }
@@ -110,9 +114,10 @@ function front(contact, labels, watermark) {
       <div class="abs" style="left:${PAD}mm; top:7mm; font-size:13pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
       <div class="abs muted" style="left:${PAD}mm; top:12.4mm; font-size:7.5pt">${contact.jobTitle}</div>
       <!-- The tagline is what the card says: larger and heavier than the job
-           title, in full ink, on two balanced lines. The company name is not
-           written out here: the logo on the back and the watermark say it. -->
-      <div class="abs" style="left:${PAD}mm; top:16.4mm; width:${TRIM.width - 2 * PAD}mm; font-size:8pt; font-weight:600; line-height:1.2; white-space:normal; text-wrap:balance">${contact.tagline}</div>
+           title, in the brand green, on two balanced lines. It takes over the
+           green from the company name, which is not written out here: the
+           logo on the back and the watermark say it. -->
+      <div class="abs accent" style="left:${PAD}mm; top:16.4mm; width:${TRIM.width - 2 * PAD}mm; font-size:8pt; font-weight:600; line-height:1.2; white-space:normal; text-wrap:balance">${contact.tagline}</div>
       <div class="abs" style="left:${PAD}mm; top:24.2mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
       ${field(FIRST, labels.email, contact.email)}
       ${field(FIRST + STEP, labels.phone, contact.phone)}
