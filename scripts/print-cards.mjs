@@ -158,16 +158,16 @@ function front(contact, labels, watermark) {
   // The label is clearly smaller than the value: in small caps with tracking
   // it reads larger than its size, so 4.6 pt against 8 pt keeps the value
   // as the thing that is read.
-  const LABEL_TO_VALUE = 1.9;
+  const LABEL_TO_VALUE = 2.2;
   const field = (y, label, value) => `
     <div class="abs muted caps" style="left:${PAD}mm; top:${y}mm; font-size:4.6pt; font-weight:600; letter-spacing:0.18em">${label}</div>
     <div class="abs" style="left:${PAD}mm; top:${y + LABEL_TO_VALUE}mm; font-size:8pt">${value}</div>`;
   // Four fields anchored to the bottom, like the web face, with the room the
-  // one-line tagline leaves spread between them. The block ends 5.2 mm from
+  // one-line tagline leaves spread between them. The block ends 5 mm from
   // the cut, closer than the side margin: the safe area printers ask for is
   // 3 mm, and the extra millimetre of air goes between the fields.
-  const STEP = 7;
-  const PAD_BOTTOM = 5.2;
+  const STEP = 6.9;
+  const PAD_BOTTOM = 5;
   const VALUE_HEIGHT = 2.85; // 8 pt line box
   const FIRST = TRIM.height - PAD_BOTTOM - VALUE_HEIGHT - LABEL_TO_VALUE - 3 * STEP;
   const [linkedIn] = PROFILES;
@@ -188,17 +188,17 @@ function front(contact, labels, watermark) {
     <div class="abs" style="right:${-GLOW * 0.4}mm; top:${-GLOW * 0.4}mm; width:${GLOW}mm; height:${GLOW}mm; border-radius:50%; background:radial-gradient(circle, rgba(31,149,122,0.22) 0%, rgba(31,149,122,0.09) 40%, rgba(31,149,122,0) 70%)"></div>
     <div class="abs" style="left:0; top:0; width:${BLEED + BAND}mm; height:${PAGE.height}mm; background:${BRAND.accent}"></div>
     <div class="trim">
-      <div class="abs heading" style="left:${PAD}mm; top:6.6mm; font-size:13pt; font-weight:700; letter-spacing:-0.01em">${contact.name}</div>
-      <div class="abs muted" style="left:${PAD}mm; top:12mm; font-size:7.5pt">${contact.jobTitle}</div>
+      <div class="abs heading" style="left:${PAD}mm; top:6.2mm; font-size:13pt; font-weight:700; letter-spacing:-0.01em">${contact.name}</div>
+      <div class="abs muted" style="left:${PAD}mm; top:11.5mm; font-size:7.5pt">${contact.jobTitle}</div>
       <!-- The tagline is what the card says: semibold italic in the brand
            green, on ONE line that runs edge to edge of the text area (the
            size is fitted to the width before printing, see fitToWidth). It
            takes over the green from the company name, which is not written
            out here: the logo on the back and the watermark say it. -->
-      <div class="abs accent" data-fit-width="${TRIM.width - 2 * PAD}" style="left:${PAD}mm; top:15.6mm; font-size:8pt; font-weight:600; font-style:italic">${contact.tagline}</div>
+      <div class="abs accent" data-fit-width="${TRIM.width - 2 * PAD}" style="left:${PAD}mm; top:15.8mm; font-size:8pt; font-weight:600; font-style:italic">${contact.tagline}</div>
       <!-- The divider sits halfway between the tagline and the first field:
            3 mm of air above it and 3 mm below (see FIRST). -->
-      <div class="abs" style="left:${PAD}mm; top:21.2mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
+      <div class="abs" style="left:${PAD}mm; top:21.3mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
       ${field(FIRST, labels.email, contact.email)}
       ${field(FIRST + STEP, labels.phone, contact.phone)}
       ${field(FIRST + 2 * STEP, labels.website, contact.website)}
