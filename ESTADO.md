@@ -17,7 +17,9 @@
      italic in the brand green (`accentInk`, which the company line used to carry), on ONE
      line whose size is fitted so it spans the text area edge to edge (≈7.3 pt on paper).
   3. Each field keeps its label and value close together, with clearer air between
-     fields (label-to-value 2.1 mm, step 7 mm on paper).
+     fields (label-to-value 1.9 mm, step 7 mm on paper); the label is clearly smaller than
+     the value (4.6 pt against 8 pt), and the block runs closer to the bottom edge (5.2 mm)
+     than to the sides (6.2 mm).
   4. The brand band on the left is thicker (1.6 mm on paper, against a 0.85 mm hairline on
      screen).
   5. The watermark is smaller (26 → 20 mm on paper).
