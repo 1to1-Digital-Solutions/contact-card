@@ -19,6 +19,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { crc32 } from "node:zlib";
 import { chromium } from "@playwright/test";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -46,6 +47,17 @@ const PALETTE = THEMES[THEME];
 const TRIM = { width: 85, height: 55 };
 const BLEED = 2;
 const PAGE = { width: TRIM.width + 2 * BLEED, height: TRIM.height + 2 * BLEED };
+/**
+ * The PDF page in whole points: Chromium rounds the page to them, and a body
+ * laid out at the exact millimetres (89 mm = 252.28 pt) overflows the rounded
+ * page by a fraction and spills a blank second sheet. Declaring the page and
+ * the body in the same whole points keeps it to one sheet; the face itself is
+ * drawn at the true millimetres and overflows the page by less than 0.1 mm.
+ */
+const PAGE_PT = {
+  width: Math.round((PAGE.width / 25.4) * 72),
+  height: Math.round((PAGE.height / 25.4) * 72),
+};
 /** Inner margin of the web card (150 of 2048 px), on paper. */
 const PAD = 6.2;
 
@@ -56,22 +68,43 @@ async function svgDataUri(file) {
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
+/**
+ * Writes the pixel density into a PNG (a `pHYs` chunk). Playwright leaves it
+ * out, and without it the printers' editors guess one and place the image at
+ * the wrong size; with it, the preview opens at 89 × 59 mm like the PDF.
+ */
+function withDpi(png, dpi) {
+  const perMetre = Math.round(dpi / 0.0254);
+  const data = Buffer.alloc(9);
+  data.writeUInt32BE(perMetre, 0);
+  data.writeUInt32BE(perMetre, 4);
+  data[8] = 1; // unit: metre
+  const typeAndData = Buffer.concat([Buffer.from("pHYs", "ascii"), data]);
+  const chunk = Buffer.alloc(12 + data.length);
+  chunk.writeUInt32BE(data.length, 0);
+  typeAndData.copy(chunk, 4);
+  chunk.writeUInt32BE(crc32(typeAndData) >>> 0, 8 + data.length);
+  // Right after IHDR: signature (8) + IHDR chunk (4 + 4 + 13 + 4).
+  const afterIhdr = 8 + 25;
+  return Buffer.concat([png.subarray(0, afterIhdr), chunk, png.subarray(afterIhdr)]);
+}
+
 function page(body) {
   return `<!doctype html>
 <html><head><meta charset="utf-8">
 <style>
-  @page { size: ${PAGE.width}mm ${PAGE.height}mm; margin: 0; }
+  @page { size: ${PAGE_PT.width}pt ${PAGE_PT.height}pt; margin: 0; }
   /* The PDF page is rounded to whole points (89 mm → 252 pt = 88.9 mm), so a
      face cut exactly to size leaves a hairline of the body showing on one
      edge. The body is painted like the card and the face is a touch larger
      than the page: whatever the rounding does, the edge stays dark. */
   html, body { margin: 0; padding: 0; background: ${PALETTE.card}; }
-  body { font-family: ${FONT_STACK}; -webkit-font-smoothing: antialiased; }
+  /* Clipped to the page: the larger face must not spill onto a second sheet. */
+  body { width: ${PAGE_PT.width}pt; height: ${PAGE_PT.height}pt; overflow: hidden; font-family: ${FONT_STACK}; -webkit-font-smoothing: antialiased; }
   .page {
     position: relative; overflow: hidden;
     width: ${PAGE.width + 0.5}mm; height: ${PAGE.height + 0.5}mm;
     background: ${PALETTE.card}; color: ${PALETTE.ink};
-    page-break-after: always;
   }
   /* Everything is placed from the trim box, not from the bleed edge. */
   .trim { position: absolute; left: ${BLEED}mm; top: ${BLEED}mm; width: ${TRIM.width}mm; height: ${TRIM.height}mm; }
@@ -167,7 +200,8 @@ for (const language of languages) {
     const base = path.join(OUT, `card-${language}-${face}`);
     await writeFile(`${base}.pdf`, pdf);
     // A 600 dpi preview of the same page, to check by eye.
-    await tab.screenshot({ path: `${base}.png`, scale: "device" });
+    const png = await tab.screenshot({ scale: "device" });
+    await writeFile(`${base}.png`, withDpi(png, DPI));
     written.push(`${base}.pdf`);
   }
 }
