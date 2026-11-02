@@ -8,8 +8,7 @@
 ## ⏭️ NEXT STEP (first thing on return)
 
 - Nothing pending. The web card was brought in line with the printed one on 2026-11-02
-  (see below); it is committed on `develop` and **not yet published**: the user reviews it
-  first (`npm run dev`, or a Vercel preview), then `main` and `vercel deploy --prod`.
+  (see below) and published the same day.
 - Done on 2026-11-02 (afternoon): the front of the web card —3D face, flat card and share
   image— now follows the printed face (`scripts/print-cards.mjs`) millimetre by millimetre:
   no company line (the watermark and the back say it), Outfit 700 for the name, the tagline
