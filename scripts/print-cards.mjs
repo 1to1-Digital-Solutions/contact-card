@@ -89,6 +89,22 @@ function withDpi(png, dpi) {
   return Buffer.concat([png.subarray(0, afterIhdr), chunk, png.subarray(afterIhdr)]);
 }
 
+/**
+ * Scales the font of every `[data-fit-width]` element so its one line of
+ * text spans exactly that many millimetres: the text is measured as drawn,
+ * so the fit holds whatever font the system resolves the stack to.
+ */
+async function fitToWidth(tab) {
+  await tab.evaluate(() => {
+    const MM = 96 / 25.4;
+    for (const el of document.querySelectorAll("[data-fit-width]")) {
+      const target = Number(el.dataset.fitWidth) * MM;
+      const size = parseFloat(getComputedStyle(el).fontSize);
+      el.style.fontSize = `${(size * target) / el.getBoundingClientRect().width}px`;
+    }
+  });
+}
+
 function page(body) {
   return `<!doctype html>
 <html><head><meta charset="utf-8">
@@ -123,8 +139,9 @@ function front(contact, labels, watermark) {
   const field = (y, label, value) => `
     <div class="abs muted caps" style="left:${PAD}mm; top:${y}mm; font-size:5.2pt; font-weight:600; letter-spacing:0.18em">${label}</div>
     <div class="abs" style="left:${PAD}mm; top:${y + LABEL_TO_VALUE}mm; font-size:7.5pt">${value}</div>`;
-  // Four fields anchored to the bottom margin, like the web face.
-  const STEP = 6.1;
+  // Four fields anchored to the bottom margin, like the web face, with the
+  // room the one-line tagline leaves spread between them.
+  const STEP = 7;
   const FIRST = TRIM.height - PAD - 2.9 - LABEL_TO_VALUE - 3 * STEP;
   const [linkedIn] = PROFILES;
   const wmWidth = 20;
@@ -146,12 +163,13 @@ function front(contact, labels, watermark) {
     <div class="trim">
       <div class="abs" style="left:${PAD}mm; top:7mm; font-size:13pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
       <div class="abs muted" style="left:${PAD}mm; top:12.4mm; font-size:7.5pt">${contact.jobTitle}</div>
-      <!-- The tagline is what the card says: larger and heavier than the job
-           title, in the brand green, on two balanced lines. It takes over the
-           green from the company name, which is not written out here: the
-           logo on the back and the watermark say it. -->
-      <div class="abs accent" style="left:${PAD}mm; top:16.4mm; width:${TRIM.width - 2 * PAD}mm; font-size:8pt; font-weight:600; line-height:1.2; white-space:normal; text-wrap:balance">${contact.tagline}</div>
-      <div class="abs" style="left:${PAD}mm; top:24.2mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
+      <!-- The tagline is what the card says: semibold italic in the brand
+           green, on ONE line that runs edge to edge of the text area (the
+           size is fitted to the width before printing, see fitToWidth). It
+           takes over the green from the company name, which is not written
+           out here: the logo on the back and the watermark say it. -->
+      <div class="abs accent" data-fit-width="${TRIM.width - 2 * PAD}" style="left:${PAD}mm; top:16.6mm; font-size:8pt; font-weight:600; font-style:italic">${contact.tagline}</div>
+      <div class="abs" style="left:${PAD}mm; top:21.6mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
       ${field(FIRST, labels.email, contact.email)}
       ${field(FIRST + STEP, labels.phone, contact.phone)}
       ${field(FIRST + 2 * STEP, labels.website, contact.website)}
@@ -196,6 +214,7 @@ for (const language of languages) {
 
   for (const [face, html] of Object.entries(faces)) {
     await tab.setContent(page(html), { waitUntil: "load" });
+    await fitToWidth(tab);
     const pdf = await tab.pdf({ printBackground: true, preferCSSPageSize: true });
     const base = path.join(OUT, `card-${language}-${face}`);
     await writeFile(`${base}.pdf`, pdf);
