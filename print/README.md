@@ -5,6 +5,13 @@ face, 89 × 59 mm (85 × 55 mm of card plus 2 mm of bleed on every side, no crop
 marks), and a 600 dpi PNG preview of each. Upload the PDF: it is vector, so the
 text stays sharp whatever the editor does with it.
 
+## Type
+
+The faces use the landing's type: Inter for the text and Outfit for the name
+(https://1to1digital.solutions). `fonts/` holds the latin subsets next/font builds for the
+landing, both under the SIL Open Font License, embedded in the page at print time. The
+landing loads no italic face of Inter, so the tagline's italic is the synthesised slant.
+
 ## What to order (notes from 2026-11-02)
 
 - **Paper:** 350 g/m² coated, nothing lighter. No textured or uncoated stock: a

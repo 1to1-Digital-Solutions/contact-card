@@ -61,11 +61,26 @@ const PAGE_PT = {
 /** Inner margin of the web card (150 of 2048 px), on paper. */
 const PAD = 6.2;
 
-const FONT_STACK = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+/**
+ * The landing's type (https://1to1digital.solutions): Inter for the text and
+ * Outfit for the headings. The files are the latin subsets next/font builds
+ * for the landing, copied into `print/fonts/` (both under the SIL Open Font
+ * License). They are embedded in the page so Chromium prints them without
+ * depending on what the system has installed. The landing loads no italic
+ * face of Inter, so the tagline's italic is the synthesised slant, as on the
+ * landing itself.
+ */
+const FONT_STACK = 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const HEADING_STACK = `Outfit, ${FONT_STACK}`;
 
 async function svgDataUri(file) {
   const svg = await readFile(path.join(ROOT, "public", file), "utf8");
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+}
+
+async function fontFace(family, file) {
+  const woff2 = await readFile(path.join(ROOT, "print", "fonts", file));
+  return `@font-face { font-family: ${family}; font-style: normal; font-weight: 100 900; src: url(data:font/woff2;base64,${woff2.toString("base64")}) format("woff2"); }`;
 }
 
 /**
@@ -95,7 +110,8 @@ function withDpi(png, dpi) {
  * so the fit holds whatever font the system resolves the stack to.
  */
 async function fitToWidth(tab) {
-  await tab.evaluate(() => {
+  await tab.evaluate(async () => {
+    await document.fonts.ready;
     const MM = 96 / 25.4;
     for (const el of document.querySelectorAll("[data-fit-width]")) {
       const target = Number(el.dataset.fitWidth) * MM;
@@ -105,10 +121,11 @@ async function fitToWidth(tab) {
   });
 }
 
-function page(body) {
+function page(body, fonts) {
   return `<!doctype html>
 <html><head><meta charset="utf-8">
 <style>
+  ${fonts}
   @page { size: ${PAGE_PT.width}pt ${PAGE_PT.height}pt; margin: 0; }
   /* The PDF page is rounded to whole points (89 mm → 252 pt = 88.9 mm), so a
      face cut exactly to size leaves a hairline of the body showing on one
@@ -127,6 +144,9 @@ function page(body) {
   .abs { position: absolute; white-space: nowrap; line-height: 1; }
   .muted { color: ${PALETTE.inkMuted}; }
   .accent { color: ${PALETTE.accentInk}; }
+  /* A class and not an inline style: the stack carries double quotes, which
+     would end a style attribute halfway. */
+  .heading { font-family: ${HEADING_STACK}; }
   .caps { text-transform: uppercase; }
 </style></head><body>${body}</body></html>`;
 }
@@ -141,7 +161,7 @@ function front(contact, labels, watermark) {
     <div class="abs" style="left:${PAD}mm; top:${y + LABEL_TO_VALUE}mm; font-size:7.5pt">${value}</div>`;
   // Four fields anchored to the bottom margin, like the web face, with the
   // room the one-line tagline leaves spread between them.
-  const STEP = 7;
+  const STEP = 6.8;
   const FIRST = TRIM.height - PAD - 2.9 - LABEL_TO_VALUE - 3 * STEP;
   const [linkedIn] = PROFILES;
   const wmWidth = 20;
@@ -161,15 +181,17 @@ function front(contact, labels, watermark) {
     <div class="abs" style="right:${-GLOW * 0.4}mm; top:${-GLOW * 0.4}mm; width:${GLOW}mm; height:${GLOW}mm; border-radius:50%; background:radial-gradient(circle, rgba(31,149,122,0.22) 0%, rgba(31,149,122,0.09) 40%, rgba(31,149,122,0) 70%)"></div>
     <div class="abs" style="left:0; top:0; width:${BLEED + BAND}mm; height:${PAGE.height}mm; background:${BRAND.accent}"></div>
     <div class="trim">
-      <div class="abs" style="left:${PAD}mm; top:7mm; font-size:13pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
+      <div class="abs heading" style="left:${PAD}mm; top:7mm; font-size:13pt; font-weight:700; letter-spacing:-0.01em">${contact.name}</div>
       <div class="abs muted" style="left:${PAD}mm; top:12.4mm; font-size:7.5pt">${contact.jobTitle}</div>
       <!-- The tagline is what the card says: semibold italic in the brand
            green, on ONE line that runs edge to edge of the text area (the
            size is fitted to the width before printing, see fitToWidth). It
            takes over the green from the company name, which is not written
            out here: the logo on the back and the watermark say it. -->
-      <div class="abs accent" data-fit-width="${TRIM.width - 2 * PAD}" style="left:${PAD}mm; top:16.6mm; font-size:8pt; font-weight:600; font-style:italic">${contact.tagline}</div>
-      <div class="abs" style="left:${PAD}mm; top:21.6mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
+      <div class="abs accent" data-fit-width="${TRIM.width - 2 * PAD}" style="left:${PAD}mm; top:16.4mm; font-size:8pt; font-weight:600; font-style:italic">${contact.tagline}</div>
+      <!-- The divider sits halfway between the tagline and the first field:
+           the same air above it as below it (see FIRST). -->
+      <div class="abs" style="left:${PAD}mm; top:21.2mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
       ${field(FIRST, labels.email, contact.email)}
       ${field(FIRST + STEP, labels.phone, contact.phone)}
       ${field(FIRST + 2 * STEP, labels.website, contact.website)}
@@ -192,10 +214,13 @@ function back(contact, logo) {
 }
 
 await mkdir(OUT, { recursive: true });
-const [watermark, logo] = await Promise.all([
+const [watermark, logo, interFace, outfitFace] = await Promise.all([
   svgDataUri(path.basename(WATERMARK[THEME].src)),
   svgDataUri(path.basename(LOGO.brand.src)),
+  fontFace("Inter", "inter-latin.woff2"),
+  fontFace("Outfit", "outfit-latin.woff2"),
 ]);
+const fonts = `${interFace}\n${outfitFace}`;
 
 const browser = await chromium.launch();
 // 600 dpi previews: CSS millimetres render at 96 dpi, so scale the device.
@@ -213,7 +238,7 @@ for (const language of languages) {
   const faces = { front: front(contact, labels, watermark), back: back(contact, logo) };
 
   for (const [face, html] of Object.entries(faces)) {
-    await tab.setContent(page(html), { waitUntil: "load" });
+    await tab.setContent(page(html, fonts), { waitUntil: "load" });
     await fitToWidth(tab);
     const pdf = await tab.pdf({ printBackground: true, preferCSSPageSize: true });
     const base = path.join(OUT, `card-${language}-${face}`);

@@ -23,6 +23,11 @@
   5. The watermark is smaller (26 → 20 mm on paper).
   6. A soft green glow in the top-right corner (radial gradient of the brand green at
      ~0.2 opacity, like the landing's hero).
+  7. The landing's type: Outfit 700 for the name, Inter for everything else
+     (`print/fonts/`, OFL). The web card draws with the system stack by decision ("nothing
+     remote at runtime"); self-hosting these two subsets from `public/` keeps that decision
+     and makes the faces match. The divider sits halfway between the tagline and the first
+     field.
   The `card-fallback` and `opengraph-image` tests pin the company name and the tagline
   on the front: update them with the change.
 - Done on 2026-11-02: the card got its definitive tagline («Entiende e integra la
