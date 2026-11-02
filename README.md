@@ -135,9 +135,13 @@ a column on the right edge.
 
 The physical card is the same card. `npm run print:cards` draws both faces
 with the data, palette and logos of the web card and writes print-ready PDFs
-to `print/out/`: 85 × 55 mm with 3 mm of bleed on every side (91 × 61 mm, no
-crop marks), one pair per language, plus 300 dpi PNG previews. The text is set
-slightly larger than on screen so the smallest labels stay above 5 pt on paper.
+to `print/out/`: 85 × 55 mm with 2 mm of bleed on every side (89 × 59 mm, no
+crop marks, which is the canvas the online printers' editors show), one pair
+per language (`npm run print:cards -- es` for one), plus 600 dpi PNG previews.
+Upload the PDF, which is vector. The text is set slightly larger than on screen
+so the smallest labels stay above 5 pt on paper; the brand band on the left is
+thicker than on screen so it survives a cut that lands inside the trim line.
+Paper and finish notes live in `print/README.md`.
 
 ## License
 

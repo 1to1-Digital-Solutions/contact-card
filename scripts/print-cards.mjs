@@ -3,15 +3,18 @@
  *
  * It draws the two faces of the web card in HTML, with the same data
  * (`lib/contact.ts`), palette and logos (`lib/brand.ts`), and prints them
- * with Chromium to PDF at the European card size, 85 × 55 mm, plus 3 mm of
- * bleed on every side (91 × 61 mm, no crop marks: that is what online
- * printers ask for). The text is set a little larger than on screen: the web
- * card is viewed at twice its real size, and the smallest labels there would
- * come out under 4 pt on paper.
+ * with Chromium to PDF at the European card size, 85 × 55 mm, plus 2 mm of
+ * bleed on every side (89 × 59 mm, no crop marks: that is the canvas the
+ * online printers' editors show, so the file goes in without stretching).
+ * The text is set a little larger than on screen: the web card is viewed at
+ * twice its real size, and the smallest labels there would come out under
+ * 4 pt on paper.
  *
- *   npm run print:cards            # writes print/out/*.pdf and *.png
+ *   npm run print:cards            # writes print/out/*.pdf and *.png, both languages
+ *   npm run print:cards -- es      # one language only
  *
- * Both languages are produced; pick one when ordering.
+ * Upload the PDF: it is vector and keeps the text sharp at any size. The PNG
+ * is a 600 dpi preview of the same page, to check by eye.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -24,13 +27,24 @@ const OUT = path.join(ROOT, "print", "out");
 const { BRAND, LOGO, THEMES, WATERMARK } = await import("../lib/brand.ts");
 const { contactIn, PROFILES } = await import("../lib/contact.ts");
 const { dictionary } = await import("../lib/dictionary.ts");
+const { LANGUAGES } = await import("../lib/i18n.ts");
+
+/** Languages to produce: the ones given on the command line, or all of them. */
+const wanted = process.argv.slice(2).filter((a) => !a.startsWith("-"));
+const languages = wanted.length ? wanted : [...LANGUAGES];
+for (const language of languages) {
+  if (!LANGUAGES.includes(language)) {
+    console.error(`unknown language "${language}"; use one of: ${LANGUAGES.join(", ")}`);
+    process.exit(1);
+  }
+}
 
 const THEME = "dark";
 const PALETTE = THEMES[THEME];
 
 /** Trim size and bleed, in mm. */
 const TRIM = { width: 85, height: 55 };
-const BLEED = 3;
+const BLEED = 2;
 const PAGE = { width: TRIM.width + 2 * BLEED, height: TRIM.height + 2 * BLEED };
 /** Inner margin of the web card (150 of 2048 px), on paper. */
 const PAD = 6.2;
@@ -65,25 +79,38 @@ function page(body) {
 }
 
 function front(contact, labels, watermark) {
+  // Each field is a label and its value, close together so they read as one
+  // thing, with clear air before the next field: the gap inside a field is
+  // smaller than the gap between fields.
+  const LABEL_TO_VALUE = 2.1;
   const field = (y, label, value) => `
     <div class="abs muted caps" style="left:${PAD}mm; top:${y}mm; font-size:5.2pt; font-weight:600; letter-spacing:0.18em">${label}</div>
-    <div class="abs" style="left:${PAD}mm; top:${y + 2.5}mm; font-size:7.5pt">${value}</div>`;
+    <div class="abs" style="left:${PAD}mm; top:${y + LABEL_TO_VALUE}mm; font-size:7.5pt">${value}</div>`;
   // Four fields anchored to the bottom margin, like the web face.
-  const STEP = 5.9;
-  const FIRST = TRIM.height - PAD - 2.9 - 2.5 - 3 * STEP;
+  const STEP = 6.4;
+  const FIRST = TRIM.height - PAD - 2.9 - LABEL_TO_VALUE - 3 * STEP;
   const [linkedIn] = PROFILES;
-  const wmWidth = 26;
+  const wmWidth = 20;
   const wmHeight = (wmWidth * WATERMARK[THEME].height) / WATERMARK[THEME].width;
 
+  // The band on the left edge, into the bleed: 1.6 mm visible once trimmed.
+  // Thicker than the hairline on screen on purpose: the cut can land up to
+  // a millimetre inside the trim line and the band has to survive it.
+  const BAND = 1.6;
+  // A soft turquoise glow in the bottom-right corner, like the one behind the
+  // landing's hero: a radial gradient (vector in the PDF, no raster blur) that
+  // fades out well before the text, in the brand green at low opacity.
+  const GLOW = 48;
+
   return `<div class="page">
-    <!-- Brand hairline along the left edge, into the bleed. -->
-    <div class="abs" style="left:0; top:0; width:${BLEED + 0.7}mm; height:${PAGE.height}mm; background:${BRAND.accent}"></div>
+    <div class="abs" style="right:${-GLOW * 0.42}mm; bottom:${-GLOW * 0.42}mm; width:${GLOW}mm; height:${GLOW}mm; border-radius:50%; background:radial-gradient(circle, rgba(31,149,122,0.42) 0%, rgba(31,149,122,0.18) 40%, rgba(31,149,122,0) 70%)"></div>
+    <div class="abs" style="left:0; top:0; width:${BLEED + BAND}mm; height:${PAGE.height}mm; background:${BRAND.accent}"></div>
     <div class="trim">
-      <div class="abs" style="left:${PAD}mm; top:7.4mm; font-size:15pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
-      <div class="abs muted" style="left:${PAD}mm; top:13.8mm; font-size:7.5pt">${contact.jobTitle}</div>
-      <div class="abs accent caps" style="left:${PAD}mm; top:17.2mm; font-size:6pt; font-weight:600; letter-spacing:0.28em">${contact.company}</div>
-      <div class="abs muted" style="left:${PAD}mm; top:20.4mm; font-size:6.5pt">${contact.tagline}</div>
-      <div class="abs" style="left:${PAD}mm; top:24.6mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
+      <div class="abs" style="left:${PAD}mm; top:7mm; font-size:15pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
+      <div class="abs muted" style="left:${PAD}mm; top:13.2mm; font-size:7.5pt">${contact.jobTitle}</div>
+      <div class="abs accent caps" style="left:${PAD}mm; top:16.5mm; font-size:6pt; font-weight:600; letter-spacing:0.28em">${contact.company}</div>
+      <div class="abs muted" style="left:${PAD}mm; top:19.6mm; font-size:6.5pt">${contact.tagline}</div>
+      <div class="abs" style="left:${PAD}mm; top:23.4mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
       ${field(FIRST, labels.email, contact.email)}
       ${field(FIRST + STEP, labels.phone, contact.phone)}
       ${field(FIRST + 2 * STEP, labels.website, contact.website)}
@@ -112,8 +139,8 @@ const [watermark, logo] = await Promise.all([
 ]);
 
 const browser = await chromium.launch();
-// 300 dpi previews: CSS millimetres render at 96 dpi, so scale the device.
-const DPI = 300;
+// 600 dpi previews: CSS millimetres render at 96 dpi, so scale the device.
+const DPI = 600;
 const context = await browser.newContext({
   deviceScaleFactor: DPI / 96,
   viewport: { width: Math.ceil((PAGE.width / 25.4) * 96), height: Math.ceil((PAGE.height / 25.4) * 96) },
@@ -121,7 +148,7 @@ const context = await browser.newContext({
 const tab = await context.newPage();
 const written = [];
 
-for (const language of ["es", "en"]) {
+for (const language of languages) {
   const contact = contactIn(language);
   const labels = dictionary(language).fields;
   const faces = { front: front(contact, labels, watermark), back: back(contact, logo) };
@@ -131,7 +158,7 @@ for (const language of ["es", "en"]) {
     const pdf = await tab.pdf({ printBackground: true, preferCSSPageSize: true });
     const base = path.join(OUT, `card-${language}-${face}`);
     await writeFile(`${base}.pdf`, pdf);
-    // A 300 dpi preview of the same page, to check by eye.
+    // A 600 dpi preview of the same page, to check by eye.
     await tab.screenshot({ path: `${base}.png`, scale: "device" });
     written.push(`${base}.pdf`);
   }
