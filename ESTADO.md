@@ -7,7 +7,25 @@
 
 ## ⏭️ NEXT STEP (first thing on return)
 
-- Nothing pending. On 2026-11-02 the card got its definitive tagline («Entiende e integra la
+- **Bring the web card in line with the print face.** The two must be the same card, and on
+  2026-11-02 the print face (`scripts/print-cards.mjs`, Spanish only for now) moved ahead
+  of the web one (`components/contact-card/card-textures.ts`, `card-fallback.tsx`,
+  `app/opengraph-image.tsx`). What changed there and still has to be ported:
+  1. The company name line ("1TO1 DIGITAL SOLUTIONS") is gone from the front: the
+     watermark and the back say it.
+  2. The name is smaller (15 → 13 pt on paper) and the tagline is the main line: larger
+     and heavier than the job title (8 pt semibold in full ink, not muted), on two
+     balanced lines.
+  3. Each field keeps its label and value close together, with clearer air between
+     fields (label-to-value 2.1 mm, step 6.1 mm on paper).
+  4. The brand band on the left is thicker (1.6 mm on paper, against a 0.85 mm hairline on
+     screen).
+  5. The watermark is smaller (26 → 20 mm on paper).
+  6. A soft green glow in the top-right corner (radial gradient of the brand green at
+     ~0.2 opacity, like the landing's hero).
+  The `card-fallback` and `opengraph-image` tests pin the company name and the tagline
+  on the front: update them with the change.
+- Done on 2026-11-02: the card got its definitive tagline («Entiende e integra la
   IA en tu negocio de forma segura» / «Understand and integrate AI into your business safely»)
   and the LinkedIn profile as a fourth field on the face; the print-ready files in
   `print/out/` (`npm run print:cards`) were regenerated with it. Next.js went to 16.4.3 (three

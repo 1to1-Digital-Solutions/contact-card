@@ -87,7 +87,7 @@ function front(contact, labels, watermark) {
     <div class="abs muted caps" style="left:${PAD}mm; top:${y}mm; font-size:5.2pt; font-weight:600; letter-spacing:0.18em">${label}</div>
     <div class="abs" style="left:${PAD}mm; top:${y + LABEL_TO_VALUE}mm; font-size:7.5pt">${value}</div>`;
   // Four fields anchored to the bottom margin, like the web face.
-  const STEP = 6.4;
+  const STEP = 6.1;
   const FIRST = TRIM.height - PAD - 2.9 - LABEL_TO_VALUE - 3 * STEP;
   const [linkedIn] = PROFILES;
   const wmWidth = 20;
@@ -97,20 +97,23 @@ function front(contact, labels, watermark) {
   // Thicker than the hairline on screen on purpose: the cut can land up to
   // a millimetre inside the trim line and the band has to survive it.
   const BAND = 1.6;
-  // A soft turquoise glow in the bottom-right corner, like the one behind the
-  // landing's hero: a radial gradient (vector in the PDF, no raster blur) that
-  // fades out well before the text, in the brand green at low opacity.
-  const GLOW = 48;
+  // A soft turquoise glow in the top-right corner, like the one behind the
+  // landing's hero: a radial gradient (vector in the PDF, no raster blur) in
+  // the brand green at low opacity. Top right because that corner is empty
+  // (the bottom one holds the watermark) and it balances the band on the left.
+  const GLOW = 52;
 
   return `<div class="page">
-    <div class="abs" style="right:${-GLOW * 0.42}mm; bottom:${-GLOW * 0.42}mm; width:${GLOW}mm; height:${GLOW}mm; border-radius:50%; background:radial-gradient(circle, rgba(31,149,122,0.42) 0%, rgba(31,149,122,0.18) 40%, rgba(31,149,122,0) 70%)"></div>
+    <div class="abs" style="right:${-GLOW * 0.4}mm; top:${-GLOW * 0.4}mm; width:${GLOW}mm; height:${GLOW}mm; border-radius:50%; background:radial-gradient(circle, rgba(31,149,122,0.22) 0%, rgba(31,149,122,0.09) 40%, rgba(31,149,122,0) 70%)"></div>
     <div class="abs" style="left:0; top:0; width:${BLEED + BAND}mm; height:${PAGE.height}mm; background:${BRAND.accent}"></div>
     <div class="trim">
-      <div class="abs" style="left:${PAD}mm; top:7mm; font-size:15pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
-      <div class="abs muted" style="left:${PAD}mm; top:13.2mm; font-size:7.5pt">${contact.jobTitle}</div>
-      <div class="abs accent caps" style="left:${PAD}mm; top:16.5mm; font-size:6pt; font-weight:600; letter-spacing:0.28em">${contact.company}</div>
-      <div class="abs muted" style="left:${PAD}mm; top:19.6mm; font-size:6.5pt">${contact.tagline}</div>
-      <div class="abs" style="left:${PAD}mm; top:23.4mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
+      <div class="abs" style="left:${PAD}mm; top:7mm; font-size:13pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
+      <div class="abs muted" style="left:${PAD}mm; top:12.4mm; font-size:7.5pt">${contact.jobTitle}</div>
+      <!-- The tagline is what the card says: larger and heavier than the job
+           title, in full ink, on two balanced lines. The company name is not
+           written out here: the logo on the back and the watermark say it. -->
+      <div class="abs" style="left:${PAD}mm; top:16.4mm; width:${TRIM.width - 2 * PAD}mm; font-size:8pt; font-weight:600; line-height:1.2; white-space:normal; text-wrap:balance">${contact.tagline}</div>
+      <div class="abs" style="left:${PAD}mm; top:24.2mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
       ${field(FIRST, labels.email, contact.email)}
       ${field(FIRST + STEP, labels.phone, contact.phone)}
       ${field(FIRST + 2 * STEP, labels.website, contact.website)}
