@@ -35,9 +35,9 @@ export type ContactData = {
 export type ContactText = {
   /** Job title: `TITLE` in the vCard, `jobTitle` in schema.org. */
   jobTitle: string;
-  /** Company tagline: what it promises, on the card itself. */
+  /** Company tagline: the one line that says what they stand for, on the card itself. */
   tagline: string;
-  /** What the business does, in plain words. Goes in the details panel, not on the card. */
+  /** What the business does, in plain words. Goes in the details panel and the structured data, not on the card. */
   services: string;
 };
 
@@ -102,8 +102,8 @@ export const TRANSLATED: Record<keyof ContactText, Record<Language, string>> = {
     en: "Software engineer",
   },
   tagline: {
-    es: "Tú creas tu negocio, nosotros nos encargamos de tu tecnología.",
-    en: "You build your business, we take care of your technology.",
+    es: "Entiende e integra la IA en tu negocio de forma segura",
+    en: "Understand and integrate AI into your business safely",
   },
   services: {
     es: "Desarrollo de software personalizado",

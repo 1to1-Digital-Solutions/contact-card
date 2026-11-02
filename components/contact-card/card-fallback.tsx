@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { LOGO } from "@/lib/brand";
-import { contactIn } from "@/lib/contact";
+import { contactIn, PROFILES } from "@/lib/contact";
 import { dictionary } from "@/lib/dictionary";
 import type { Language } from "@/lib/i18n";
 
@@ -77,10 +77,13 @@ export function CardFallback({
                   {contact.tagline}
                 </span>
               </span>
-              <span className="flex flex-col gap-[1cqw] text-[3.4cqw] text-ink">
+              <span className="flex flex-col gap-[0.8cqw] text-[3.2cqw] text-ink">
                 <span>{contact.email}</span>
                 <span>{contact.phone}</span>
                 <span>{contact.website}</span>
+                {/* The LinkedIn profile, as on the 3D face: the first of the
+                    profiles is the one that goes on the card. */}
+                <span>{PROFILES[0].address}</span>
               </span>
             </span>
 

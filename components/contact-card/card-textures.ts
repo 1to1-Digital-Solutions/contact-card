@@ -8,7 +8,7 @@ import {
   LOGO,
   WATERMARK,
 } from "@/lib/brand";
-import type { Contact, ContactData } from "@/lib/contact";
+import { type Contact, type ContactData, PROFILES } from "@/lib/contact";
 import type { Dictionary } from "@/lib/dictionary";
 
 /**
@@ -250,7 +250,7 @@ export function createFrontTexture(
   ctx.fillStyle = palette.ink;
   ctx.font = font(116, 600);
   setTracking(ctx, -2);
-  ctx.fillText(contact.name, PAD, 230);
+  ctx.fillText(contact.name, PAD, 200);
 
   // The job title, between the name and the company: in muted ink and
   // without small caps so it qualifies the name without disputing its
@@ -258,34 +258,41 @@ export function createFrontTexture(
   ctx.fillStyle = palette.inkMuted;
   ctx.font = font(46, 400);
   setTracking(ctx, 0);
-  ctx.fillText(contact.jobTitle, PAD, 380);
+  ctx.fillText(contact.jobTitle, PAD, 345);
 
   ctx.fillStyle = palette.accentInk;
   ctx.font = font(34, 600);
   setTracking(ctx, 10);
-  ctx.fillText(contact.company.toUpperCase(), PAD, 460);
+  ctx.fillText(contact.company.toUpperCase(), PAD, 425);
 
   // The tagline, separated from the identity block by some breathing room so
   // it reads as a sentence of its own and not as a fourth line of the name.
   // It goes in muted ink and smaller than the job title: it says what the
-  // company does without taking the place of whoever signs the card. At this
-  // size it fits on one line with room to spare in both languages, with more
-  // than a third of the width free.
+  // company stands for without taking the place of whoever signs the card.
+  // At this size it fits on one line with room to spare in both languages,
+  // with more than a third of the width free.
   ctx.fillStyle = palette.inkMuted;
   ctx.font = font(38, 400);
   setTracking(ctx, 0);
-  ctx.fillText(contact.tagline, PAD, 560);
+  ctx.fillText(contact.tagline, PAD, 505);
 
   ctx.fillStyle = palette.inkMuted;
   ctx.globalAlpha = 0.3;
-  ctx.fillRect(PAD, 680, W - PAD * 2, 2);
+  ctx.fillRect(PAD, 600, W - PAD * 2, 2);
   ctx.globalAlpha = 1;
 
-  // Data block anchored to the bottom edge, with the same margin as at the top.
-  const first = H - PAD - (58 + 54) - 2 * 160;
+  // Data block anchored to the bottom edge, with the same margin as at the
+  // top. Four fields: the three ways to reach them and the LinkedIn profile,
+  // which is where a card handed over at an event usually leads next. The
+  // step between fields is tighter than with three, and the block still
+  // clears the divider.
+  const STEP = 135;
+  const first = H - PAD - (58 + 54) - 3 * STEP;
+  const [linkedIn] = PROFILES;
   drawField(ctx, palette, first, labels.email, contact.email);
-  drawField(ctx, palette, first + 160, labels.phone, contact.phone);
-  drawField(ctx, palette, first + 320, labels.website, contact.website);
+  drawField(ctx, palette, first + STEP, labels.phone, contact.phone);
+  drawField(ctx, palette, first + 2 * STEP, labels.website, contact.website);
+  drawField(ctx, palette, first + 3 * STEP, linkedIn.name, linkedIn.address);
 
   const texture = toTexture(canvas);
   refreshWhenDrawn(

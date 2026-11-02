@@ -7,8 +7,11 @@
 
 ## ⏭️ NEXT STEP (first thing on return)
 
-- Nothing pending: the card is complete and ready to be published. The next task sets what
-  comes next.
+- Nothing pending. On 2026-11-02 the card got its definitive tagline («Entiende e integra la
+  IA en tu negocio de forma segura» / «Understand and integrate AI into your business safely»)
+  and the LinkedIn profile as a fourth field on the face; the print-ready files in
+  `print/out/` (`npm run print:cards`) were regenerated with it. Next.js went to 16.4.3 (three
+  critical advisories on 16.4.0 made `next build` stop).
 
 ## What contact-card is
 

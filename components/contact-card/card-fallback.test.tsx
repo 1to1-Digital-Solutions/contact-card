@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { contactIn } from "@/lib/contact";
+import { contactIn, PROFILES } from "@/lib/contact";
 import { LANGUAGES } from "@/lib/i18n";
 import { CardFallback } from "./card-fallback";
 
@@ -14,8 +14,8 @@ describe("flat card", () => {
   const markup = (language: (typeof LANGUAGES)[number]) =>
     renderToStaticMarkup(<CardFallback note="" language={language} />);
 
-  it.each(LANGUAGES)("carries the tagline on the front in %s", (language) => {
-    expect(markup(language)).toContain(contactIn(language).tagline);
+  it("carries the LinkedIn profile with the other ways to reach them", () => {
+    expect(markup("es")).toContain(PROFILES[0].address);
   });
 
   it.each(LANGUAGES)("still introduces whoever signs the card in %s", (language) => {
@@ -26,8 +26,13 @@ describe("flat card", () => {
     expect(html).toContain(contact.company);
   });
 
-  /** What they do belongs to the panel: the card has the tagline and nothing else. */
-  it("does not repeat the panel's services line on the card", () => {
-    expect(markup("es")).not.toContain(contactIn("es").services);
+  /**
+   * The tagline is the one line on the card that says what the company
+   * stands for; what the business does is listed in the panel, not here.
+   */
+  it.each(LANGUAGES)("carries the tagline and not the services line in %s", (language) => {
+    const html = markup(language);
+    expect(html).toContain(contactIn(language).tagline);
+    expect(html).not.toContain(contactIn(language).services);
   });
 });

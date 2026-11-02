@@ -213,8 +213,8 @@ describe("preview metadata", () => {
     expect(alt).toContain(CONTACT.name);
     expect(alt).toContain(CONTACT.jobTitle);
     expect(alt).toContain(CONTACT.company);
-    // The tagline is seen in the image: whoever cannot see it has to find
-    // out all the same.
+    // The tagline is seen in the image: whoever cannot see it has to read
+    // it all the same.
     expect(alt).toContain(CONTACT.tagline);
   });
 

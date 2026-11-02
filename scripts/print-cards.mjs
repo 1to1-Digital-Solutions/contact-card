@@ -22,7 +22,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "print", "out");
 
 const { BRAND, LOGO, THEMES, WATERMARK } = await import("../lib/brand.ts");
-const { contactIn } = await import("../lib/contact.ts");
+const { contactIn, PROFILES } = await import("../lib/contact.ts");
 const { dictionary } = await import("../lib/dictionary.ts");
 
 const THEME = "dark";
@@ -66,24 +66,29 @@ function page(body) {
 
 function front(contact, labels, watermark) {
   const field = (y, label, value) => `
-    <div class="abs muted caps" style="left:${PAD}mm; top:${y}mm; font-size:5.5pt; font-weight:600; letter-spacing:0.18em">${label}</div>
-    <div class="abs" style="left:${PAD}mm; top:${y + 2.7}mm; font-size:8.5pt">${value}</div>`;
-  const wmWidth = 29;
+    <div class="abs muted caps" style="left:${PAD}mm; top:${y}mm; font-size:5.2pt; font-weight:600; letter-spacing:0.18em">${label}</div>
+    <div class="abs" style="left:${PAD}mm; top:${y + 2.5}mm; font-size:7.5pt">${value}</div>`;
+  // Four fields anchored to the bottom margin, like the web face.
+  const STEP = 5.9;
+  const FIRST = TRIM.height - PAD - 2.9 - 2.5 - 3 * STEP;
+  const [linkedIn] = PROFILES;
+  const wmWidth = 26;
   const wmHeight = (wmWidth * WATERMARK[THEME].height) / WATERMARK[THEME].width;
 
   return `<div class="page">
     <!-- Brand hairline along the left edge, into the bleed. -->
     <div class="abs" style="left:0; top:0; width:${BLEED + 0.7}mm; height:${PAGE.height}mm; background:${BRAND.accent}"></div>
     <div class="trim">
-      <div class="abs" style="left:${PAD}mm; top:8.5mm; font-size:15pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
-      <div class="abs muted" style="left:${PAD}mm; top:15.3mm; font-size:7.5pt">${contact.jobTitle}</div>
-      <div class="abs accent caps" style="left:${PAD}mm; top:18.9mm; font-size:6pt; font-weight:600; letter-spacing:0.28em">${contact.company}</div>
-      <div class="abs muted" style="left:${PAD}mm; top:22.6mm; font-size:6.5pt">${contact.tagline}</div>
-      <div class="abs" style="left:${PAD}mm; top:27mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
-      ${field(29.6, labels.email, contact.email)}
-      ${field(36.4, labels.phone, contact.phone)}
-      ${field(43.2, labels.website, contact.website)}
-      <img src="${watermark}" style="position:absolute; right:${PAD}mm; bottom:${PAD}mm; width:${wmWidth}mm; height:${wmHeight}mm; opacity:0.1">
+      <div class="abs" style="left:${PAD}mm; top:7.4mm; font-size:15pt; font-weight:600; letter-spacing:-0.01em">${contact.name}</div>
+      <div class="abs muted" style="left:${PAD}mm; top:13.8mm; font-size:7.5pt">${contact.jobTitle}</div>
+      <div class="abs accent caps" style="left:${PAD}mm; top:17.2mm; font-size:6pt; font-weight:600; letter-spacing:0.28em">${contact.company}</div>
+      <div class="abs muted" style="left:${PAD}mm; top:20.4mm; font-size:6.5pt">${contact.tagline}</div>
+      <div class="abs" style="left:${PAD}mm; top:24.6mm; width:${TRIM.width - 2 * PAD}mm; height:0.15mm; background:${PALETTE.inkMuted}; opacity:0.3"></div>
+      ${field(FIRST, labels.email, contact.email)}
+      ${field(FIRST + STEP, labels.phone, contact.phone)}
+      ${field(FIRST + 2 * STEP, labels.website, contact.website)}
+      ${field(FIRST + 3 * STEP, linkedIn.name, linkedIn.address)}
+      <img src="${watermark}" style="position:absolute; right:${PAD}mm; bottom:${PAD + 6.5}mm; width:${wmWidth}mm; height:${wmHeight}mm; opacity:0.1">
     </div>
   </div>`;
 }

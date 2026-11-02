@@ -34,7 +34,7 @@ const CONTACT = contactIn(DEFAULT_LANGUAGE);
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = `Tarjeta de contacto de ${CONTACT.name}, ${CONTACT.jobTitle} de ${CONTACT.company}. «${CONTACT.tagline}» Con su email, su teléfono y su web.`;
+export const alt = `Tarjeta de contacto de ${CONTACT.name}, ${CONTACT.jobTitle} de ${CONTACT.company}. «${CONTACT.tagline}». Con su email, su teléfono y su web.`;
 
 /**
  * The page's starting theme, not the dark one by name: if tomorrow the page
@@ -118,7 +118,7 @@ export default function Image() {
             {/* The tagline makes it into the preview because it makes it onto
                 the card: at this size it fits on one line with room to spare,
                 and it is what lets whoever sees the shared link know what the
-                company does.
+                company stands for.
 
                 Its breathing room is smaller than on the card face: here the
                 paper is far more landscape and the air left between the two
